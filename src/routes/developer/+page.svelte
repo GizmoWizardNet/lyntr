@@ -583,15 +583,15 @@ pip install pylyntr`}
 			<CodeBlock
 				lang="python"
 				label="Usage"
-				code={`from pylyntr import Lyntr
+				code={`from pylyntr import LyntrClient
 
-client = Lyntr(client_id="...", client_secret="...")
+client = LyntrClient(client_id="...", client_secret="...")
 
-me = client.me()
-lynt = client.post("just shipped a python client 🐍")
+me = client.get_user()
+lynt = client.create_post("day 592752131 of lyntr comeback")
 
-for comment in client.comments.all(limit=20):
-    print(comment.handle, comment.content)`}
+for comment in client.all_comments()[:20]: # limit to 20
+    print(comment.user.username, comment.content)`}
 			/>
 			<p class="text-muted-foreground">
 				Talks to the same <code>/api/v2</code> base URL and credentials as above — nothing
