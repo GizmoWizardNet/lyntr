@@ -48,6 +48,24 @@
 	const myMembership = $derived((members as any[]).find((m: any) => m.user_id === myId) ?? null);
 	const iAmOwner = $derived(conv?.owner_id === myId);
 
+	// Discord/iMessage-style "Seen" line: for each other member, find the
+	// most recent message in the loaded window matching their
+	// last_read_message_id and group members by that message id, so a
+	// message can show "Seen by Alice, Bob" instead of one line per member.
+	// Only ever renders under the single most-recent read message per
+	// member — not every message before it — same as every chat app does
+	// this, since showing it retroactively on every earlier message would
+	// just be noise.
+	const seenByMessageId = $derived.by(() => {
+		const map = new Map<string, any[]>();
+		for (const m of members as any[]) {
+			if (m.user_id === myId || !m.last_read_message_id) continue;
+			if (!map.has(m.last_read_message_id)) map.set(m.last_read_message_id, []);
+			map.get(m.last_read_message_id)!.push(m);
+		}
+		return map;
+	});
+
 	function displayName() {
 		if (isGroup) return conv?.name || members.map((m: any) => m.username).join(', ') || 'Group';
 		return otherUser?.username ?? '';
@@ -125,6 +143,24 @@
 				}
 				return { ...m, reactions };
 			});
+		}));
+
+		// ── Read receipts ─────────────────────────────────────────────
+		// This event was already being broadcast server-side (see
+		// /api/dm/read) but nothing on the client ever listened for it, so
+		// "Seen" state only ever existed in the database — never rendered.
+		// Patches the matching member's read position in place; readByMessageId
+		// below derives which message(s) to show a "Seen" marker under.
+		unsubs.push(wsClient.on('dm_read_receipt', (data: any) => {
+			if (data.conversation_id !== conversationId) return;
+			conv = {
+				...conv,
+				members: (conv.members as any[]).map((m) =>
+					m.user_id === data.user_id
+						? { ...m, last_read_message_id: data.message_id, last_read_at: new Date().toISOString() }
+						: m
+				)
+			};
 		}));
 
 		unsubs.push(wsClient.on('dm_typing_start', (data: any) => {
@@ -588,6 +624,19 @@
 							{/each}
 						</div>
 					{/if}
+
+					{#if seenByMessageId.has(msg.id)}
+						<div class="seen-row" class:me={isMe}>
+							{#each seenByMessageId.get(msg.id) as reader (reader.user_id)}
+								<span title={`Seen by ${reader.handle}`}>
+									<Avatar size={4} src={cdnUrl(reader.user_id, 'small')} alt="" userId={reader.user_id} showPresence={false} />
+								</span>
+							{/each}
+							{#if !isGroup}
+								<span class="seen-label">Seen</span>
+							{/if}
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -968,6 +1017,10 @@
 	.reaction-picker button:hover { background: hsl(var(--accent)); transform: scale(1.15); }
 
 	.reactions-row { display: flex; gap: 4px; flex-wrap: wrap; }
+	.seen-row { display: flex; align-items: center; gap: 2px; margin-top: 2px; justify-content: flex-end; opacity: 0.6; }
+	.seen-row.me { justify-content: flex-end; }
+	.seen-row :global(img) { width: 14px; height: 14px; border-radius: 999px; }
+	.seen-label { font-size: 10px; color: var(--muted-foreground, #888); }
 	.reactions-row.me { justify-content: flex-end; }
 	.reaction-chip {
 		background: hsl(var(--muted));

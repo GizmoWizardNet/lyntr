@@ -43,7 +43,9 @@ export async function getActiveMembers(conversationId: string) {
 			username: users.username,
 			handle: users.handle,
 			name_color: users.name_color,
-			verified: users.verified
+			verified: users.verified,
+			last_read_message_id: dmMembers.last_read_message_id,
+			last_read_at: dmMembers.last_read_at
 		})
 		.from(dmMembers)
 		.innerJoin(users, eq(users.id, dmMembers.user_id))

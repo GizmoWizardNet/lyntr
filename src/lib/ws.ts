@@ -269,17 +269,33 @@ export function broadcastLyntEdited(
 	broadcastAll({ type: 'lynt_edited', lyntId, ...payload });
 }
 
-// Someone reacted (or un-reacted) to a lynt. `reactions` is the full,
-// current tally — [{ emoji, count, reactedByUser }] from the acting user's
-// POV is NOT sent here (that's per-viewer and computed client-side from
-// each viewer's own reaction, same pattern as poll my_votes) — every viewer
-// just gets the authoritative counts and derives their own state from
-// whether their own userId is in `userIds` for that emoji.
+// Someone reacted (or un-reacted) to a lynt. Sent per-connection (not one
+// shared broadcastAll payload) because `reactedByUser` is viewer-relative —
+// exactly like reactedByUser/likedByUser computed in lyntObj() for the
+// initial page load. Broadcasting one shared shape with `userIds` instead
+// and asking the client to derive its own reactedByUser from it was the
+// original approach here, but it doesn't match the `{ emoji, count,
+// reactedByUser }` shape ReactionBar already expects from the initial
+// fetch — that mismatch is why reactions rendered fine on load but never
+// updated live. Recomputing reactedByUser server-side per recipient keeps
+// one consistent shape everywhere.
 export function broadcastReactionUpdate(
 	lyntId: string,
 	reactions: { emoji: string; count: number; userIds: string[] }[]
 ) {
-	broadcastAll({ type: 'reaction_update', lyntId, reactions });
+	for (const conn of connections) {
+		const viewerId = conn.userId;
+		const payload = {
+			type: 'reaction_update',
+			lyntId,
+			reactions: reactions.map((r) => ({
+				emoji: r.emoji,
+				count: r.count,
+				reactedByUser: !!viewerId && r.userIds.includes(viewerId)
+			}))
+		};
+		send(conn, payload);
+	}
 }
 
 // Poll votes/resolves had no live path at all — a viewer watching a poll
