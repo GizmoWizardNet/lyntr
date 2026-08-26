@@ -1,0 +1,63 @@
+secrets:
+  serverEnv:
+    file: ./.env
+
+services:
+  bot:
+    build:
+      context: ./src/misc/
+      dockerfile: ./Dockerfile
+    restart: always
+    secrets:
+      - serverEnv
+    ports:
+      - '5444:5444'
+    networks:
+      - lynternet
+
+  minio:
+    networks:
+      - lynternet
+    image: minio/minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ./minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASS}
+    command: server --console-address :9001 /data
+  website:
+    env_file:
+      - .env
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - '6000-6002:5999'
+    environment:
+      - PUBLIC_SERVER_HOST=http://localhost:5999
+    secrets:
+      - serverEnv
+    deploy:
+      mode: replicated
+      replicas: 1
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - lynternet
+  cloudflared:
+    env_file:
+      - .env
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - lynternet
+    depends_on:
+      - website
+networks:
+  lynternet:

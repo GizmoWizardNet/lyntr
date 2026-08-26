@@ -1,0 +1,740 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=Inter:wght@400;500;600&display=swap');
+
+/* ════════════════════════════════════════════════
+   OLD-ROBLOX (2006–09) TYPOGRAPHY OVERRIDE
+   Tahoma/Verdana over the system stack — the Work
+   Sans/Inter imports above stay only as a fallback
+   for any glyphs Tahoma is missing.
+   ════════════════════════════════════════════════ */
+:root {
+  --font-retro: Tahoma, Geneva, Verdana, 'Work Sans', sans-serif;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background:          53 24% 93%;
+    --foreground:          20 14.3% 4.1%;
+    --muted:               48 20% 91%;
+    --muted-foreground:    25 5.3% 44.7%;
+    --popover:             48 26% 95%;
+    --popover-foreground:  20 14.3% 4.1%;
+    --card:                48 30% 97%;
+    --card-foreground:     20 14.3% 4.1%;
+    --border:              40 20% 83%;
+    --input:               40 18% 86%;
+    --primary:             22 100% 15%;
+    --primary-foreground:  60 9.1% 97.8%;
+    --primary-top:         22 85% 28%;
+    --primary-dim:         22 100% 11%;
+    --secondary:           48 22% 88%;
+    --secondary-foreground: 24 9.8% 10%;
+    --accent:              44 28% 86%;
+    --accent-foreground:   24 9.8% 10%;
+    --destructive:         0 72.2% 50.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --ring:                22 80% 25%;
+    --radius:              0.25rem;
+
+    /* Radius scale — added because the app had 12 different hardcoded
+       border-radius values (2px through 20px) scattered across ~140
+       declarations, with no real pattern to which surface got which:
+       cards and dialogs were 6px, but popovers and dropdown menus — which
+       sit right next to cards/dialogs in the UI and should read as the
+       same "material" — were 5px, and badges/inputs/small buttons were a
+       mix of 4px and 5px. 6px was already the overwhelming majority
+       (cards, dialogs, most buttons), so it's the house default here;
+       the sm/lg/full tiers just name sizes that were already in use
+       for smaller controls and pills, rather than inventing a new scale. */
+    --radius-sm:           4px;
+    --radius-md:           6px;
+    --radius-lg:           8px;
+    --radius-full:         999px;
+
+    --lynt-focus:          44 28% 88%;
+
+    --inset-shadow:        inset 0px 2px 5px rgba(60, 30, 0, 0.16);
+    --float-shadow:        2px 2px 0 rgba(60, 30, 0, 0.35);
+    --ghost-border:        1px solid rgba(100, 70, 30, 0.22);
+    --bevel-top:           rgba(255, 240, 210, 0.65);
+    --grid-color:          rgba(100, 70, 20, 0.055);
+
+    /* ── Old-Roblox chunky 3D bevel: hard light/dark edges, no blur ── */
+    --bevel-light:         rgba(255, 248, 225, 0.9);
+    --bevel-dark:          rgba(60, 30, 0, 0.55);
+    --hard-shadow:         2px 2px 0 rgba(60, 30, 0, 0.35);
+    --hard-shadow-sm:      1px 1px 0 rgba(60, 30, 0, 0.3);
+    --crt-stripe:          rgba(60, 30, 0, 0.05);
+
+    /* Header gradient */
+    --header-bg:           linear-gradient(180deg, hsl(48 30% 91%) 0%, hsl(44 24% 86%) 100%);
+    --header-border-top:   rgba(255, 248, 230, 0.9);
+    --float-glow:          0 8px 24px -6px rgba(60, 30, 0, 0.35);
+
+    /* ── Aero glass (buttons + tabs only — see note in .dark below) ──
+       Scoped deliberately narrow: OutlineButton (nav icons, like/repost/
+       etc.) and TopTab, NOT cards/dialogs/forms, which keep the
+       Old-Roblox bevel above. A prior attempt at a full glass theme
+       ("Glassy Aerodynamics") was pulled app-wide after visual bugs
+       proved hard to chase down across every surface — keeping this to
+       two components keeps the blast radius small if something similar
+       comes up again. */
+    --aero-surface:        rgba(255, 255, 255, 0.55);
+    --aero-surface-hover:  rgba(255, 255, 255, 0.78);
+    --aero-border-top:     rgba(255, 255, 255, 0.85);
+    --aero-border-bottom:  rgba(31, 24, 10, 0.12);
+    --aero-shine:          linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 45%, rgba(255, 255, 255, 0) 55%);
+    --aero-shadow:         0 2px 8px rgba(40, 30, 10, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    --aero-shadow-active:  0 3px 10px rgba(40, 30, 10, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    --aero-blur:           12px;
+  }
+
+  .dark {
+    --background:          20 14.3% 4.1%;
+    --foreground:          60 9.1% 97.8%;
+    --muted:               12 6.5% 15.1%;
+    --muted-foreground:    24 5.4% 63.9%;
+    --popover:             20 14.3% 4.1%;
+    --popover-foreground:  60 9.1% 97.8%;
+    --card:                20 14.3% 4.1%;
+    --card-foreground:     60 9.1% 97.8%;
+    --border:              12 6.5% 18%;
+    --input:               12 6.5% 15.1%;
+    --primary:             60 9.1% 97.8%;
+    --primary-foreground:  24 9.8% 10%;
+    --primary-top:         60 9.1% 100%;
+    --primary-dim:         60 5% 80%;
+    --secondary:           12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --accent:              12 6.5% 15.1%;
+    --accent-foreground:   60 9.1% 97.8%;
+    --destructive:         0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --ring:                24 5.7% 82.9%;
+    --lynt-focus:          20 4% 14%;
+
+    --inset-shadow:        inset 0px 2px 5px rgba(0, 0, 0, 0.4);
+    --float-shadow:        2px 2px 0 rgba(0, 0, 0, 0.5);
+    --ghost-border:        1px solid rgba(255, 255, 255, 0.09);
+    --bevel-top:           rgba(255, 255, 255, 0.07);
+    --grid-color:          rgba(255, 255, 255, 0.03);
+
+    --bevel-light:         rgba(255, 255, 255, 0.18);
+    --bevel-dark:          rgba(0, 0, 0, 0.6);
+    --hard-shadow:         2px 2px 0 rgba(0, 0, 0, 0.5);
+    --hard-shadow-sm:      1px 1px 0 rgba(0, 0, 0, 0.45);
+    --crt-stripe:          rgba(255, 255, 255, 0.025);
+
+    --header-bg:           linear-gradient(180deg, hsl(20 10% 10%) 0%, hsl(20 8% 7%) 100%);
+    --header-border-top:   rgba(255, 255, 255, 0.07);
+    --float-glow:          0 8px 24px -6px rgba(0, 0, 0, 0.6);
+
+    /* Dark-mode aero — this is the look from the reference screenshots:
+       near-black translucent glass, a thin bright top edge, soft dark
+       drop shadow, faint cool-white gloss sheen top-to-mid. */
+    --aero-surface:        rgba(255, 255, 255, 0.06);
+    --aero-surface-hover:  rgba(255, 255, 255, 0.12);
+    --aero-border-top:     rgba(255, 255, 255, 0.22);
+    --aero-border-bottom:  rgba(0, 0, 0, 0.55);
+    --aero-shine:          linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0) 55%);
+    --aero-shadow:         0 2px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    --aero-shadow-active:  0 3px 12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    --aero-blur:           12px;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  /* ── Old-Roblox tiled texture: diagonal hatch, bolder than a blueprint grid ── */
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-retro);
+    background-image:
+      repeating-linear-gradient(45deg, var(--crt-stripe) 0px, var(--crt-stripe) 1px, transparent 1px, transparent 14px),
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 28px 28px, 28px 28px, 28px 28px;
+  }
+
+  /* Display & headline → still Tahoma-era, just heavier weight for that chunky forum-header look */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-retro);
+    font-weight: 700;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   NAV PANEL — Glossy structural ribbon
+   ════════════════════════════════════════════════ */
+
+/* The sidebar nav container */
+.inline-flex.w-full.flex-row.items-start.gap-2.rounded-\[12px\].bg-border {
+  background: var(--header-bg) !important;
+  border-top: 2px solid var(--bevel-light) !important;
+  border-left: 2px solid var(--bevel-light) !important;
+  border-bottom: 2px solid var(--bevel-dark) !important;
+  border-right: 2px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+  border-radius: 6px !important;
+}
+
+/* ════════════════════════════════════════════════
+   MOBILE BOTTOM NAV — same raised bevel ribbon as
+   the desktop sidebar, floating clear of the edge
+   so it reads as a physical object, not a flat bar
+   ════════════════════════════════════════════════ */
+.mobile-nav-ribbon {
+  background: var(--header-bg);
+  border-top: 2px solid var(--bevel-light);
+  border-left: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-dark);
+  box-shadow: var(--float-shadow), var(--float-glow);
+}
+@media (min-width: 768px) {
+  .mobile-nav-ribbon {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   NAV BUTTONS — Recessed interactive pill
+   ════════════════════════════════════════════════ */
+.shit {
+  transition:
+    filter 0.1s ease-in-out,
+    box-shadow 0.1s ease-in-out,
+    background-color 0.1s ease-in-out,
+    color 0.1s ease-in-out !important;
+  transform: none !important;
+  border-radius: 4px !important;
+  padding: 6px 10px !important;
+  font-family: var(--font-retro);
+  font-weight: 700 !important;
+}
+
+.shit:hover {
+  filter: none !important;
+  transform: none !important;
+  background: hsl(var(--primary) / 0.12) !important;
+  box-shadow: var(--inset-shadow) !important;
+}
+
+.shit.active {
+  background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary))) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  transform: none !important;
+  border-top: 1px solid var(--bevel-light) !important;
+  border-left: 1px solid var(--bevel-light) !important;
+  border-bottom: 1px solid var(--bevel-dark) !important;
+  border-right: 1px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow-sm) !important;
+}
+
+/* ════════════════════════════════════════════════
+   PRIMARY BUTTON — High-Gloss Pill
+   ════════════════════════════════════════════════ */
+button.bg-primary,
+.btn-gloss,
+[data-button-root][class*="bg-primary"] {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary-top)) 0%,
+    hsl(var(--primary)) 100%
+  ) !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+  transition: filter 0.1s ease !important;
+  border-radius: 5px !important;
+  font-family: var(--font-retro);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+button.bg-primary:hover,
+.btn-gloss:hover {
+  filter: brightness(1.1) !important;
+}
+button.bg-primary:active,
+.btn-gloss:active {
+  filter: brightness(0.95) !important;
+  box-shadow: var(--hard-shadow-sm) !important;
+  transform: translate(1px, 1px) !important;
+}
+
+/* shadcn Button component default variant */
+[class*="buttonVariants"],
+.inline-flex.items-center.justify-center[class*="bg-primary"] {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary-top)) 0%,
+    hsl(var(--primary)) 100%
+  ) !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+}
+
+/* ════════════════════════════════════════════════
+   POST BUTTON (full-width in sidebar)
+   ════════════════════════════════════════════════ */
+.w-full.bg-primary,
+button[class*="w-full"][class*="bg-primary"] {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary-top)) 0%,
+    hsl(var(--primary)) 100%
+  ) !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+  font-family: var(--font-retro);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+/* ════════════════════════════════════════════════
+   LYNT CARDS — Recessed content wells
+   ════════════════════════════════════════════════ */
+.bg-lynt-foreground,
+.lynt-card {
+  box-shadow: var(--inset-shadow) !important;
+  border-top: 1px solid var(--bevel-dark) !important;
+  border-left: 1px solid var(--bevel-dark) !important;
+  border-bottom: 1px solid var(--bevel-light) !important;
+  border-right: 1px solid var(--bevel-light) !important;
+  background: hsl(var(--lynt-focus)) !important;
+  border-radius: 6px !important;
+  transition: box-shadow 0.1s ease, background 0.1s ease !important;
+}
+
+/* On hover: pop OUT of the recess like a pressed-button release, not a soft float */
+.bg-lynt-foreground:hover,
+.lynt-card:hover {
+  background: hsl(var(--card)) !important;
+  box-shadow: var(--hard-shadow) !important;
+  border-top-color: var(--bevel-light) !important;
+  border-left-color: var(--bevel-light) !important;
+  border-bottom-color: var(--bevel-dark) !important;
+  border-right-color: var(--bevel-dark) !important;
+}
+
+/* ════════════════════════════════════════════════
+   REPOST QUOTE CARD — Beveled inner frame
+   ════════════════════════════════════════════════ */
+.rounded-lg.border-2.border-primary {
+  border: var(--ghost-border) !important;
+  border-left: 3px solid hsl(var(--primary)) !important;
+  border-radius: 6px !important;
+  background: hsl(var(--background)) !important;
+  box-shadow: var(--inset-shadow) !important;
+}
+
+/* ════════════════════════════════════════════════
+   REPLY INPUT BAR — Recessed well
+   ════════════════════════════════════════════════ */
+.flex.w-full.items-center.gap-2.rounded-xl.bg-border {
+  background: hsl(var(--input)) !important;
+  box-shadow: var(--inset-shadow) !important;
+  border-top: 1px solid var(--bevel-dark) !important;
+  border-left: 1px solid var(--bevel-dark) !important;
+  border-bottom: 1px solid var(--bevel-light) !important;
+  border-right: 1px solid var(--bevel-light) !important;
+  border-radius: 4px !important;
+}
+
+/* ════════════════════════════════════════════════
+   INPUT FIELDS — Recessed wells
+   ════════════════════════════════════════════════ */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+[contenteditable="true"] {
+  background: hsl(var(--input)) !important;
+  box-shadow: var(--inset-shadow) !important;
+  border-top: 1px solid var(--bevel-dark) !important;
+  border-left: 1px solid var(--bevel-dark) !important;
+  border-bottom: 1px solid var(--bevel-light) !important;
+  border-right: 1px solid var(--bevel-light) !important;
+  border-radius: 3px !important;
+  font-family: var(--font-retro) !important;
+}
+input:focus,
+textarea:focus,
+[contenteditable="true"]:focus {
+  outline: none !important;
+  box-shadow: var(--inset-shadow), 0 0 0 2px hsl(var(--ring) / 0.4) !important;
+}
+
+/* ════════════════════════════════════════════════
+   PROFILE BUTTON TRIGGER — Bottom bar
+   ════════════════════════════════════════════════ */
+.static.bottom-2.flex.max-w-md.cursor-pointer.items-center.gap-4.rounded-full.bg-border {
+  background: var(--header-bg) !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  box-shadow: var(--inset-shadow) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-retro) !important;
+}
+
+/* ════════════════════════════════════════════════
+   POPOVER / DROPDOWN — Glassmorphism float
+   ════════════════════════════════════════════════ */
+[data-bits-dialog-content],
+[data-radix-popper-content-wrapper],
+.popover-content,
+[data-popover-content],
+[data-melt-popover-content],
+[data-bits-popover-content] {
+  background: hsl(var(--popover)) !important;
+  border-top: 2px solid var(--bevel-light) !important;
+  border-left: 2px solid var(--bevel-light) !important;
+  border-bottom: 2px solid var(--bevel-dark) !important;
+  border-right: 2px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+  border-radius: 5px !important;
+  font-family: var(--font-retro);
+}
+
+/* ════════════════════════════════════════════════
+   DIALOG MODAL — Glassmorphism elevated panel
+   ════════════════════════════════════════════════ */
+[role="dialog"] {
+  background: hsl(var(--card)) !important;
+  border-top: 2px solid var(--bevel-light) !important;
+  border-left: 2px solid var(--bevel-light) !important;
+  border-bottom: 2px solid var(--bevel-dark) !important;
+  border-right: 2px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-retro);
+}
+
+/* ════════════════════════════════════════════════
+   TOASTS — Floating pills
+   ════════════════════════════════════════════════ */
+[data-sonner-toast],
+[role="tooltip"] {
+  background: hsl(var(--popover)) !important;
+  box-shadow: var(--hard-shadow) !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  font-family: var(--font-retro);
+}
+
+/* ════════════════════════════════════════════════
+   TAB BAR — TopTab active indicator
+   ════════════════════════════════════════════════ */
+/* Tab labels */
+.cursor-pointer.select-none.text-xl {
+  font-family: var(--font-retro);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Active tab underline pill: glossy not flat */
+.absolute.-bottom-2.left-0.right-0.mt-4.h-2.rounded-b-lg.bg-primary {
+  background: linear-gradient(to right, hsl(var(--primary-top)), hsl(var(--primary))) !important;
+  box-shadow: 0 2px 8px rgba(60,30,0,0.3) !important;
+  opacity: 1 !important;
+  height: 3px !important;
+  border-radius: 2px !important;
+}
+
+/* ════════════════════════════════════════════════
+   NEW POSTS PILL
+   ════════════════════════════════════════════════ */
+.mx-auto.mt-2.flex.items-center.gap-2.rounded-full.bg-primary {
+  background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary))) !important;
+  box-shadow:
+    inset 0 1px 0 var(--bevel-top),
+    var(--float-shadow) !important;
+  border: 1px solid hsl(var(--primary-dim)) !important;
+}
+
+/* ════════════════════════════════════════════════
+   AVATAR — Beveled rect, not circle
+   ════════════════════════════════════════════════ */
+.avatar,
+[class*="avatar"] img {
+  border-radius: 5px !important;
+  border-top: 1.5px solid var(--bevel-light) !important;
+  border-left: 1.5px solid var(--bevel-light) !important;
+  border-bottom: 1.5px solid var(--bevel-dark) !important;
+  border-right: 1.5px solid var(--bevel-dark) !important;
+  box-shadow: var(--hard-shadow-sm) !important;
+}
+
+/* ════════════════════════════════════════════════
+   SCROLLBAR — Polished, matches primary
+   ════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track {
+  background: hsl(var(--primary-foreground));
+  border-left: 1px solid var(--bevel-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary-top)),
+    hsl(var(--primary))
+  );
+  border-radius: 2px;
+  border-top: 1px solid var(--bevel-light);
+  border-left: 1px solid var(--bevel-light);
+  border-bottom: 1px solid var(--bevel-dark);
+  border-right: 1px solid var(--bevel-dark);
+}
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.1); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ════════════════════════════════════════════════
+   MISC UTILITIES (preserved)
+   ════════════════════════════════════════════════ */
+[contenteditable=true]:empty:before {
+  content: attr(placeholder);
+  color: grey;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+a {
+  color: hsl(var(--primary));
+  font-weight: bold;
+}
+a:hover { text-decoration: underline; }
+
+.drop-shadow {
+  transition: filter 0.2s ease-in-out;
+  filter: none;
+}
+.drop-shadow:hover {
+  filter: drop-shadow(0 0px 10px rgba(38, 14, 0, 0.35));
+}
+
+/* ════════════════════════════════════════════════
+   SEPARATOR — Ghost rule, not hard line
+   ════════════════════════════════════════════════ */
+[data-orientation="horizontal"].bg-border,
+.h-\[1px\].bg-border,
+hr {
+  background: linear-gradient(
+    to right,
+    transparent,
+    hsl(var(--border) / 0.8) 20%,
+    hsl(var(--border) / 0.8) 80%,
+    transparent
+  ) !important;
+  border: none !important;
+  height: 1px !important;
+}
+
+/* ════════════════════════════════════════════════
+   NOTIFICATION BADGE — Glossy pill
+   ════════════════════════════════════════════════ */
+.absolute.-top-2.right-0.flex.h-7.w-7 {
+  background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary))) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  box-shadow: var(--float-shadow) !important;
+  border: 1px solid hsl(var(--primary-dim)) !important;
+}
+
+/* ════════════════════════════════════════════════
+   HEADING TEXT-SHADOW (for text on dark surfaces)
+   ════════════════════════════════════════════════ */
+h1, h2, h3, h4, h5, h6 {
+  text-shadow: 1px 1px 2px rgba(60, 30, 0, 0.1);
+}
+
+/* ════════════════════════════════════════════════
+   NAV RIBBON (explicit class, not fragile selector)
+   ════════════════════════════════════════════════ */
+.nav-ribbon {
+  background: var(--header-bg);
+  border-top: 2px solid var(--bevel-light);
+  border-left: 2px solid var(--bevel-light);
+  border-bottom: 2px solid var(--bevel-dark);
+  border-right: 2px solid var(--bevel-dark);
+  box-shadow: var(--hard-shadow);
+  border-radius: 6px;
+  font-family: var(--font-retro);
+}
+
+/* ════════════════════════════════════════════════
+   LYNT CARD (explicit class)
+   ════════════════════════════════════════════════ */
+.lynt-card {
+  background: hsl(var(--lynt-focus));
+  box-shadow: var(--inset-shadow);
+  border-top: 1px solid var(--bevel-dark);
+  border-left: 1px solid var(--bevel-dark);
+  border-bottom: 1px solid var(--bevel-light);
+  border-right: 1px solid var(--bevel-light);
+  border-radius: 6px;
+  transition: box-shadow 0.1s ease, background 0.1s ease;
+}
+.lynt-card:hover {
+  background: hsl(var(--card));
+  box-shadow: var(--hard-shadow);
+}
+
+/* REPOST QUOTE — beveled left-accent frame */
+.repost-quote {
+  border: var(--ghost-border);
+  border-left: 3px solid hsl(var(--primary));
+  border-radius: 6px;
+  background: hsl(var(--background));
+  box-shadow: var(--inset-shadow);
+}
+
+/* ════════════════════════════════════════════════
+   REPLY BAR & PROFILE TRIGGER (explicit classes)
+   ════════════════════════════════════════════════ */
+.reply-bar {
+  background: hsl(var(--input));
+  box-shadow: var(--inset-shadow);
+  border-top: 1px solid var(--bevel-dark);
+  border-left: 1px solid var(--bevel-dark);
+  border-bottom: 1px solid var(--bevel-light);
+  border-right: 1px solid var(--bevel-light);
+  border-radius: 4px;
+}
+
+.profile-trigger {
+  background: var(--header-bg);
+  border-top: 1.5px solid var(--bevel-light);
+  border-left: 1.5px solid var(--bevel-light);
+  border-bottom: 1.5px solid var(--bevel-dark);
+  border-right: 1.5px solid var(--bevel-dark);
+  box-shadow: var(--inset-shadow);
+  border-radius: 6px;
+  font-family: var(--font-retro);
+}
+.profile-trigger:hover {
+  box-shadow: var(--hard-shadow);
+  background: hsl(var(--card));
+}
+
+/* ════════════════════════════════════════════════
+   INLINE EDITOR (LyntContents + DivInput shared)
+   ════════════════════════════════════════════════ */
+.edit-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.edit-tab {
+  font-family: var(--font-retro);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 5px 5px 0 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  transition: background 0.12s, color 0.12s;
+}
+.edit-tab.active {
+  background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+  color: hsl(var(--primary-foreground));
+  box-shadow: inset 0 1px 0 rgba(255,240,210,0.5), 0 2px 5px rgba(60,30,0,0.18);
+}
+.edit-tab:not(.active):hover {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--foreground));
+}
+
+.edit-textarea {
+  width: 100%;
+  border-radius: 6px;
+  background: hsl(var(--input));
+  box-shadow: var(--inset-shadow);
+  border: var(--ghost-border);
+  padding: 8px 10px;
+  font-family: var(--font-retro);
+  font-size: 0.975rem;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  color: hsl(var(--foreground));
+  caret-color: hsl(var(--primary));
+}
+.edit-textarea:focus {
+  box-shadow: var(--inset-shadow), 0 0 0 2px hsl(var(--ring) / 0.3);
+}
+
+.edit-preview {
+  min-height: 60px;
+  padding: 8px 10px;
+  background: hsl(var(--muted));
+  border-radius: 6px;
+  border: var(--ghost-border);
+  box-shadow: var(--inset-shadow);
+}
+
+.edit-save-btn {
+  background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+  border: 1px solid hsl(var(--primary-dim));
+  box-shadow: inset 0 1px 0 rgba(255,240,210,0.45), 0 2px 6px rgba(60,30,0,0.2);
+  transition: filter 0.12s;
+}
+.edit-save-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* ════════════════════════════════════════════════
+   PARSED CONTENT — markdown element styles
+   (covers both feed and preview contexts)
+   ════════════════════════════════════════════════ */
+.parsed-content p          { margin: 0 0 0.25em; line-height: 1.55; }
+.parsed-content br         { display: block; content: ''; margin-top: 0.4em; }
+.parsed-content h1,
+.parsed-content h2,
+.parsed-content h3,
+.parsed-content h4         { font-family: var(--font-retro); font-weight: 700; line-height: 1.2; margin: 0.5em 0 0.2em; }
+.parsed-content h1         { font-size: 1.35em; }
+.parsed-content h2         { font-size: 1.2em; }
+.parsed-content h3         { font-size: 1.08em; }
+.parsed-content h4         { font-size: 1em; }
+.parsed-content strong     { font-weight: 700; }
+.parsed-content em         { font-style: italic; }
+.parsed-content s          { opacity: 0.6; }
+.parsed-content code       { font-family: 'Fira Mono', 'Consolas', monospace; font-size: 0.875em; background: hsl(var(--input)); border: 1px solid hsl(var(--border)); border-radius: 3px; padding: 1px 5px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); }
+.parsed-content pre        { background: hsl(var(--muted)); border: var(--ghost-border); border-radius: 6px; padding: 10px 14px; box-shadow: var(--inset-shadow); overflow-x: auto; margin: 0.5em 0; position: relative; }
+.parsed-content pre::before { content: attr(data-lang); position: absolute; top: 5px; right: 10px; font-size: 0.7em; font-weight: 700; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.05em; }
+.parsed-content pre code   { background: none; border: none; padding: 0; box-shadow: none; font-size: 0.85em; }
+.parsed-content blockquote { border-left: 3px solid hsl(var(--primary)); margin: 0.5em 0; padding: 4px 12px; background: hsl(var(--background)); box-shadow: var(--inset-shadow); border-radius: 0 4px 4px 0; opacity: 0.85; font-style: italic; }
+.parsed-content hr         { border: none; height: 1px; background: linear-gradient(to right, transparent, hsl(var(--border) / 0.8) 20%, hsl(var(--border) / 0.8) 80%, transparent); margin: 0.6em 0; }
+.parsed-content a          { color: hsl(var(--primary)); font-weight: 600; text-decoration: underline dotted; text-underline-offset: 2px; }
+.parsed-content a:hover    { text-decoration-style: solid; }

@@ -1,0 +1,51 @@
+<script lang="ts">
+	import { Dialog as DialogPrimitive } from "bits-ui-old";
+	import X from "lucide-svelte/icons/x";
+	import * as Dialog from "./index.js";
+	import { cn, flyAndScale } from "$lib/utils.js";
+
+	type $$Props = DialogPrimitive.ContentProps;
+
+	interface Props {
+		class?: $$Props["class"];
+		transition?: $$Props["transition"];
+		transitionConfig?: $$Props["transitionConfig"];
+		children?: import('svelte').Snippet;
+		[key: string]: any
+	}
+
+	let {
+		class: className = undefined,
+		transition = flyAndScale,
+		transitionConfig = {
+		duration: 200,
+	},
+		children,
+		...rest
+	}: Props = $props();
+	
+</script>
+
+<Dialog.Portal>
+	<Dialog.Overlay />
+	<DialogPrimitive.Content
+		{transition}
+		{transitionConfig}
+		class={cn(
+			"fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-popover p-6 font-[family-name:var(--font-retro)] md:w-full",
+			"border-t-[2px] border-l-[2px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)]",
+			"border-b-[2px] border-r-[2px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)]",
+			"shadow-[var(--hard-shadow)] sm:rounded-[var(--radius-md)]",
+			className
+		)}
+		{...rest}
+	>
+		{@render children?.()}
+		<DialogPrimitive.Close
+			class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+		>
+			<X class="h-4 w-4" />
+			<span class="sr-only">Close</span>
+		</DialogPrimitive.Close>
+	</DialogPrimitive.Content>
+</Dialog.Portal>
