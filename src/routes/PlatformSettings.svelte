@@ -57,8 +57,15 @@
 		}
 	}
 
+	// ── Custom font ──────────────────────────────────────────────────────
+	// Overrides the `--font-retro` CSS variable that every rule in app.css
+	// reads from, so one change here re-fonts the whole app. Presets cover
+	// the common case with zero typing; the free-text field is what makes
+	// "whatever you want" literal — any name gets tried against Google
+	// Fonts if it isn't already a system font.
 	const FONT_PRESETS = [
 		{ label: 'Default (Tahoma)', value: null },
+		{ label: 'Nasalization', value: 'Nasalization' },
 		{ label: 'Comic Sans MS', value: 'Comic Sans MS' },
 		{ label: 'Times New Roman', value: 'Times New Roman' },
 		{ label: 'Courier New', value: 'Courier New' },
@@ -70,6 +77,15 @@
 		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
 		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
 	]);
+	// Fonts that need a specific non-Google-Fonts provider stylesheet.
+	// Nasalization isn't on Google Fonts at all — it's served from
+	// cdnfonts.com (https://www.cdnfonts.com/nasalization.font) — so it
+	// needs its own entry here rather than going through the generic
+	// Google Fonts URL builder below. Keyed by the exact font-family name
+	// used in `value` above.
+	const FONT_PROVIDERS: Record<string, string> = {
+		Nasalization: 'https://fonts.cdnfonts.com/css/nasalization-2'
+	};
 	const FONT_NAME_PATTERN = /^[a-zA-Z0-9 '\-]{1,60}$/;
 
 	let customFont = $state<string | null>(null);
@@ -91,11 +107,14 @@
 		if (fontName && !SYSTEM_FONTS.has(fontName)) {
 			const link = document.createElement('link');
 			link.rel = 'stylesheet';
-			link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+			link.href =
+				FONT_PROVIDERS[fontName] ??
+				`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
 			document.head.appendChild(link);
 			injectedFontLink = link;
 		}
 	}
+
 
 	async function saveFont(fontName: string | null) {
 		if (fontName && !FONT_NAME_PATTERN.test(fontName)) {

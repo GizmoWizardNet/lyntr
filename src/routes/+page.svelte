@@ -33,6 +33,13 @@
 		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
 		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
 	]);
+	// Fonts served from a specific non-Google-Fonts provider — kept in
+	// sync with the identical map in PlatformSettings.svelte. Nasalization
+	// isn't on Google Fonts; it's provided via cdnfonts.com
+	// (https://www.cdnfonts.com/nasalization.font).
+	const FONT_PROVIDERS: Record<string, string> = {
+		Nasalization: 'https://fonts.cdnfonts.com/css/nasalization-2'
+	};
 
 	let injectedFontLink: HTMLLinkElement | null = null;
 
@@ -53,7 +60,9 @@
 		if (!SYSTEM_FONTS.has(fontName)) {
 			const link = document.createElement('link');
 			link.rel = 'stylesheet';
-			link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+			link.href =
+				FONT_PROVIDERS[fontName] ??
+				`https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
 			document.head.appendChild(link);
 			injectedFontLink = link;
 		} else {
