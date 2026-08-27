@@ -8,21 +8,21 @@ Official open source repository for [lyntr](https://1lyn.tr). Changes to this RE
 - **Frontend:** SvelteKit + Svelte 5
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Database:** PostgreSQL / Supabase
-- **ORM:** Drizzle
-- **Realtime:** WebSockets
+- **Database:** Supabase
+- **ORM:** Self edits in the SQL Editor
+- **Realtime:** WebSockets, removed older SSE implementation
 - **Object storage:** MinIO
 - **Caching / rate limiting:** Upstash Redis
-- **Deployment:** Docker
+- **Deployment:** Docker Containers
 
 The official Discord server for all things Lyntr can be found here: https://discord.gg/y5PA8uS5Tj
 
 ## Screenshots
 
 <p align="center">
-  <img src="github-assets/banner.png" width="48%">
-  <img src="github-assets/banner_white.png" width="48%">
-  <img src="github-assets/banner_mobile.png">
+  <img src="github-assets/banner.png" width="60%">
+  <img src="github-assets/banner_white.png" width="50%">
+  <img src="github-assets/banner_mobile.png" width="40%">
 </p>
 
 ## Development
@@ -34,4 +34,4 @@ and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for curr
 
 ### Please refer to the [MIT License](https://opensource.org/license/mit) for more license information.
 
-Created by GizmoWizard, under GizmoWizardNet, 2026.
+Created by GizmoWizard, under GizmoWizardNet, 2026. ⭐ this repo!
