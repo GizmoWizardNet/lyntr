@@ -1,11 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=Inter:wght@400;500;600&display=swap');
 
-/* ════════════════════════════════════════════════
-   OLD-ROBLOX (2006–09) TYPOGRAPHY OVERRIDE
-   Tahoma/Verdana over the system stack — the Work
-   Sans/Inter imports above stay only as a fallback
-   for any glyphs Tahoma is missing.
-   ════════════════════════════════════════════════ */
 :root {
   --font-retro: Tahoma, Geneva, Verdana, 'Work Sans', sans-serif;
 }
@@ -39,16 +33,6 @@
     --ring:                22 80% 25%;
     --radius:              0.25rem;
 
-    /* Radius scale — added because the app had 12 different hardcoded
-       border-radius values (2px through 20px) scattered across ~140
-       declarations, with no real pattern to which surface got which:
-       cards and dialogs were 6px, but popovers and dropdown menus — which
-       sit right next to cards/dialogs in the UI and should read as the
-       same "material" — were 5px, and badges/inputs/small buttons were a
-       mix of 4px and 5px. 6px was already the overwhelming majority
-       (cards, dialogs, most buttons), so it's the house default here;
-       the sm/lg/full tiers just name sizes that were already in use
-       for smaller controls and pills, rather than inventing a new scale. */
     --radius-sm:           4px;
     --radius-md:           6px;
     --radius-lg:           8px;
@@ -74,14 +58,6 @@
     --header-border-top:   rgba(255, 248, 230, 0.9);
     --float-glow:          0 8px 24px -6px rgba(60, 30, 0, 0.35);
 
-    /* ── Aero glass (buttons + tabs only — see note in .dark below) ──
-       Scoped deliberately narrow: OutlineButton (nav icons, like/repost/
-       etc.) and TopTab, NOT cards/dialogs/forms, which keep the
-       Old-Roblox bevel above. A prior attempt at a full glass theme
-       ("Glassy Aerodynamics") was pulled app-wide after visual bugs
-       proved hard to chase down across every surface — keeping this to
-       two components keeps the blast radius small if something similar
-       comes up again. */
     --aero-surface:        rgba(255, 255, 255, 0.55);
     --aero-surface-hover:  rgba(255, 255, 255, 0.78);
     --aero-border-top:     rgba(255, 255, 255, 0.85);
@@ -738,3 +714,7 @@ h1, h2, h3, h4, h5, h6 {
 .parsed-content hr         { border: none; height: 1px; background: linear-gradient(to right, transparent, hsl(var(--border) / 0.8) 20%, hsl(var(--border) / 0.8) 80%, transparent); margin: 0.6em 0; }
 .parsed-content a          { color: hsl(var(--primary)); font-weight: 600; text-decoration: underline dotted; text-underline-offset: 2px; }
 .parsed-content a:hover    { text-decoration-style: solid; }
+
+*:not(code):not(pre):not(pre *):not(.font-mono):not(.value):not(.price):not(.val) {
+  font-family: var(--font-retro) !important;
+}

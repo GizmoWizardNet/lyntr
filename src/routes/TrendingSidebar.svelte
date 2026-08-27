@@ -60,15 +60,12 @@
 		{:else if tags.length === 0}
 			<div class="empty-row">Nothing trending yet.</div>
 		{:else}
-			<div class="list">
+			<div class="pill-wrap">
 				{#each tags as tag, i (tag.tag)}
-					<button class="row tag-row" onclick={() => openTag(tag.tag)}>
-						<span class="rank">{String(i + 1).padStart(2, '0')}</span>
-						<span class="tag-body">
-							<span class="tag-name">#{tag.tag}</span>
-							<span class="tag-count">{tag.count} {tag.count === 1 ? 'lynt' : 'lynts'}</span>
-						</span>
-						<span class="chevron" aria-hidden="true">›</span>
+					<button class="pill tag-pill" onclick={() => openTag(tag.tag)}>
+						<span class="pill-rank">{i + 1}</span>
+						<span class="pill-tag">#{tag.tag}</span>
+						<span class="pill-count">{tag.count}</span>
 					</button>
 				{/each}
 			</div>
@@ -87,10 +84,10 @@
 		{:else if users.length === 0}
 			<div class="empty-row">Nobody trending yet.</div>
 		{:else}
-			<div class="list">
+			<div class="pill-list">
 				{#each users as user, i (user.id)}
-					<button class="row user-row" onclick={() => openUser(user.handle)}>
-						<span class="rank">{String(i + 1).padStart(2, '0')}</span>
+					<button class="pill user-pill" onclick={() => openUser(user.handle)}>
+						<span class="pill-rank">{i + 1}</span>
 						<img src={cdnUrl(user.id, 'small')} alt="" class="avatar" loading="lazy" decoding="async" />
 						<span class="user-body">
 							<span class="user-name" style={user.nameColor ? `color: ${user.nameColor}` : ''}>
@@ -101,7 +98,7 @@
 							</span>
 							<span class="user-handle">@{user.handle}</span>
 						</span>
-						<span class="score">
+						<span class="score-pill">
 							<b>{user.score}</b>
 							<small>pts</small>
 						</span>
@@ -123,7 +120,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		font-family: Tahoma, Geneva, Verdana, sans-serif;
+		font-family: var(--font-retro);
 	}
 
 	/* ── Panel shell — matches lynt-card bevel system ── */
@@ -162,104 +159,103 @@
 		letter-spacing: 0.06em;
 	}
 
-	/* ── List container ── */
-	.list {
+	/* ── Pill list container ── */
+	/* Tags wrap into a flowing chip cloud instead of a bordered vertical
+	   list — this is the requested "pill-like system": each tag is now a
+	   fully standalone, individually-shadowed rounded chip rather than a
+	   row sharing a divider border with its neighbors. */
+	.pill-wrap {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
+		gap: 6px;
+		padding: 10px;
+		background: hsl(var(--background));
 	}
 
-	/* ── Shared row base ── */
-	.row {
-		width: 100%;
-		border: none;
-		border-bottom: 1px solid hsl(var(--border));
-		border-radius: 0;
+	.pill-list {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 10px;
 		background: hsl(var(--background));
+	}
+
+	/* ── Shared pill base ── */
+	.pill {
+		border: 1px solid hsl(var(--border));
+		border-radius: 999px;
+		background: hsl(var(--card));
 		color: hsl(var(--foreground));
 		font-family: inherit;
 		text-align: left;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 0;
-		transition: background 0.1s;
+		gap: 6px;
+		transition: background 0.12s, border-color 0.12s, transform 0.08s;
 	}
 
-	.row:last-child { border-bottom: none; }
+	.pill:hover {
+		background: hsl(var(--lynt-focus));
+		border-color: hsl(var(--primary) / 0.4);
+	}
 
-	.row:hover { background: hsl(var(--lynt-focus)); }
-
-	.row:active {
+	.pill:active {
+		transform: scale(0.98);
 		background: hsl(var(--muted));
-		box-shadow: var(--inset-shadow);
 	}
 
-	/* Rank badge — monospace to keep digits from jumping */
-	.rank {
+	/* Rank chip inside the pill — small filled circle instead of a squared
+	   divider column, so it reads as part of the pill's shape. */
+	.pill-rank {
 		flex-shrink: 0;
-		width: 32px;
-		align-self: stretch;
+		width: 16px;
+		height: 16px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: hsl(var(--muted));
-		border-right: 1px solid hsl(var(--border));
+		border-radius: 999px;
+		background: hsl(var(--primary));
+		color: hsl(var(--primary-foreground));
 		font-family: 'Courier New', monospace;
-		font-size: 10px;
+		font-size: 9px;
 		font-weight: 800;
-		color: hsl(var(--muted-foreground));
 	}
 
-	/* ── Tag row specifics ── */
-	.tag-row { padding-right: 8px; }
-
-	.tag-body {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-		padding: 7px 0;
+	/* ── Tag pill specifics ── */
+	.tag-pill {
+		padding: 5px 12px 5px 5px;
 	}
 
-	.tag-name {
+	.pill-tag {
 		font-size: 12px;
 		font-weight: 700;
 		color: hsl(var(--primary));
-		overflow: hidden;
-		text-overflow: ellipsis;
 		white-space: nowrap;
-		text-decoration: underline;
-		text-decoration-style: dotted;
-		text-underline-offset: 3px;
 	}
 
-	.tag-count {
+	.pill-count {
 		font-size: 9px;
+		font-weight: 700;
 		color: hsl(var(--muted-foreground));
+		background: hsl(var(--muted));
+		border-radius: 999px;
+		padding: 1px 6px;
 	}
 
-	.chevron {
-		color: hsl(var(--muted-foreground));
-		font-size: 16px;
-		line-height: 1;
-		flex-shrink: 0;
+	/* ── User pill specifics ── */
+	.user-pill {
+		width: 100%;
+		padding: 5px 10px 5px 5px;
 	}
-
-	/* ── User row specifics ── */
-	.user-row { padding: 6px 8px 6px 0; }
 
 	.avatar {
 		width: 30px;
 		height: 30px;
-		border-radius: 4px;
+		border-radius: 999px;
 		flex-shrink: 0;
 		object-fit: cover;
-		border-top:    1px solid var(--bevel-light);
-		border-left:   1px solid var(--bevel-light);
-		border-bottom: 1px solid var(--bevel-dark);
-		border-right:  1px solid var(--bevel-dark);
+		border: 1px solid hsl(var(--border));
 		background: hsl(var(--muted));
 	}
 
@@ -297,29 +293,25 @@
 		white-space: nowrap;
 	}
 
-	.score {
+	.score-pill {
 		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 4px 6px;
-		border-top:    1px solid var(--bevel-light);
-		border-left:   1px solid var(--bevel-light);
-		border-bottom: 1px solid var(--bevel-dark);
-		border-right:  1px solid var(--bevel-dark);
+		padding: 4px 10px;
 		background: hsl(var(--muted));
-		border-radius: 3px;
+		border-radius: 999px;
 		min-width: 32px;
 	}
 
-	.score b {
+	.score-pill b {
 		font-family: 'Courier New', monospace;
 		font-size: 10px;
 		line-height: 1;
 		color: hsl(var(--foreground));
 	}
 
-	.score small {
+	.score-pill small {
 		font-size: 7px;
 		color: hsl(var(--muted-foreground));
 		letter-spacing: 0.05em;
