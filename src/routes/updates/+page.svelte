@@ -5,7 +5,6 @@
 	import { ArrowLeft, Sparkles, Wrench, Bug, Trash2 } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
 	import { renderMarkdown } from '$lib/markdown';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 
@@ -88,46 +87,110 @@
 	{:else if entries.length === 0}
 		<p class="text-muted-foreground text-sm">Nothing posted yet — check back soon.</p>
 	{:else}
-		<div class="space-y-10">
-			{#each entries as entry (entry.id)}
-				<article class="space-y-3">
-					<div class="flex flex-wrap items-center gap-2">
-						{#if entry.version}
-							<Badge variant="outline" class="font-mono">v{entry.version}</Badge>
-						{/if}
-						<h2 class="text-xl font-semibold">{entry.title}</h2>
+		<!--
+			Timeline rail: one dot per entry connected by a running vertical
+			line, catplay-style. The line is a single absolutely-positioned
+			element behind the dots rather than a per-row border, so it reads
+			as one continuous thread down the page instead of segments that
+			can visibly gap/overlap depending on each entry's height.
+		-->
+		<div class="timeline">
+			<div class="timeline-line" aria-hidden="true"></div>
+			{#each entries as entry, i (entry.id)}
+				<article class="timeline-row">
+					<div class="timeline-dot-col">
+						<span class="timeline-dot" class:first={i === 0}></span>
 					</div>
-					<p class="text-muted-foreground text-xs">
-						{formatDate(entry.publishedAt)}
-						{#if entry.authorHandle}
-							· by @{entry.authorHandle}
-						{/if}
-					</p>
-
-					{#if entry.body}
-						<div class="prose prose-sm dark:prose-invert max-w-none">
-							{@html renderMarkdown(entry.body)}
+					<div class="timeline-content">
+						<div class="flex flex-wrap items-center gap-2">
+							{#if entry.version}
+								<Badge variant="outline" class="font-mono">v{entry.version}</Badge>
+							{/if}
+							<h2 class="text-xl font-semibold">{entry.title}</h2>
 						</div>
-					{/if}
+						<p class="text-muted-foreground text-xs">
+							{formatDate(entry.publishedAt)}
+							{#if entry.authorHandle}
+								· by @{entry.authorHandle}
+							{/if}
+						</p>
 
-					{#if entry.items?.length}
-						<ul class="space-y-1.5">
-							{#each entry.items as item (item.id)}
-								{@const meta = CATEGORY_META[item.category] ?? CATEGORY_META.improved}
-								<li class="flex items-start gap-2 text-sm">
-									<Badge variant="outline" class="mt-0.5 shrink-0 gap-1 {meta.class}">
-										<meta.icon class="h-3 w-3" />
-										{meta.label}
-									</Badge>
-									<span>{item.content}</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
+						{#if entry.body}
+							<div class="prose prose-sm dark:prose-invert max-w-none">
+								{@html renderMarkdown(entry.body)}
+							</div>
+						{/if}
 
-					<Separator />
+						{#if entry.items?.length}
+							<ul class="space-y-1.5">
+								{#each entry.items as item (item.id)}
+									{@const meta = CATEGORY_META[item.category] ?? CATEGORY_META.improved}
+									<li class="flex items-start gap-2 text-sm">
+										<Badge variant="outline" class="mt-0.5 shrink-0 gap-1 {meta.class}">
+											<meta.icon class="h-3 w-3" />
+											{meta.label}
+										</Badge>
+										<span>{item.content}</span>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</div>
 				</article>
 			{/each}
 		</div>
 	{/if}
 </div>
+
+<style>
+	/* Timeline rail. Grid keeps the dot column a fixed width so the line and
+	   every dot land on the exact same x position regardless of how much
+	   text is in a given entry. */
+	.timeline {
+		position: relative;
+	}
+	.timeline-line {
+		position: absolute;
+		left: 5px;
+		top: 6px;
+		bottom: 6px;
+		width: 2px;
+		background: linear-gradient(
+			to bottom,
+			var(--accent, #5865f2) 0%,
+			color-mix(in srgb, var(--accent, #5865f2) 25%, transparent) 100%
+		);
+	}
+	.timeline-row {
+		display: grid;
+		grid-template-columns: 12px 1fr;
+		column-gap: 20px;
+		padding-bottom: 40px;
+	}
+	.timeline-row:last-child {
+		padding-bottom: 0;
+	}
+	.timeline-dot-col {
+		display: flex;
+		justify-content: center;
+		padding-top: 6px;
+	}
+	.timeline-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 999px;
+		background: var(--background, #0b0b0d);
+		border: 2px solid var(--accent, #5865f2);
+		z-index: 1;
+	}
+	.timeline-dot.first {
+		background: var(--accent, #5865f2);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #5865f2) 20%, transparent);
+	}
+	.timeline-content {
+		min-width: 0;
+	}
+	.timeline-content > * + * {
+		margin-top: 0.5rem;
+	}
+</style>
