@@ -26,6 +26,12 @@
 					return `<span class="tok-comment">${esc(line)}</span>`;
 				}
 				let out = esc(line);
+				// colour strings as the first thing, to avoid broken html
+				// caused by trying to highlight attributes
+				out = out.replace(
+					/(&#39;|')((?:\\.|[^'\\])*)(\1)|(")((?:\\.|[^"\\])*)(")/g,
+					(m) => `<span class="tok-string">${m}</span>`
+				);
 				// HTTP methods
 				out = out.replace(
 					/\b(GET|POST|PUT|PATCH|DELETE)\b/g,
@@ -37,11 +43,6 @@
 				out = out.replace(
 					/(\s)(--?[A-Za-z][A-Za-z-]*)/g,
 					'$1<span class="tok-flag">$2</span>'
-				);
-				// quoted strings (single or double)
-				out = out.replace(
-					/(&#39;|')((?:\\.|[^'\\])*)(\1)|(")((?:\\.|[^"\\])*)(")/g,
-					(m) => `<span class="tok-string">${m}</span>`
 				);
 				// env-style variables
 				out = out.replace(
@@ -55,13 +56,14 @@
 
 	function highlightJson(src: string) {
 		let out = esc(src);
+		// colour strings as the first thing, to avoid broken html
+		// caused by trying to highlight attributes
+		out = out.replace(/(:\s*)"((?:\\.|[^"\\])*)"/g, (_m, pre, v) =>
+			`${pre}<span class="tok-string">"${v}"</span>`
+		);
 		// keys
 		out = out.replace(/(&quot;|")([^"\n]+?)\1(\s*:)/g, (_m, q, k, colon) =>
 			`<span class="tok-key">${q}${k}${q}</span>${colon}`
-		);
-		// string values
-		out = out.replace(/(:\s*)"((?:\\.|[^"\\])*)"/g, (_m, pre, v) =>
-			`${pre}<span class="tok-string">"${v}"</span>`
 		);
 		// numbers
 		out = out.replace(/:\s*(-?\d+(\.\d+)?)/g, (m, n) =>
@@ -79,13 +81,15 @@
 
 	function highlightTs(src: string) {
 		let out = esc(src);
-		out = out.replace(
-			/\b(const|let|await|async|function|return|import|from|export|if|else|new)\b/g,
-			'<span class="tok-keyword">$1</span>'
-		);
+		// colour strings as the first thing, to avoid broken html
+		// caused by trying to highlight attributes
 		out = out.replace(
 			/(&#39;|')((?:\\.|[^'\\])*)(\1)|(")((?:\\.|[^"\\])*)(")/g,
 			(m) => `<span class="tok-string">${m}</span>`
+		);
+		out = out.replace(
+			/\b(const|let|await|async|function|return|import|from|export|if|else|new)\b/g,
+			'<span class="tok-keyword">$1</span>'
 		);
 		out = out.replace(/(\/\/.*)$/gm, '<span class="tok-comment">$1</span>');
 		return out;
@@ -99,15 +103,18 @@
 					return `<span class="tok-comment">${esc(line)}</span>`;
 				}
 				let out = esc(line);
-				out = out.replace(
-					/\b(from|import|as|def|class|return|for|in|if|else|elif|with|try|except|None|True|False|and|or|not)\b/g,
-					'<span class="tok-keyword">$1</span>'
-				);
+				// colour strings as the first thing, to avoid broken html
+				// caused by trying to highlight attributes
 				out = out.replace(
 					/(&#39;|')((?:\\.|[^'\\])*)(\1)|(")((?:\\.|[^"\\])*)(")/g,
 					(m) => `<span class="tok-string">${m}</span>`
 				);
-				out = out.replace(/\b(\d+)\b/g, '<span class="tok-number">$1</span>');
+				out = out.replace(
+				    // class also needs to be removed, as it appears in the span
+					/\b(from|import|as|def|return|for|in|if|else|elif|with|try|except|None|True|False|and|or|not|print)\b/g,
+					`<span class="tok-keyword">$1</span>`
+				);
+				out = out.replace(/\b(\d+)\b/g, `<span class="tok-number">$1</span>`);
 				return out;
 			})
 			.join('\n');
