@@ -31,7 +31,8 @@ export const GET: RequestHandler = async ({ request, cookies }) => {
 				last_login_date: users.last_login_date,
 				is_admin: users.is_admin,
 				lynt_coins: users.lynt_coins,
-				default_feed: users.default_feed
+				default_feed: users.default_feed,
+				custom_font: users.custom_font
 			})
 			.from(users)
 			.where(eq(users.id, jwtPayload.userId))
@@ -88,7 +89,8 @@ export const GET: RequestHandler = async ({ request, cookies }) => {
 				login_streak: newStreak,
 				is_admin: user.is_admin,
 				lynt_coins: lyntCoins,
-				default_feed: user.default_feed
+				default_feed: user.default_feed,
+				custom_font: user.custom_font
 			},
 			{ status: 200 }
 		);

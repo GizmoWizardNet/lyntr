@@ -415,10 +415,34 @@ export async function processAndUploadLyntImages(
 // ---------------------------------------------------------------------------
 // uploadAvatar  (unchanged)
 // ---------------------------------------------------------------------------
+// A malicious animated WebP/GIF can carry thousands of frames — sharp will
+// happily try to decode/re-encode all of them, which is both a storage
+// blow-up (an animated avatar could otherwise balloon past what a static
+// one ever could) and a CPU-time DoS vector on this endpoint. Reject
+// anything past a sane frame count before doing any resize/encode work.
+// 300 frames is generous — at a typical 15–20fps source GIF/WebP that's
+// still 15-20 seconds of animation, far more than an avatar/banner needs.
+const MAX_ANIMATION_FRAMES = 300;
+
+export async function assertReasonableFrameCount(inputBuffer: Buffer) {
+	const metadata = await sharp(inputBuffer).metadata();
+	const pages = metadata.pages ?? 1;
+	if (pages > MAX_ANIMATION_FRAMES) {
+		throw new Error(`Animated image has too many frames (${pages}); max is ${MAX_ANIMATION_FRAMES}`);
+	}
+}
+
 export async function uploadAvatar(inputBuffer: Buffer, fileName: string, minioClient: any) {
-	const buffer_small  = await sharp(inputBuffer).resize(40,  40).webp().toBuffer();
-	const buffer_medium = await sharp(inputBuffer).resize(50,  50).webp().toBuffer();
-	const buffer_big    = await sharp(inputBuffer).resize(160, 160).webp().toBuffer();
+	await assertReasonableFrameCount(inputBuffer);
+
+	// `{ animated: true }` tells sharp to read every frame of an animated
+	// source (animated WebP or GIF) instead of just the first — without it,
+	// resize()+webp() silently collapses an animated upload down to a single
+	// still frame, which is why animated avatars never actually animated.
+	// Harmless no-op for ordinary static images (jpg/png/still webp).
+	const buffer_small  = await sharp(inputBuffer, { animated: true }).resize(40,  40).webp().toBuffer();
+	const buffer_medium = await sharp(inputBuffer, { animated: true }).resize(50,  50).webp().toBuffer();
+	const buffer_big    = await sharp(inputBuffer, { animated: true }).resize(160, 160).webp().toBuffer();
 
 	const shits = [
 		{ filename: fileName + '_small.webp',  buffer: buffer_small  },

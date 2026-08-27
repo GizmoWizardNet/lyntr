@@ -10,7 +10,7 @@ import { followers, likes, lynts, notifications, users, history, bookmarks, user
 import { eq, inArray, or, sql } from 'drizzle-orm';
 import { minioClient } from '@/server/minio';
 import sharp from 'sharp';
-import { deleteLynt, uploadAvatar } from '../util';
+import { deleteLynt, uploadAvatar, assertReasonableFrameCount } from '../util';
 import { readFileSync } from 'fs';
 import sanitizeHtml from 'sanitize-html';
 import { isImageNsfw, NSFW_ERROR } from '@/moderation';
@@ -523,8 +523,18 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 				return NSFW_ERROR;
 			}
 
-			// Resize to a sensible banner dimension (1500×500) and store as WebP
-			const resized = await sharp(buffer)
+			try {
+				await assertReasonableFrameCount(buffer);
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'Invalid image';
+				return json({ error: message }, { status: 400 });
+			}
+
+			// Resize to a sensible banner dimension (1500×500) and store as WebP.
+			// `{ animated: true }` on the sharp() constructor keeps every frame
+			// of an animated source instead of collapsing to the first — same
+			// fix as uploadAvatar() in api/util.ts.
+			const resized = await sharp(buffer, { animated: true })
 				.resize(1500, 500, { fit: 'cover', position: 'centre' })
 				.webp({ quality: 80 })
 				.toBuffer();

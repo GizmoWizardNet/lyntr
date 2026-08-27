@@ -58,6 +58,12 @@ export const users = pgTable('users', {
     // Kept as free text rather than a Postgres enum so adding a new feed
     // tab later doesn't require an ALTER TYPE migration.
     default_feed: text('default_feed').default('For you').notNull(),
+    // Platform Setting: lets a user override Lyntr's global font. Free text
+    // rather than an enum — validated/sanitized server-side in
+    // /api/platform-settings, then applied client-side as a CSS custom
+    // property (see `--font-retro` in app.css) plus an on-the-fly Google
+    // Fonts <link> for names that aren't already a system font.
+    custom_font: text('custom_font').default(null),
     notification_email: text('notification_email').default(null),
 
     // ── LyntCoins (LC) ───────────────────────────────────────────────

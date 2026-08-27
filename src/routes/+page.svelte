@@ -24,6 +24,43 @@
 		id: ''
 	});
 
+	// Small, common system fonts don't need a Google Fonts fetch — anything
+	// else gets loaded from Google Fonts on the fly, which is what makes
+	// "type literally any font name" work instead of only supporting a
+	// fixed list of presets.
+	const SYSTEM_FONTS = new Set([
+		'Tahoma', 'Geneva', 'Verdana', 'Arial', 'Helvetica', 'Georgia',
+		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
+		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
+	]);
+
+	let injectedFontLink: HTMLLinkElement | null = null;
+
+	function applyCustomFont(fontName: string | null | undefined) {
+		const root = document.documentElement;
+		if (!fontName) {
+			root.style.removeProperty('--font-retro');
+			if (injectedFontLink) {
+				injectedFontLink.remove();
+				injectedFontLink = null;
+			}
+			return;
+		}
+
+		root.style.setProperty('--font-retro', `"${fontName}", Tahoma, Geneva, Verdana, sans-serif`);
+
+		if (injectedFontLink) injectedFontLink.remove();
+		if (!SYSTEM_FONTS.has(fontName)) {
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+			document.head.appendChild(link);
+			injectedFontLink = link;
+		} else {
+			injectedFontLink = null;
+		}
+	}
+
 	// Holds the freshly-created account's data between the 'registered' and
 	// 'login' events fired by AccountCreator, so we can skip the /api/me
 	// round-trip and drop the user straight into the app.
@@ -65,7 +102,8 @@
 					created_at: res.created_at,
 					iq:         res.iq,
 					id:         res.id,
-					default_feed: res.default_feed
+					default_feed: res.default_feed,
+					custom_font: res.custom_font
 				};
 				localStorage.setItem('user-data', JSON.stringify(userData));
 				noAccount = false;
@@ -114,6 +152,14 @@
 	$effect(() => {
 		const baseTitle = data.lynt ? `${data.lynt.username} on Lyntr` : 'Lyntr';
 		document.title = $unreadMessages > 0 ? `(${$unreadMessages}) ${baseTitle}` : baseTitle;
+	});
+
+	// Applies as soon as userData is populated (from /api/me on load, from
+	// cached localStorage on repeat visits, or after AccountCreator hands
+	// off a fresh account) and again whenever it's changed live from
+	// PlatformSettings — same pattern as the tab-title effect above.
+	$effect(() => {
+		applyCustomFont((userData as any).custom_font);
 	});
 
 </script>

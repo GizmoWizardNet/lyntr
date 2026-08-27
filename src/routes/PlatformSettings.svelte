@@ -31,6 +31,8 @@
 			if (res.ok) {
 				const data = await res.json();
 				defaultFeed = data.default_feed ?? 'For you';
+				customFont = data.custom_font ?? null;
+				customFontInput = customFont ?? '';
 			}
 		} finally {
 			loadingFeed = false;
@@ -52,6 +54,71 @@
 			}
 		} finally {
 			savingFeed = false;
+		}
+	}
+
+	const FONT_PRESETS = [
+		{ label: 'Default (Tahoma)', value: null },
+		{ label: 'Comic Sans MS', value: 'Comic Sans MS' },
+		{ label: 'Times New Roman', value: 'Times New Roman' },
+		{ label: 'Courier New', value: 'Courier New' },
+		{ label: 'Georgia', value: 'Georgia' },
+		{ label: 'Impact', value: 'Impact' }
+	];
+	const SYSTEM_FONTS = new Set([
+		'Tahoma', 'Geneva', 'Verdana', 'Arial', 'Helvetica', 'Georgia',
+		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
+		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
+	]);
+	const FONT_NAME_PATTERN = /^[a-zA-Z0-9 '\-]{1,60}$/;
+
+	let customFont = $state<string | null>(null);
+	let customFontInput = $state('');
+	let savingFont = $state(false);
+	let injectedFontLink: HTMLLinkElement | null = null;
+
+	function applyFontLocally(fontName: string | null) {
+		const root = document.documentElement;
+		if (!fontName) {
+			root.style.removeProperty('--font-retro');
+		} else {
+			root.style.setProperty('--font-retro', `"${fontName}", Tahoma, Geneva, Verdana, sans-serif`);
+		}
+		if (injectedFontLink) {
+			injectedFontLink.remove();
+			injectedFontLink = null;
+		}
+		if (fontName && !SYSTEM_FONTS.has(fontName)) {
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+			document.head.appendChild(link);
+			injectedFontLink = link;
+		}
+	}
+
+	async function saveFont(fontName: string | null) {
+		if (fontName && !FONT_NAME_PATTERN.test(fontName)) {
+			toast.error('That font name has characters that aren\'t supported.');
+			return;
+		}
+		savingFont = true;
+		try {
+			const res = await fetch('/api/platform-settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ custom_font: fontName }),
+			});
+			if (res.ok) {
+				customFont = fontName;
+				applyFontLocally(fontName);
+				toast.success(fontName ? `Font set to "${fontName}".` : 'Font reset to default.');
+			} else {
+				const data = await res.json().catch(() => ({}));
+				toast.error(data.error ?? 'Could not save font.');
+			}
+		} finally {
+			savingFont = false;
 		}
 	}
 
@@ -148,6 +215,42 @@
 						{/each}
 					</select>
 				{/if}
+			</div>
+
+			<!-- ── Custom font ────────────────────────────────────────────── -->
+			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+				<span class="text-sm font-semibold">Font</span>
+				<p class="text-xs text-muted-foreground">
+					Change Lyntr's font. Pick a preset, or type any font name — non-system fonts are pulled from Google Fonts automatically.
+				</p>
+				<div class="flex flex-wrap gap-1.5">
+					{#each FONT_PRESETS as preset}
+						<Button
+							variant={customFont === preset.value ? 'default' : 'outline'}
+							size="sm"
+							disabled={savingFont}
+							onclick={() => { customFontInput = preset.value ?? ''; saveFont(preset.value); }}
+						>
+							{preset.label}
+						</Button>
+					{/each}
+				</div>
+				<div class="flex gap-2 pt-1">
+					<input
+						type="text"
+						placeholder="Or type any font name, e.g. Pacifico"
+						bind:value={customFontInput}
+						disabled={savingFont}
+						class="flex-1 rounded-[4px] border-t-[1px] border-l-[1px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[1px] border-r-[1px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] bg-input px-2 py-1.5 text-sm shadow-[var(--inset-shadow)]"
+					/>
+					<Button
+						size="sm"
+						disabled={savingFont || !customFontInput.trim()}
+						onclick={() => saveFont(customFontInput.trim())}
+					>
+						Apply
+					</Button>
+				</div>
 			</div>
 
 			<!-- ── Push notifications ────────────────────────────────────── -->

@@ -49,8 +49,16 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return NSFW_ERROR
 		}
 
-		// compression
-		uploadAvatar(inputBuffer, fileName, minioClient);
+		// compression — was previously fire-and-forget (missing await), so
+		// any failure here (including the frame-count guard added above)
+		// would silently become an unhandled rejection instead of a real
+		// error response, and the client would see a false "success".
+		try {
+			await uploadAvatar(inputBuffer, fileName, minioClient);
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Image processing failed';
+			return json({ error: message }, { status: 400 });
+		}
 
 		return json(
 			{
