@@ -43,6 +43,6 @@ and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for curr
 
 ### Please refer to the [MIT License](https://opensource.org/license/mit) for more license information.
 
-<img style="width: 128px; height: 128px" src="github-assets/org_logo.png" /><
-
 Created by GizmoWizard, under GizmoWizardNet, 2026. ⭐ this repo!
+
+<img style="width: 128px; height: 128px" src="github-assets/org_logo.png" />
