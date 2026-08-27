@@ -118,32 +118,32 @@ export const ACHIEVEMENT_CATALOG: AchievementDef[] = [
 
 	// ── Followers ─────────────────────────────────────────────────
 	{
-		key: 'followers_100',
+		key: 'followers_20',
 		name: 'Followers I',
-		description: 'Reached 100 followers.',
+		description: 'Reached 20 followers.',
 		tier: 'bronze',
 		coinReward: 75,
-		icon: 'follower_100.png',
+		icon: 'follower_20.png',
 		family: 'followers',
 		level: 1
 	},
 	{
-		key: 'followers_1000',
+		key: 'followers_50',
 		name: 'Followers II',
-		description: 'Reached 1,000 followers.',
+		description: 'Reached 50 followers.',
 		tier: 'silver',
 		coinReward: 300,
-		icon: 'follower_100.png',
+		icon: 'follower_50.png',
 		family: 'followers',
 		level: 2
 	},
 	{
-		key: 'followers_10000',
+		key: 'followers_100',
 		name: 'Followers III',
-		description: 'Reached 10,000 followers.',
+		description: 'Reached 100 followers.',
 		tier: 'gold',
 		coinReward: 750,
-		icon: 'follower_100.png',
+		icon: 'follower_50.png',
 		family: 'followers',
 		level: 3
 	},
