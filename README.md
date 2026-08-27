@@ -22,6 +22,7 @@ The official Discord server for all things Lyntr can be found here: https://disc
 <p align="center">
   <img src="github-assets/banner.png" width="60%">
   <img src="github-assets/banner_white.png" width="50%">
+  <img src="github-assets/api_banner.png" width="55%">
   <img src="github-assets/banner_mobile.png" width="40%">
 </p>
 
@@ -29,9 +30,19 @@ The official Discord server for all things Lyntr can be found here: https://disc
 
 Lyntr is actively developed, by the community and myself.
 
+Contributors Credit: NotHMRC, Stormzady, and GizmoWizard(myself).
+
 See the [development updates](https://1lyn.tr/updates) for recent changes
 and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for current work.
 
+## Contribution
+
+- For contribution to the Lyntr project, *please*, **DO NOT** open a PR for small spelling mistakes or one-line fixes. Instead, open an issue and a contributor or myself shall review it shortly.
+
+- For more long form edits, use PRs, and forks.
+
 ### Please refer to the [MIT License](https://opensource.org/license/mit) for more license information.
+
+<img style="width: 128px; height: 128px" src="github-assets/org_logo.png" /><
 
 Created by GizmoWizard, under GizmoWizardNet, 2026. ⭐ this repo!

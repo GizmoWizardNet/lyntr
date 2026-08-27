@@ -11,24 +11,31 @@
 		Radio,
 		Code,
 		MessageCircle,
-		Mail
+		Mail,
+		AppWindow
 	} from 'lucide-svelte';
 
 	const features: Array<{ icon: any; color: string; label: string }> = [
-		{ icon: PenLine, color: 'text-amber-500', label: 'Post lynts — text, images, GIFs, and polls' },
-		{ icon: Users, color: 'text-emerald-500', label: 'Follow people and DM them in real time' },
-		{ icon: MessagesSquare, color: 'text-sky-500', label: 'Forum for longer-form discussion' },
-		{ icon: Trophy, color: 'text-yellow-500', label: 'Leaderboard rankings' },
-		{ icon: Webhook, color: 'text-violet-500', label: 'Developer API with your own credentials' },
-		{ icon: Radio, color: 'text-rose-500', label: 'Live notifications, presence, and typing indicators' }
+		{ icon: PenLine, color: 'text-amber-500', label: 'Lynt away; text, images, GIFs and much more!' },
+		{ icon: Users, color: 'text-emerald-500', label: 'Follow people and DM them in semi-real time' },
+		{ icon: MessagesSquare, color: 'text-sky-500', label: 'Forum for longer-form discussion, over a hundred words.' },
+		{ icon: Trophy, color: 'text-yellow-500', label: 'Leaderboard rankings, fight for the top!' },
+		{ icon: Webhook, color: 'text-violet-500', label: 'Developer API with your own credentials, code whatever you want.' },
+		{ icon: Radio, color: 'text-rose-500', label: 'Live stuff is built in, though not VERY good.' }
 	];
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [
-		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original repo', external: true },
+		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true },
 		{
 			href: 'https://github.com/NotHMRC/pylyntr',
 			icon: Code,
 			label: 'Pylyntr — open source Python lib for the API by NotHMRC',
+			external: true
+		},
+		{
+			href: 'https://codeberg.org/NytrixLabs/lyntr-desktop',
+			icon: AppWindow,
+			label: 'Lyntr Desktop — open source desktop app shell by Stormzady',
 			external: true
 		},
 		{ href: 'https://discord.gg/y5PA8uS5Tj', icon: MessageCircle, label: 'Discord!', external: true },
