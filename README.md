@@ -45,4 +45,12 @@ and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for curr
 
 Created by GizmoWizard, under GizmoWizardNet, 2026. ⭐ this repo!
 
+<a href="https://www.star-history.com/?repos=GizmoWizardNet%2Flyntr&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=GizmoWizardNet/lyntr&type=date&theme=dark&legend=top-left&sealed_token=wFxZopBF__Cj-S5fwinkit3fEEWxEJf9arEO15CtHCEl2NHBKHG34FWtQWprsN1gwm200pgXFYuxKYH21eumA0DVz1ydjt8Xrb-vBFAECWCsRBZldwhboQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=GizmoWizardNet/lyntr&type=date&legend=top-left&sealed_token=wFxZopBF__Cj-S5fwinkit3fEEWxEJf9arEO15CtHCEl2NHBKHG34FWtQWprsN1gwm200pgXFYuxKYH21eumA0DVz1ydjt8Xrb-vBFAECWCsRBZldwhboQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=GizmoWizardNet/lyntr&type=date&legend=top-left&sealed_token=wFxZopBF__Cj-S5fwinkit3fEEWxEJf9arEO15CtHCEl2NHBKHG34FWtQWprsN1gwm200pgXFYuxKYH21eumA0DVz1ydjt8Xrb-vBFAECWCsRBZldwhboQ" />
+ </picture>
+</a>
+
 <img style="width: 128px; height: 128px" src="github-assets/org_logo.png" />
