@@ -486,7 +486,9 @@ async function handleSlash(interaction: ChatInputCommandInteraction) {
 		}
 	}
 
-	await interaction.deferReply({ ephemeral: true });
+	// Mod/admin actions stay ephemeral (only the invoker sees them);
+	// public fun commands post a normal visible message in the channel.
+	await interaction.deferReply({ ephemeral: requiredPerm !== undefined });
 
 	try {
 		switch (commandName) {
