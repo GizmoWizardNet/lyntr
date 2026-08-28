@@ -133,6 +133,13 @@
 										<span>{item.content}</span>
 									</li>
 								{/each}
+								<li class="flex items-start gap-2 text-sm">
+									<Badge variant="outline" class="mt-0.5 shrink-0 gap-1 bg-amber-500/15 text-amber-500 border-amber-500/30">
+										<Bug class="h-3 w-3" />
+										Fixed
+									</Badge>
+									<span>Removed Herobrine.</span>
+								</li>
 							</ul>
 						{/if}
 					</div>
