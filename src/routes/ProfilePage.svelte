@@ -384,7 +384,7 @@
 								/>
 							{/if}
 
-							<div class="w-24 w-full">
+							<div class="w-full">
 								{#if isSelf}
 									<Button class="w-full" on:click={() => (showSettings = true)}>Edit Profile</Button>
 								{:else}
