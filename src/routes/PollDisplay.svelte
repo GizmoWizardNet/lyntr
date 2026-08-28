@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { BarChart2, Check } from 'lucide-svelte';
+	import PollOptionVotersDropdown from './PollOptionVotersDropdown.svelte';
 
 	interface PollOption {
 		id: string;
@@ -65,6 +66,23 @@
 	const showResults = $derived(isResolved || (hasVoted && !editing));
 
 	const maxVotes = $derived(Math.max(...poll.options.map((o) => o.votes), 1));
+
+	// Hover state for the per-option and poll-wide "who voted" dropdowns,
+	// same debounce pattern as scheduleLikersHover in Lynt.svelte so a quick
+	// mouse pass-over doesn't fire a fetch, but lingering does.
+	let optionHover = $state<string | null>(null);
+	let footerHover = $state(false);
+	let hoverTimer: ReturnType<typeof setTimeout>;
+
+	function scheduleOptionHover(optionId: string | null, show: boolean) {
+		clearTimeout(hoverTimer);
+		hoverTimer = setTimeout(() => (optionHover = show ? optionId : null), show ? 350 : 150);
+	}
+
+	function scheduleFooterHover(show: boolean) {
+		clearTimeout(hoverTimer);
+		hoverTimer = setTimeout(() => (footerHover = show), show ? 350 : 150);
+	}
 
 	function setsEqual(a: Set<string>, b: Set<string>) {
 		if (a.size !== b.size) return false;
@@ -196,18 +214,41 @@
 			{@const isSelected = pending.has(option.id)}
 
 			{#if showResults}
-				<div class="option-track" class:winner={isWinner}>
+				<div
+					class="option-track"
+					class:winner={isWinner}
+					onmouseenter={() => scheduleOptionHover(option.id, true)}
+					onmouseleave={() => scheduleOptionHover(option.id, false)}
+				>
 					<div
 						class="option-fill"
 						class:winner={isWinner}
 						class:dim={isResolved && !isWinner}
 						style="width: {pct}%;"
 					></div>
+					<!-- Base text, colored for the *unfilled* (track) background. -->
 					<span class="option-text">
 						{#if option.voted}<Check size={12} class="check" />{/if}
 						{option.text}
 					</span>
 					<span class="pct">{pct}%</span>
+					<!-- Duplicate text clipped to exactly the filled width, colored for
+					     the *filled* (striped) background instead. Guarantees contrast
+					     on both sides of the fill boundary regardless of theme, rather
+					     than the old single foreground color that only worked in one
+					     of the two themes. -->
+					<div class="option-text-fill-overlay" style="clip-path: inset(0 {100 - pct}% 0 0);">
+						<span class="option-text">
+							{#if option.voted}<Check size={12} class="check" />{/if}
+							{option.text}
+						</span>
+						<span class="pct">{pct}%</span>
+					</div>
+					<PollOptionVotersDropdown
+						optionId={option.id}
+						voteCount={option.votes}
+						visible={optionHover === option.id}
+					/>
 				</div>
 			{:else}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -236,7 +277,19 @@
 	</div>
 
 	<div class="poll-footer">
-		<span class="vote-count">{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
+		<span
+			class="vote-count-wrap"
+			onmouseenter={() => scheduleFooterHover(true)}
+			onmouseleave={() => scheduleFooterHover(false)}
+		>
+			<span class="vote-count">{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
+			<PollOptionVotersDropdown
+				optionId={poll.id}
+				kind="poll"
+				voteCount={poll.total_votes}
+				visible={footerHover}
+			/>
+		</span>
 
 		{#if isResolved}
 			<span class="resolved-badge">Ended</span>
@@ -351,6 +404,25 @@
 	.option-track.winner {
 		border-top-color: hsl(var(--primary));
 		border-left-color: hsl(var(--primary));
+	}
+
+	/* Clipped duplicate-text overlay for fill contrast (see markup comment).
+	   Same box/padding as .option-track so its text lines up pixel-for-pixel
+	   with the base text underneath. */
+	.option-text-fill-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		padding: 0 10px;
+		pointer-events: none;
+	}
+	.option-text-fill-overlay .option-text,
+	.option-text-fill-overlay .pct {
+		color: hsl(var(--primary-foreground));
+	}
+	.option-text-fill-overlay .option-text {
+		flex: 1;
 	}
 
 	.option-fill {
@@ -481,6 +553,11 @@
 		font-size: 12px;
 		border-top: 1px dashed hsl(var(--border));
 		margin-top: 2px;
+	}
+
+	.vote-count-wrap {
+		position: relative;
+		display: inline-flex;
 	}
 
 	.vote-count {
