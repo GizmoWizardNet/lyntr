@@ -226,7 +226,7 @@
 				<option value={145}>145+ IQ</option>
 			</select>
 		</div>
-		<AutoRefreshControl onRefresh={() => load(true)} storageKey="lyntr_scrollables" />
+		<AutoRefreshControl onRefresh={() => load(true)} storageKey="lyntr_scrollables" defaultEnabled={false} />
 		<Button size="sm" onclick={() => (uploadOpen = true)}>
 			<Plus class="mr-1 h-4 w-4" /> Post
 		</Button>
