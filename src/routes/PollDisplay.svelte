@@ -336,7 +336,6 @@
 		border-bottom: 1px solid var(--bevel-dark);
 		border-right: 1px solid var(--bevel-dark);
 		box-shadow: var(--hard-shadow);
-		overflow: hidden;
 		font-family: var(--font-retro);
 	}
 
@@ -345,6 +344,12 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 12px;
+		/* .poll used to rely on overflow:hidden to round these top corners
+		   to match its own radius, but that also clipped the option/footer
+		   voter hover dropdowns whenever they popped up above the card
+		   bounds. Rounding this directly means .poll no longer needs
+		   overflow:hidden at all. */
+		border-radius: calc(var(--radius) + 4px) calc(var(--radius) + 4px) 0 0;
 		background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
 		color: hsl(var(--primary-foreground));
 		border-bottom: 1px solid var(--bevel-dark);
@@ -412,6 +417,7 @@
 	.option-text-fill-overlay {
 		position: absolute;
 		inset: 0;
+		z-index: 2;
 		display: flex;
 		align-items: center;
 		padding: 0 10px;
