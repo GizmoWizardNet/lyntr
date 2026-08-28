@@ -108,33 +108,38 @@ const commands = [
 		.setName('verify')
 		.setDescription('Grant verified badge to a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('unverify')
 		.setDescription('Remove verified badge from a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('ban')
 		.setDescription('Permanently ban a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addStringOption(o => o.setName('reason').setDescription('Reason for ban').setRequired(false))
-		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('unban')
 		.setDescription('Unban a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('warn')
 		.setDescription('Warn a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addStringOption(o => o.setName('reason').setDescription('Warning reason').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('mute')
@@ -142,13 +147,15 @@ const commands = [
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addIntegerOption(o => o.setName('minutes').setDescription('Duration in minutes (0 = permanent)').setRequired(true))
 		.addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('unmute')
 		.setDescription('Unmute a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('tempban')
@@ -156,62 +163,72 @@ const commands = [
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addIntegerOption(o => o.setName('minutes').setDescription('Duration in minutes').setRequired(true))
 		.addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
-		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('note')
 		.setDescription('Add a moderator note to a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addStringOption(o => o.setName('note').setDescription('Note text').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('adjustiq')
 		.setDescription('Adjust a user\'s IQ score')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
 		.addIntegerOption(o => o.setName('iq').setDescription('New IQ value').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('shadowban')
 		.setDescription('Shadowban a user (content hidden from others, invisible to them)')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+		.setDMPermission(false),
 
 	// Lookup
 	new SlashCommandBuilder()
 		.setName('profile')
 		.setDescription('View a user\'s full profile')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('lookup')
 		.setDescription('Quick user lookup — ID, IQ, verification, join date')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('modhistory')
 		.setDescription('View moderation history for a user')
 		.addStringOption(o => o.setName('handle').setDescription('Lyntr handle').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('reports')
 		.setDescription('Show recent unresolved reports')
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	// Stats
 	new SlashCommandBuilder()
 		.setName('stats')
 		.setDescription('Lyntr platform statistics')
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	new SlashCommandBuilder()
 		.setName('health')
 		.setDescription('Infrastructure health check')
-		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+		.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+		.setDMPermission(false),
 
 	// Fun
 	new SlashCommandBuilder()
@@ -433,8 +450,42 @@ function reportActionRow(escalated = false) {
 // ─────────────────────────────────────────────────────────────
 // Slash command handler
 // ─────────────────────────────────────────────────────────────
+// Commands that must never run without real mod/admin permission in a guild,
+// regardless of what Discord's client-side integration settings allow.
+const RESTRICTED_COMMANDS: Record<string, bigint> = {
+	verify: PermissionFlagsBits.ModerateMembers,
+	unverify: PermissionFlagsBits.ModerateMembers,
+	ban: PermissionFlagsBits.BanMembers,
+	unban: PermissionFlagsBits.BanMembers,
+	warn: PermissionFlagsBits.ModerateMembers,
+	mute: PermissionFlagsBits.ModerateMembers,
+	unmute: PermissionFlagsBits.ModerateMembers,
+	tempban: PermissionFlagsBits.BanMembers,
+	note: PermissionFlagsBits.ModerateMembers,
+	adjustiq: PermissionFlagsBits.Administrator,
+	shadowban: PermissionFlagsBits.Administrator,
+	profile: PermissionFlagsBits.ModerateMembers,
+	lookup: PermissionFlagsBits.ModerateMembers,
+	modhistory: PermissionFlagsBits.ModerateMembers,
+	reports: PermissionFlagsBits.ModerateMembers,
+	stats: PermissionFlagsBits.ModerateMembers,
+	health: PermissionFlagsBits.ModerateMembers
+};
+
 async function handleSlash(interaction: ChatInputCommandInteraction) {
 	const { commandName } = interaction;
+
+	// Hard server-side gate — never trust setDefaultMemberPermissions/
+	// setDMPermission alone, since guild admins can override integration
+	// permissions and DMs have no member/permission context at all.
+	const requiredPerm = RESTRICTED_COMMANDS[commandName];
+	if (requiredPerm !== undefined) {
+		if (!interaction.inGuild() || !interaction.memberPermissions?.has(requiredPerm)) {
+			await interaction.reply({ content: '❌ You do not have permission to use this command.', ephemeral: true });
+			return;
+		}
+	}
+
 	await interaction.deferReply({ ephemeral: true });
 
 	try {
