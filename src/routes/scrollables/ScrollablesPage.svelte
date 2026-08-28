@@ -19,6 +19,14 @@
 	let loadingMore = $state(false);
 	let activeIndex = $state(0);
 	let muted = $state(true);
+	// Same "one shared setting, applies to whichever video is active" model
+	// as `muted` above — YouTube's playback speed works the same way,
+	// persisting across videos within a session. Also persisted to
+	// localStorage so it survives a page reload/revisit, matching YouTube's
+	// actual cross-session behavior rather than just cross-video.
+	const PLAYBACK_SPEED_KEY = 'lyntr_scrollables_playback_speed';
+	const VALID_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+	let playbackRate = $state(1);
 	let minIq = $state(0);
 	let commentsOpenFor = $state<string | null>(null);
 	let uploadOpen = $state(false);
@@ -80,6 +88,16 @@
 		load(true);
 	}
 
+	function setPlaybackRate(rate: number) {
+		playbackRate = rate;
+		try {
+			localStorage.setItem(PLAYBACK_SPEED_KEY, String(rate));
+		} catch {
+			// Same private-browsing/storage-disabled fallback as the onMount
+			// read above — the rate still applies for this session either way.
+		}
+	}
+
 	function maybeLoadMore() {
 		// Fetch the next page once the viewer is within 3 cards of the end —
 		// this is what makes the mobile scroll feel infinite rather than
@@ -127,6 +145,14 @@
 	let wsUnsubs: Array<() => void> = [];
 
 	onMount(() => {
+		try {
+			const stored = Number(localStorage.getItem(PLAYBACK_SPEED_KEY));
+			if (stored && VALID_SPEEDS.includes(stored)) playbackRate = stored;
+		} catch {
+			// localStorage unavailable (private browsing, etc.) — just fall
+			// back to the 1x default, no need to surface an error for this.
+		}
+
 		observer = new IntersectionObserver(
 			(entries) => {
 				// The slot with the most visible area is "active". With
@@ -219,6 +245,8 @@
 						renderVideo={inWindow(i)}
 						{muted}
 						onToggleMute={() => (muted = !muted)}
+						{playbackRate}
+						onSetPlaybackRate={setPlaybackRate}
 						onOpenComments={() => (commentsOpenFor = item.id)}
 						onDeleted={handleDeleted}
 					/>

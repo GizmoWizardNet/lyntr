@@ -19,11 +19,17 @@
 		renderVideo: boolean;
 		muted: boolean;
 		onToggleMute: () => void;
+		// YouTube-style playback speed. Lives in the parent (same lifting
+		// pattern as `muted`) so it's one shared setting across every card
+		// rather than resetting to 1x each time a new video scrolls into
+		// view.
+		playbackRate: number;
+		onSetPlaybackRate: (rate: number) => void;
 		onOpenComments: () => void;
 		onDeleted: (id: string) => void;
 	}
 
-	let { scrollable, myId, active, renderVideo, muted, onToggleMute, onOpenComments, onDeleted }: Props = $props();
+	let { scrollable, myId, active, renderVideo, muted, onToggleMute, playbackRate, onSetPlaybackRate, onOpenComments, onDeleted }: Props = $props();
 
 	// Tracks `scrollable.id` so a like/bookmark tap can update these locally
 	// for instant feedback, while a fresh `scrollable` object from the
@@ -73,6 +79,25 @@
 			videoEl.currentTime = 0;
 		}
 	});
+
+	// `playbackRate` isn't a bindable HTML attribute (unlike `muted`) — it
+	// has to be set imperatively on the element, so it needs its own
+	// effect, re-applied whenever the shared rate changes OR whenever this
+	// card gets a freshly-mounted <video> element (scrolling back to a
+	// card outside the render window unmounts/remounts it — see
+	// `renderVideo` in the Props doc above).
+	$effect(() => {
+		if (!videoEl) return;
+		videoEl.playbackRate = playbackRate;
+	});
+
+	const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+	let speedMenuOpen = $state(false);
+
+	function selectSpeed(rate: number) {
+		onSetPlaybackRate(rate);
+		speedMenuOpen = false;
+	}
 
 	function togglePlay() {
 		if (!videoEl) return;
@@ -164,6 +189,33 @@
 		<button class="mute-btn" onclick={(e) => { e.stopPropagation(); onToggleMute(); }}>
 			{#if muted}<VolumeX class="h-5 w-5" />{:else}<Volume2 class="h-5 w-5" />{/if}
 		</button>
+
+		<!-- Playback speed — same YouTube-style control, sitting just above
+		     the mute button so both live in one predictable corner. -->
+		<Popover.Root bind:open={speedMenuOpen}>
+			<Popover.Trigger asChild>
+				{#snippet children({ builder })}
+					<button
+						{...builder}
+						class="speed-btn"
+						onclick={(e) => { e.stopPropagation(); speedMenuOpen = !speedMenuOpen; }}
+					>
+						{playbackRate}x
+					</button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="w-24 p-1" align="end" onclick={(e) => e.stopPropagation()}>
+				{#each SPEED_OPTIONS as speed}
+					<button
+						class="speed-option"
+						class:active={speed === playbackRate}
+						onclick={() => selectSpeed(speed)}
+					>
+						{speed}x{speed === 1 ? ' (Normal)' : ''}
+					</button>
+				{/each}
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	<!-- Author + caption overlay, bottom-left -->
@@ -285,6 +337,50 @@
 		background: rgba(0, 0, 0, 0.5);
 		color: white;
 		border: none;
+	}
+
+	.speed-btn {
+		position: absolute;
+		top: 56px;
+		right: 12px;
+		min-width: 36px;
+		height: 28px;
+		padding: 0 8px;
+		border-radius: 999px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.5);
+		color: white;
+		border: none;
+		font-size: 12px;
+		font-weight: 700;
+		font-family: 'Courier New', monospace;
+	}
+
+	.speed-btn:hover {
+		background: rgba(0, 0, 0, 0.7);
+	}
+
+	.speed-option {
+		display: block;
+		width: 100%;
+		padding: 6px 8px;
+		border: none;
+		background: transparent;
+		text-align: left;
+		font-size: 13px;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.speed-option:hover {
+		background: hsl(var(--accent));
+	}
+
+	.speed-option.active {
+		font-weight: 700;
+		color: hsl(var(--primary));
 	}
 
 	.meta-overlay {
