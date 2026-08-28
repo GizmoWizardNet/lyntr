@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// Images can carry a post on their own — unlike v1, content isn't
 	// required if at least one image is attached.
-	if (!content && imageFiles.length === 0) {
+	if (!content.trim() && imageFiles.length === 0) { // trim to prevent whitespace posts
 		return json({ error: 'content or at least one image is required.' }, { status: 400 });
 	}
 	if (content.length > 280) {
