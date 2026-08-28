@@ -27,6 +27,7 @@
 	import MentionAutocomplete from './MentionAutocomplete.svelte';
 	import { goto } from '$app/navigation';
 	import TopTab from './TopTab.svelte';
+	import AutoRefreshControl from './AutoRefreshControl.svelte';
 	import ForumPage from './Forum/ForumPage.svelte';
 	import ScrollablesPage from './scrollables/ScrollablesPage.svelte';
 	import CoinPop from './CoinPop.svelte';
@@ -536,6 +537,7 @@
 									<option value={130}>130+</option>
 									<option value={145}>145+</option>
 								</select>
+								<AutoRefreshControl onRefresh={() => fetchFeed()} storageKey="lyntr_feed" />
 							</div>
 							<Separator class="mt-4" />
 

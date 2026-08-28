@@ -5,6 +5,7 @@
 	import ScrollableCard from './ScrollableCard.svelte';
 	import ScrollableComments from './ScrollableComments.svelte';
 	import UploadScrollableDialog from './UploadScrollableDialog.svelte';
+	import AutoRefreshControl from '../AutoRefreshControl.svelte';
 	import { Button } from '@/components/ui/button';
 	import { wsClient } from '$lib/ws-client';
 
@@ -225,6 +226,7 @@
 				<option value={145}>145+ IQ</option>
 			</select>
 		</div>
+		<AutoRefreshControl onRefresh={() => load(true)} storageKey="lyntr_scrollables" />
 		<Button size="sm" onclick={() => (uploadOpen = true)}>
 			<Plus class="mr-1 h-4 w-4" /> Post
 		</Button>
