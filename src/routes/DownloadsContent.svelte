@@ -1,38 +1,32 @@
 <script lang="ts">
 	import HugeIcon from './HugeIcon.svelte';
-	import {
-		AppWindowIcon,
-		ComputerTerminal01Icon,
-		AndroidIcon,
-		Download01Icon,
-		SourceCodeIcon
-	} from '@hugeicons/core-free-icons';
+	import { Download01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons';
 
 	// Lyntr Desktop (Nytrix Labs, see AboutContent's credits) ships .exe/.deb/
-	// .rpm builds; Lyntr Mobile ships a plain .apk (no Play Store listing).
-	// All four live as GitHub/Codeberg-style release assets under a moving
-	// "latest" tag rather than a pinned version, so this page never needs
-	// updating when a new build goes out.
+	// .rpm/raw-binary builds; Lyntr Mobile ships a plain .apk (no Play Store
+	// listing). All release assets live under a moving "latest" tag rather
+	// than a pinned version, so this page never needs updating when a new
+	// build goes out.
 	const RELEASE_BASE = 'https://codeberg.org/NytrixLabs/lyntr-desktop/releases/download/latest';
 
 	interface DownloadEntry {
 		platform: string;
 		detail: string;
 		filename: string;
-		icon: any;
+		iconSrc: string;
 	}
 
 	const downloads: DownloadEntry[] = [
-		{ platform: 'Windows', detail: '.exe installer', filename: 'lyntr-desktop.exe', icon: AppWindowIcon },
-		{ platform: 'Linux', detail: '.deb — Debian, Ubuntu and derivatives', filename: 'lyntr-desktop.deb', icon: ComputerTerminal01Icon },
-		{ platform: 'Linux', detail: '.rpm — Fedora, openSUSE, RHEL', filename: 'lyntr-desktop.rpm', icon: ComputerTerminal01Icon },
+		{ platform: 'Windows', detail: '.exe installer', filename: 'lyntr-desktop.exe', iconSrc: 'download-icons/windows.png' },
+		{ platform: 'Linux', detail: '.deb — Debian, Ubuntu, Mint', filename: 'lyntr-desktop.deb', iconSrc: 'download-icons/linux.png' },
+		{ platform: 'Linux', detail: '.rpm — Fedora, openSUSE', filename: 'lyntr-desktop.rpm', iconSrc: 'download-icons/linux.png' },
 		{
 			platform: 'Linux',
 			detail: 'Raw binary — chmod +x, then ./lyntr-desktop',
 			filename: 'lyntr-desktop',
-			icon: ComputerTerminal01Icon
+			iconSrc: 'download-icons/linux.png'
 		},
-		{ platform: 'Android', detail: '.apk — sideload, no Play Store', filename: 'lyntr-mobile.apk', icon: AndroidIcon }
+		{ platform: 'Android', detail: '.apk — sideload, no Play Store', filename: 'lyntr-mobile.apk', iconSrc: 'download-icons/android.png' }
 	];
 </script>
 
@@ -53,7 +47,7 @@
 		{#each downloads as d}
 			<div class="download-card">
 				<div class="download-icon">
-					<HugeIcon icon={d.icon} size={28} />
+					<img src={d.iconSrc} alt="{d.platform} icon" width="28" height="28" />
 				</div>
 				<div class="download-info">
 					<span class="download-platform">{d.platform}</span>
