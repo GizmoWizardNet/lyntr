@@ -18,8 +18,8 @@
 
 	const downloads: DownloadEntry[] = [
 		{ platform: 'Windows', detail: '.exe installer', filename: 'lyntr-desktop.exe', iconSrc: 'download-icons/windows.png' },
-		{ platform: 'Linux', detail: '.deb — Debian, Ubuntu', filename: 'lyntr-desktop.deb', iconSrc: 'download-icons/linux.png' },
-		{ platform: 'Linux', detail: '.rpm — Fedora, openSUSE, RHEL', filename: 'lyntr-desktop.rpm', iconSrc: 'download-icons/linux.png' },
+		{ platform: 'Linux', detail: '.deb — Debian, Ubuntu', filename: 'lyntr-desktop.deb', iconSrc: 'download-icons/ubuntu.png' },
+		{ platform: 'Linux', detail: '.rpm — Fedora, openSUSE, RHEL', filename: 'lyntr-desktop.rpm', iconSrc: 'download-icons/fedora.png' },
 		{
 			platform: 'Linux',
 			detail: 'Raw binary — chmod +x, then ./lyntr-desktop',
