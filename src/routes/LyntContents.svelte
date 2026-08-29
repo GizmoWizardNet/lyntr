@@ -8,7 +8,7 @@
 
 	import CalendarDays from 'lucide-svelte/icons/calendar-days';
 	import * as Popover from '@/components/ui/popover';
-	import { Copy, Ellipsis, Trash, Pencil, Bookmark, BookmarkCheck } from 'lucide-svelte';
+	import { Code, Copy, Ellipsis, Trash, Pencil, Bookmark, BookmarkCheck } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { working } from '$lib/working';
 	import Report from './Report.svelte';
@@ -203,6 +203,11 @@
 		navigator.clipboard.writeText(content)
 	}
 
+	function handleCopyId() {
+		toast.success('Lynt ID copied to clipboard!');
+		navigator.clipboard.writeText(postId)
+	}
+
 	$: ({ truncated, needsReadMore } = truncateContentFunc(content));
 </script>
 
@@ -360,6 +365,14 @@
 								<Bookmark class="h-5 w-5 text-muted-foreground" />
 								<span>Save</span>
 							{/if}
+						</button>
+
+						<button
+							on:click={handleCopyId}
+							class="flex items-center gap-3 rounded-lg p-3 text-sm hover:bg-lynt-foreground"
+						>
+							<Code class="h-5 w-5 text-muted-foreground" />
+							<span>Copy ID</span>
 						</button>
 					</Popover.Content>
 				</Popover.Root>
