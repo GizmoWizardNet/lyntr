@@ -41,6 +41,10 @@ and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for curr
 
 - For more long form edits, use PRs, and forks.
 
+## AI
+
+This repo is pre-configured with a AGENTS.md and CLAUDE.md for use with Claude Code, or other Codex-like LLMs. 
+
 ### Please refer to the [MIT License](https://opensource.org/license/mit) for more license information.
 
 Created by GizmoWizard, under GizmoWizardNet, 2026. ⭐ this repo!
