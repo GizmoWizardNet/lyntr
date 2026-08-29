@@ -2,9 +2,6 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { authenticateApiRequest, isApiAuthResponse } from '@/server/apiAuth';
 import { getScrollable } from '@/server/scrollables';
-import { db } from '@/server/db';
-import { scrollables } from '@/server/schema';
-import { eq, sql } from 'drizzle-orm';
 
 
 export const GET: RequestHandler = async ({ request, params }) => {
