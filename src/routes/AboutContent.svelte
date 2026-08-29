@@ -29,6 +29,7 @@
 	];
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [
+		{ href: 'https://github.com/GizmoWizardNet/lyntr', icon: Code, label: 'Our Github :D', external: true },
 		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true },
 		{
 			href: 'https://github.com/NotHMRC/pylyntr',
