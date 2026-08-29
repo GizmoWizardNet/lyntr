@@ -211,7 +211,7 @@
     background-color 0.1s ease-in-out,
     color 0.1s ease-in-out !important;
   transform: none !important;
-  border-radius: 4px !important;
+  border-radius: 999px !important;
   padding: 6px 10px !important;
   font-family: var(--font-retro);
   font-weight: 700 !important;
