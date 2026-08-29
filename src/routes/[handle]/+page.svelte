@@ -24,7 +24,7 @@
 	});
 
 	async function checkAuthAndProfileStatus() {
-		if (Cookies.get('temp-discord-token') || Cookies.get('temp-google-token'))
+		if (Cookies.get('_TOKEN__DO_NOT_SHARE') || Cookies.get('temp-discord-token') || Cookies.get('temp-google-token'))
 			authenticated = true;
 		try {
 			const response = await fetch('/api/me', {
@@ -43,6 +43,7 @@
 				};
 
 				noAccount = false;
+				authenticated = true;
 			} else noAccount = true;
 		} catch (error) {
 			console.error('Error checking auth and profile status:', error);
