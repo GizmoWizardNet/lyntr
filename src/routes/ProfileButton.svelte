@@ -19,7 +19,8 @@
 		InformationCircleIcon,
 		UserBlock01Icon,
 		Logout01Icon,
-		Settings01Icon
+		Settings01Icon,
+		Download01Icon
 	} from '@hugeicons/core-free-icons';
 
 	let opened = $state(false);
@@ -122,6 +123,15 @@
 			>
 				<HugeIcon icon={ShieldCheck} size={24} />
 				<span>Verify my account</span>
+			</button>
+
+			<!-- Downloads -->
+			<button
+				onclick={() => goto('/downloads')}
+				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
+			>
+				<HugeIcon icon={Download01Icon} size={24} />
+				<span>Downloads</span>
 			</button>
 
 			<!-- About -->
