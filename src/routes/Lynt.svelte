@@ -152,18 +152,31 @@
 		likersHoverTimer = setTimeout(() => (likersHover = show), show ? 350 : 150);
 	}
 
+	// Guest gating — myId is only ever empty when this component is reused
+	// on the logged-out landing page teaser feed (see Landing.svelte); every
+	// authenticated context always supplies a real myId, so this is a no-op
+	// there. Centralizes the "log in to do X" nudge instead of each handler
+	// silently hitting a 401 or opening a dialog that has nowhere to post to.
+	function requireAuth(action: string): boolean {
+		if (myId) return false;
+		toast.info(`Log in to ${action}.`);
+		return true;
+	}
+
 	function handleRepost(e: MouseEvent) {
 		// Block opening the dialog if the user already reposted this lynt.
 		// Don't toggle openDialog manually here — Dialog.Trigger already
 		// does that via bind:open, and doing it twice causes the dialog
 		// to flash open then immediately close.
-		if (repostedByUser) {
+		if (repostedByUser || requireAuth('repost')) {
 			e.preventDefault();
 			e.stopPropagation();
 		}
 	}
 
 	async function handleLike() {
+		if (requireAuth('like')) return;
+
 		// Optimistic update
 		likeCount = likedByUser ? likeCount - 1 : Number(likeCount) + 1;
 		likedByUser = !likedByUser;
@@ -185,6 +198,7 @@
 	}
 
 	async function openLynt(lyntid: string) {
+		if (requireAuth('view the full conversation')) return;
 		lyntClick(lyntid);
 	}
 

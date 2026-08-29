@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Auth from './Auth.svelte';
-	import PublicFeedCard from './PublicFeedCard.svelte';
+	import Lynt from './Lynt.svelte';
 	import { scrollableCdnRawUrl } from './stores';
 	import { Play } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	interface Props {
 		feed: any[];
@@ -10,6 +11,14 @@
 	}
 
 	let { feed, scrollables }: Props = $props();
+
+	// Passed as Lynt's required lyntClick prop, but never actually reached —
+	// Lynt's own requireAuth() guard intercepts every click path (card body,
+	// parent-preview, comment icon) before this fires, since myId="" below.
+	// Kept only because the prop itself is required.
+	async function guestLyntClick() {
+		toast.info('Log in to view the full conversation.');
+	}
 </script>
 
 <div class="landing-grid">
@@ -24,7 +33,7 @@
 		</div>
 		<div class="feed-scroll">
 			{#each feed as lynt (lynt.id)}
-				<PublicFeedCard {lynt} />
+				<Lynt {...lynt} myId="" lyntClick={guestLyntClick} truncateContent={true} />
 			{:else}
 				<p class="empty">No lynts yet — be the first.</p>
 			{/each}
