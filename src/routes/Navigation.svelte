@@ -117,7 +117,7 @@
 			text={item.label}
 			secondary={badgeFor(item)}
 			secondaryClass={item.label === 'Achievements' ? 'bg-amber-500 text-black' : undefined}
-			className="hidden border-none md:flex md:w-auto"
+			className="hidden border-none md:flex md:w-auto !rounded-full"
 			on:click={() => handleNavClick(item.page)}
 		/>
 	{/each}
@@ -130,7 +130,7 @@
 				iconAnim={item.anim}
 				secondary={badgeFor(item)}
 				secondaryClass={item.label === 'Achievements' ? 'bg-amber-500 text-black' : undefined}
-				className="flex-1 border-none md:hidden"
+				className="flex-1 border-none md:hidden !rounded-full"
 				on:click={() => handleNavClick(item.page)}
 			/>
 		{/if}
@@ -143,7 +143,7 @@
 					<button
 						{...builder}
 						onclick={() => (moreOpen = !moreOpen)}
-						class="shit inline-flex w-full items-center justify-center rounded-xl font-bold text-primary"
+						class="shit inline-flex w-full items-center justify-center rounded-full font-bold text-primary"
 					>
 						<MoreHorizontal class="h-6 w-6" strokeWidth={2.5} />
 					</button>
