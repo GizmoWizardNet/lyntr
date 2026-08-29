@@ -27,7 +27,7 @@
 	});
 
 	async function checkAuth() {
-		if (Cookies.get('temp-discord-token') || Cookies.get('temp-google-token')) {
+		if (Cookies.get('_TOKEN__DO_NOT_SHARE')) {
 			authenticated = true;
 		}
 		try {
