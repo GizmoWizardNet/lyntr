@@ -23,30 +23,81 @@
 	const QUICK_EMOJI = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
 
 	let pickerOpen = $state(false);
-	// Optimistic local overlay so the click feels instant; the authoritative
-	// tally arrives moments later over the socket and replaces this anyway.
-	let pending = $state<Set<string>>(new Set());
+	// Optimistic local delta so a click feels instant instead of waiting on
+	// the reaction_update round trip: +1/-1 per emoji, applied on top of
+	// the server-truth `reactions` prop in `displayReactions` below. Once
+	// the real broadcast arrives, `reactions` itself already reflects the
+	// change, so the delta nets out to the same number — it's cleared as
+	// soon as its emoji shows up in the incoming prop with the state we
+	// predicted, not just on request completion, so a slow broadcast
+	// doesn't cause a visible flicker back to the old count in between.
+	let pendingDelta = $state<Map<string, { count: number; reactedByUser: boolean }>>(new Map());
+
+	const displayReactions = $derived.by(() => {
+		if (pendingDelta.size === 0) return reactions;
+
+		const byEmoji = new Map(reactions.map((r) => [r.emoji, r]));
+		const remaining = new Map(pendingDelta);
+
+		for (const [emoji, predicted] of pendingDelta) {
+			const server = byEmoji.get(emoji);
+			// Server has already caught up to (or passed) what we predicted —
+			// drop the local override and just trust the prop from here on.
+			if (server && server.reactedByUser === predicted.reactedByUser) {
+				remaining.delete(emoji);
+				continue;
+			}
+			byEmoji.set(emoji, {
+				emoji,
+				count: predicted.count,
+				reactedByUser: predicted.reactedByUser
+			});
+		}
+
+		if (remaining.size !== pendingDelta.size) {
+			// Reassign (not mutate) so the $state setter fires and clears
+			// out emoji that just got confirmed by the server.
+			pendingDelta = remaining;
+		}
+
+		// New reactions (count 0 → 1) need inserting; existing ones already
+		// got overwritten in place above via byEmoji.set.
+		return Array.from(byEmoji.values()).filter((r) => r.count > 0);
+	});
 
 	async function toggle(emoji: string) {
 		if (!myId) return;
 		pickerOpen = false;
-		pending = new Set(pending).add(emoji);
+
+		const current = displayReactions.find((r) => r.emoji === emoji);
+		const wasReacted = current?.reactedByUser ?? false;
+		const baseCount = current?.count ?? 0;
+
+		pendingDelta = new Map(pendingDelta).set(emoji, {
+			count: wasReacted ? baseCount - 1 : baseCount + 1,
+			reactedByUser: !wasReacted
+		});
+
 		try {
-			await fetch('/api/reactions', {
+			const res = await fetch('/api/reactions', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ lynt_id: lyntId, emoji })
 			});
-		} finally {
-			const next = new Set(pending);
-			next.delete(emoji);
-			pending = next;
+			if (!res.ok) throw new Error('reaction request failed');
+		} catch {
+			// Roll back the optimistic guess — the broadcast that would
+			// otherwise reconcile it is never coming since the request
+			// itself failed.
+			const rolledBack = new Map(pendingDelta);
+			rolledBack.delete(emoji);
+			pendingDelta = rolledBack;
 		}
 	}
 </script>
 
 <div class="reaction-bar">
-	{#each reactions as r (r.emoji)}
+	{#each displayReactions as r (r.emoji)}
 		<button
 			class="reaction-pill"
 			class:active={r.reactedByUser}
