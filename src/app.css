@@ -136,7 +136,13 @@
     --aero-surface:        rgba(255, 255, 255, 0.06);
     --aero-surface-hover:  rgba(255, 255, 255, 0.12);
     --aero-border-top:     rgba(255, 255, 255, 0.22);
-    --aero-border-bottom:  rgba(0, 0, 0, 0.55);
+    /* Was rgba(0, 0, 0, 0.55) — a near-black bottom edge on a near-black
+       page background is invisible, so the pill's outline only ever
+       showed on the top/sides and looked cut off/unfinished along the
+       bottom arc. Dim white (still visibly darker than the top edge, so
+       the light-top/dark-bottom bevel hierarchy is preserved) instead of
+       black keeps it visible against the dark page regardless. */
+    --aero-border-bottom:  rgba(255, 255, 255, 0.08);
     --aero-shine:          linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0) 55%);
     --aero-shadow:         0 2px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
     --aero-shadow-active:  0 3px 12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
