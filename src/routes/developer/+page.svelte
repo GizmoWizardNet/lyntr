@@ -24,12 +24,16 @@
 	} from '@hugeicons/core-free-icons';
 	import { endpoints, type Endpoint } from './endpoints';
 
+	// Aged/desaturated accent palette (see app.css --accent-*) instead of
+	// raw Tailwind bg-sky-500/text-emerald-500/etc — those read as a modern
+	// SaaS dashboard next to the sepia/bevel theme everywhere else on the
+	// site; same hue mapping, just pulled into the same aged-paper family.
 	const methodColors: Record<Endpoint['method'], string> = {
-		GET: 'bg-sky-500/15 text-sky-500 border-sky-500/30',
-		POST: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
-		PUT: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
-		PATCH: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
-		DELETE: 'bg-rose-500/15 text-rose-500 border-rose-500/30'
+		GET: 'bg-[hsl(var(--accent-blue)/0.14)] text-[hsl(var(--accent-blue))] border-[hsl(var(--accent-blue)/0.35)]',
+		POST: 'bg-[hsl(var(--accent-green)/0.14)] text-[hsl(var(--accent-green))] border-[hsl(var(--accent-green)/0.35)]',
+		PUT: 'bg-[hsl(var(--accent-amber)/0.14)] text-[hsl(var(--accent-amber))] border-[hsl(var(--accent-amber)/0.35)]',
+		PATCH: 'bg-[hsl(var(--accent-amber)/0.14)] text-[hsl(var(--accent-amber))] border-[hsl(var(--accent-amber)/0.35)]',
+		DELETE: 'bg-[hsl(var(--accent-rose)/0.14)] text-[hsl(var(--accent-rose))] border-[hsl(var(--accent-rose)/0.35)]'
 	};
 
 	// Just the text-color portion of methodColors, for inline use in the
@@ -37,11 +41,22 @@
 	// meant for actual <Badge> chips, and look like clunky boxes inline
 	// inside a <pre> block instead of just reading as colored text.
 	const methodTextColors: Record<Endpoint['method'], string> = {
-		GET: 'text-sky-500',
-		POST: 'text-emerald-500',
-		PUT: 'text-amber-500',
-		PATCH: 'text-amber-500',
-		DELETE: 'text-rose-500'
+		GET: 'text-[hsl(var(--accent-blue))]',
+		POST: 'text-[hsl(var(--accent-green))]',
+		PUT: 'text-[hsl(var(--accent-amber))]',
+		PATCH: 'text-[hsl(var(--accent-amber))]',
+		DELETE: 'text-[hsl(var(--accent-rose))]'
+	};
+
+	// Solid (non-transparent) dot color per method, for the legend key —
+	// separate from methodColors' translucent badge backgrounds since a
+	// 14%-opacity dot at 10px would be nearly invisible.
+	const methodDotColors: Record<Endpoint['method'], string> = {
+		GET: 'bg-[hsl(var(--accent-blue))]',
+		POST: 'bg-[hsl(var(--accent-green))]',
+		PUT: 'bg-[hsl(var(--accent-amber))]',
+		PATCH: 'bg-[hsl(var(--accent-amber))]',
+		DELETE: 'bg-[hsl(var(--accent-rose))]'
 	};
 
 	type ApiClient = {
@@ -556,7 +571,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 				is additive, not a breaking migration.
 			</p>
 			<p class="text-muted-foreground flex items-start gap-1.5">
-				Endpoints marked <Badge variant="outline" class="mx-0.5 border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400">sensitive</Badge>
+				Endpoints marked <Badge variant="outline" class="mx-0.5 border-[hsl(var(--accent-rose)/0.4)] bg-[hsl(var(--accent-rose)/0.1)] text-[hsl(var(--accent-rose))]">sensitive</Badge>
 				perform a write on your account (posting, editing, following) and require a credential
 				that hasn't been scoped down to read-only.
 			</p>
@@ -612,7 +627,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 			<div class="mb-3 flex flex-wrap items-center gap-3 text-xs">
 				{#each (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const) as m}
 					<span class="inline-flex items-center gap-1.5">
-						<span class={`inline-block h-2.5 w-2.5 rounded-full ${methodColors[m].split(' ')[0].replace('/15', '')}`}></span>
+						<span class={`inline-block h-2.5 w-2.5 rounded-full ${methodDotColors[m]}`}></span>
 						{m}
 					</span>
 				{/each}
@@ -743,7 +758,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 										</Badge>
 										<code class="truncate text-xs">{ep.path}</code>
 										{#if ep.sensitive}
-											<Badge variant="outline" class="border-amber-500/40 bg-amber-500/10 text-[10px] text-amber-600 dark:text-amber-400">
+											<Badge variant="outline" class="border-[hsl(var(--accent-rose)/0.4)] bg-[hsl(var(--accent-rose)/0.1)] text-[10px] text-[hsl(var(--accent-rose))]">
 												sensitive
 											</Badge>
 										{/if}

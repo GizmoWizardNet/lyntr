@@ -153,9 +153,9 @@
 		Back to Updates
 	</Button>
 
-	<div>
-		<h1 class="text-2xl font-bold">Dev Cycle Admin</h1>
-		<p class="text-muted-foreground text-sm">Author changelog entries. Drafts stay hidden from /updates until published.</p>
+	<div class="devcycle-header">
+		<h1>Dev Cycle Admin</h1>
+		<p>Author changelog entries. Drafts stay hidden from /updates until published.</p>
 	</div>
 
 	{#if loading}
@@ -194,7 +194,7 @@
 					</div>
 					{#each items as item, i}
 						<div class="flex items-start gap-2">
-							<select bind:value={item.category} class="border-border bg-background rounded-md border px-2 py-1.5 text-sm">
+							<select bind:value={item.category} class="px-2 py-1.5 text-sm">
 								<option value="new">New</option>
 								<option value="improved">Improved</option>
 								<option value="fixed">Fixed</option>
@@ -247,3 +247,30 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/* Gradient bevel header bar — same visual language as the poll-head
+	   gradient and the sidebar nav ribbon, so this page's title reads as
+	   part of the same "material" as the rest of the site instead of a
+	   plain text-2xl heading dropped on the page. */
+	.devcycle-header {
+		padding: 12px 16px;
+		border-radius: var(--radius-md);
+		background: var(--header-bg);
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow);
+	}
+	.devcycle-header h1 {
+		margin: 0;
+		font-size: 1.25rem;
+	}
+	.devcycle-header p {
+		margin: 4px 0 0;
+		font-size: 0.8125rem;
+		color: hsl(var(--muted-foreground));
+		font-family: var(--font-retro);
+	}
+</style>

@@ -15,13 +15,17 @@
 		AppWindow
 	} from 'lucide-svelte';
 
+	// Aged/desaturated accent palette (see app.css --accent-*) instead of
+	// raw Tailwind text-amber-500/text-emerald-500/etc — those read as
+	// modern SaaS icon colors next to the sepia/bevel theme everywhere
+	// else on the site.
 	const features: Array<{ icon: any; color: string; label: string }> = [
-		{ icon: PenLine, color: 'text-amber-500', label: 'Lynt away; text, images, GIFs and much more!' },
-		{ icon: Users, color: 'text-emerald-500', label: 'Follow people and DM them in semi-real time' },
-		{ icon: MessagesSquare, color: 'text-sky-500', label: 'Forum for longer-form discussion, over a hundred words.' },
-		{ icon: Trophy, color: 'text-yellow-500', label: 'Leaderboard rankings, fight for the top!' },
-		{ icon: Webhook, color: 'text-violet-500', label: 'Developer API with your own credentials, code whatever you want.' },
-		{ icon: Radio, color: 'text-rose-500', label: 'Live stuff is built in, though not VERY good.' }
+		{ icon: PenLine, color: 'text-[hsl(var(--accent-amber))]', label: 'Lynt away; text, images, GIFs and much more!' },
+		{ icon: Users, color: 'text-[hsl(var(--accent-green))]', label: 'Follow people and DM them in semi-real time' },
+		{ icon: MessagesSquare, color: 'text-[hsl(var(--accent-blue))]', label: 'Forum for longer-form discussion, over a hundred words.' },
+		{ icon: Trophy, color: 'text-[hsl(var(--accent-yellow))]', label: 'Leaderboard rankings, fight for the top!' },
+		{ icon: Webhook, color: 'text-[hsl(var(--accent-violet))]', label: 'Developer API with your own credentials, code whatever you want.' },
+		{ icon: Radio, color: 'text-[hsl(var(--accent-rose))]', label: 'Live stuff is built in, though not VERY good.' }
 	];
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [

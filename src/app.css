@@ -58,6 +58,19 @@
     --header-border-top:   rgba(255, 248, 230, 0.9);
     --float-glow:          0 8px 24px -6px rgba(60, 30, 0, 0.35);
 
+    /* Aged/desaturated accent palette for categorical color-coding (HTTP
+       method badges, feature icons, etc). Exists because those spots kept
+       reaching for raw Tailwind bg-sky-500/text-emerald-500/etc, which read
+       as a modern SaaS dashboard next to the sepia/bevel theme everywhere
+       else — same hues, pulled down in saturation/lightness to sit in the
+       same aged-paper family as --primary. */
+    --accent-blue:         205 40% 38%;
+    --accent-green:        140 28% 30%;
+    --accent-amber:        36 55% 38%;
+    --accent-violet:       260 22% 42%;
+    --accent-rose:         5 50% 40%;
+    --accent-yellow:       42 50% 36%;
+
     --aero-surface:        rgba(255, 255, 255, 0.55);
     --aero-surface-hover:  rgba(255, 255, 255, 0.78);
     --aero-border-top:     rgba(255, 255, 255, 0.85);
@@ -107,6 +120,15 @@
     --header-bg:           linear-gradient(180deg, hsl(20 10% 10%) 0%, hsl(20 8% 7%) 100%);
     --header-border-top:   rgba(255, 255, 255, 0.07);
     --float-glow:          0 8px 24px -6px rgba(0, 0, 0, 0.6);
+
+    /* Same aged-accent family as light mode, lifted in lightness to stay
+       legible against the near-black background — hues unchanged. */
+    --accent-blue:         205 40% 58%;
+    --accent-green:        140 28% 48%;
+    --accent-amber:        36 55% 56%;
+    --accent-violet:       260 30% 66%;
+    --accent-rose:         5 50% 60%;
+    --accent-yellow:       42 55% 58%;
 
     /* Dark-mode aero — this is the look from the reference screenshots:
        near-black translucent glass, a thin bright top edge, soft dark
@@ -281,6 +303,24 @@ button[class*="w-full"][class*="bg-primary"] {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   font-size: 0.8rem;
+}
+
+/* ════════════════════════════════════════════════
+   NATIVE <select> — recessed well, matches Input
+   exactly (same bevel direction/inset-shadow) so a
+   raw <select> dropped into a page (admin/devcycle
+   was the offender) doesn't read as an unstyled
+   browser default next to everything around it.
+   ════════════════════════════════════════════════ */
+select {
+  border-radius: var(--radius-sm) !important;
+  background: hsl(var(--input));
+  font-family: var(--font-retro);
+  border-top: 1px solid var(--bevel-dark) !important;
+  border-left: 1px solid var(--bevel-dark) !important;
+  border-bottom: 1px solid var(--bevel-light) !important;
+  border-right: 1px solid var(--bevel-light) !important;
+  box-shadow: var(--inset-shadow) !important;
 }
 
 /* ════════════════════════════════════════════════
