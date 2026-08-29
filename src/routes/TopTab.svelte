@@ -32,10 +32,14 @@
 </div>
 
 <style>
-	/* Aero pill tabs — same --aero-* tokens as OutlineButton's .shit, kept
-	   as a separate ruleset (rather than sharing a class) since a tab
-	   needs the active fill to sit *behind* its own label as a positioned
-	   layer, where a nav button just swaps its whole background. */
+	/* Simple glass — dark translucent pill, thin border, faint shadow, no
+	   blur/shine/saturation stacking. The earlier version reused the same
+	   heavy --aero-* tokens as OutlineButton's circular nav buttons (12px
+	   blur + 160% saturate + a gradient shine layer), which reads fine on
+	   a small icon-only circle but got noisy and "frosted" once stretched
+	   across a whole row of wide text pills — closer to the Smolish-style
+	   reference (flat dark fill, subtle top border, no glare) than the
+	   full aero treatment. */
 	.tab-pill {
 		position: relative;
 		overflow: hidden;
@@ -53,24 +57,17 @@
 		color: hsl(var(--foreground));
 		transition:
 			background 0.15s ease-in-out,
-			border-color 0.15s ease-in-out,
-			box-shadow 0.15s ease-in-out;
+			border-color 0.15s ease-in-out;
 	}
 
 	.tab-pill:hover:not(.active) {
-		background: var(--aero-surface);
-		border-color: var(--aero-border-top);
-		border-bottom-color: var(--aero-border-bottom);
-		box-shadow: var(--aero-shadow);
-		-webkit-backdrop-filter: blur(var(--aero-blur)) saturate(160%);
-		backdrop-filter: blur(var(--aero-blur)) saturate(160%);
+		background: hsl(var(--foreground) / 0.06);
+		border-color: hsl(var(--foreground) / 0.12);
 	}
 
 	.tab-pill.active {
 		color: hsl(var(--primary-foreground));
-		border-color: var(--aero-border-top);
-		border-bottom-color: rgba(0, 0, 0, 0.3);
-		box-shadow: var(--aero-shadow-active);
+		border-color: hsl(var(--foreground) / 0.12);
 	}
 
 	.tab-label {
@@ -78,22 +75,16 @@
 		z-index: 1;
 	}
 
-	/* The active pill's glass fill — a separate absolutely-positioned
-	   layer (rather than just setting .tab-pill.active's own background)
-	   so it can fly in/out on tab switch the same way the old underline
-	   bar did, instead of the whole pill hard-cutting between states. */
+	/* The active pill's fill — a separate absolutely-positioned layer
+	   (rather than just setting .tab-pill.active's own background) so it
+	   can fly in/out on tab switch the same way the old underline bar
+	   did, instead of the whole pill hard-cutting between states. Flat
+	   primary color, no gradient/shine — matches the simplified look. */
 	.tab-fill {
 		position: absolute;
 		inset: 0;
 		border-radius: inherit;
-		background: linear-gradient(to bottom, hsl(var(--primary-top)) 0%, hsl(var(--primary)) 100%);
+		background: hsl(var(--primary) / 0.85);
 		z-index: 0;
-	}
-
-	.tab-fill::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: var(--aero-shine);
 	}
 </style>
