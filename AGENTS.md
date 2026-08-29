@@ -1,1 +1,1 @@
-NEVER USE `temp-discord-token` OUTSIDE OF OAUTH
+# ***NEVER USE `temp-discord-token` AND `temp-google-token` OUTSIDE OF OAUTH***
