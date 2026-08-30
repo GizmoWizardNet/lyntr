@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { mode } from 'mode-watcher';
+	import { PUBLIC_GIT_COMMIT } from '$env/static/public';
 	import {
 		BookOpen,
 		TrendingUp,
@@ -29,7 +30,6 @@
 	];
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [
-		{ href: 'https://github.com/GizmoWizardNet/lyntr', icon: Code, label: 'Our Github :D', external: true },
 		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true },
 		{
 			href: 'https://github.com/NotHMRC/pylyntr',
@@ -111,6 +111,7 @@
 				<span class="legal-dot">·</span>
 				<a href="/privacy">Privacy Policy</a>
 			</div>
+			<p class="build-footer">Running commit: <code>{PUBLIC_GIT_COMMIT}</code></p>
 		</section>
 	</div>
 </div>
@@ -295,6 +296,18 @@
 
 	.legal-dot {
 		color: hsl(var(--muted-foreground));
+	}
+
+	.build-footer {
+		margin: 4px 0 0;
+		text-align: center;
+		font-family: var(--font-retro);
+		font-size: 11px;
+		color: hsl(var(--muted-foreground) / 0.7);
+	}
+
+	.build-footer code {
+		font-family: 'Consolas', 'Courier New', monospace;
 	}
 
 	@media (max-width: 560px) {
