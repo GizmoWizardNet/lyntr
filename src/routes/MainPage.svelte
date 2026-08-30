@@ -580,7 +580,7 @@
 					<div
 						class="hidden h-full shrink-0 overflow-y-auto px-4 lg:block"
 					>
-					<TrendingSidebar />
+					<TrendingSidebar myId={id} />
 					</div>
 				{/if}
 

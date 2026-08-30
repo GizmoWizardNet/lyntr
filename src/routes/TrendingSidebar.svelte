@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { currentPage, pendingSearchQuery, cdnUrl } from './stores';
+	import UserBadges from './UserBadges.svelte';
+
+	interface Props {
+		myId?: string | null;
+	}
+	let { myId = null }: Props = $props();
 
 	type TrendingTag = {
 		tag: string;
@@ -13,14 +19,26 @@
 		handle: string;
 		verified: boolean;
 		nameColor: string | null;
+		isAdmin: boolean;
+		contributor: boolean;
+		loginStreak: number;
 		postCount: number;
 		likeCount: number;
 		score: number;
+		followerCount: number;
+		isFollowing: boolean;
+		followsViewer: boolean;
+		isSelf: boolean;
 	};
 
 	let tags: TrendingTag[] = $state([]);
 	let users: TrendingUser[] = $state([]);
 	let loading = $state(true);
+
+	// Local optimistic follow-state overrides, keyed by user id, so a click
+	// updates the button instantly instead of waiting on a re-fetch.
+	let followOverrides: Record<string, boolean> = $state({});
+	let followBusy: Record<string, boolean> = $state({});
 
 	onMount(async () => {
 		try {
@@ -36,6 +54,10 @@
 		}
 	});
 
+	function isFollowing(user: TrendingUser) {
+		return followOverrides[user.id] ?? user.isFollowing;
+	}
+
 	function openTag(tag: string) {
 		pendingSearchQuery.set(`#${tag}`);
 		currentPage.set('search');
@@ -44,15 +66,38 @@
 	function openUser(handle: string) {
 		currentPage.set('profile' + handle);
 	}
+
+	async function toggleFollow(e: MouseEvent, user: TrendingUser) {
+		e.stopPropagation();
+		if (!myId || followBusy[user.id]) return;
+
+		const nextState = !isFollowing(user);
+		followOverrides = { ...followOverrides, [user.id]: nextState };
+		followBusy = { ...followBusy, [user.id]: true };
+
+		try {
+			const res = await fetch('/api/follow', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userId: user.id })
+			});
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		} catch (error) {
+			// Roll back on failure.
+			followOverrides = { ...followOverrides, [user.id]: !nextState };
+			console.error('Failed to toggle follow from trending sidebar:', error);
+		} finally {
+			followBusy = { ...followBusy, [user.id]: false };
+		}
+	}
 </script>
 
 <aside class="sidebar">
 
-	<!-- Tags panel -->
+	<!-- Trending tags panel -->
 	<div class="panel">
 		<div class="panel-head">
-			<span class="panel-title">TRENDING</span>
-			<span class="panel-sub">PAST 7 DAYS</span>
+			<span class="panel-title">What's happening</span>
 		</div>
 
 		{#if loading}
@@ -60,23 +105,24 @@
 		{:else if tags.length === 0}
 			<div class="empty-row">Nothing trending yet.</div>
 		{:else}
-			<div class="pill-wrap">
+			<div class="tag-list">
 				{#each tags as tag, i (tag.tag)}
-					<button class="pill tag-pill" onclick={() => openTag(tag.tag)}>
-						<span class="pill-rank">{i + 1}</span>
-						<span class="pill-tag">#{tag.tag}</span>
-						<span class="pill-count">{tag.count}</span>
+					<button class="tag-row" onclick={() => openTag(tag.tag)}>
+						<span class="tag-meta">Trending in Lyntr</span>
+						<span class="tag-name">#{tag.tag}</span>
+						<span class="tag-count">{tag.count} {tag.count === 1 ? 'Lynt' : 'Lynts'}</span>
 					</button>
 				{/each}
 			</div>
 		{/if}
+
+		<button class="show-more" onclick={() => currentPage.set('search')}>Show more</button>
 	</div>
 
-	<!-- Users panel -->
+	<!-- Who to follow panel -->
 	<div class="panel">
 		<div class="panel-head">
-			<span class="panel-title">TOP LYNTRS</span>
-			<span class="panel-sub">THIS WEEK</span>
+			<span class="panel-title">Who to follow</span>
 		</div>
 
 		{#if loading}
@@ -84,42 +130,65 @@
 		{:else if users.length === 0}
 			<div class="empty-row">Nobody trending yet.</div>
 		{:else}
-			<div class="pill-list">
-				{#each users as user, i (user.id)}
-					<button class="pill user-pill" onclick={() => openUser(user.handle)}>
-						<span class="pill-rank">{i + 1}</span>
-						<img src={cdnUrl(user.id, 'small')} alt="" class="avatar" loading="lazy" decoding="async" />
+			<div class="user-list">
+				{#each users as user (user.id)}
+					<button class="user-row" onclick={() => openUser(user.handle)}>
+						<img
+							src={cdnUrl(user.id, 'small')}
+							alt=""
+							class="avatar"
+							loading="lazy"
+							decoding="async"
+						/>
 						<span class="user-body">
-							<span class="user-name" style={user.nameColor ? `color: ${user.nameColor}` : ''}>
-								{user.username}
-								{#if user.verified}
-									<img src="/verified.png" alt="Verified" class="verified-icon" />
-								{/if}
+							<span class="user-name-row">
+								<span
+									class="user-name"
+									style={user.nameColor ? `color: ${user.nameColor}` : ''}
+								>
+									{user.username}
+								</span>
+								<UserBadges
+									verified={user.verified}
+									isAdmin={user.isAdmin}
+									contributor={user.contributor}
+									loginStreak={user.loginStreak}
+									followerCount={user.followerCount}
+									followsViewer={user.followsViewer}
+									compact
+								/>
 							</span>
 							<span class="user-handle">@{user.handle}</span>
 						</span>
-						<span class="score-pill">
-							<b>{user.score}</b>
-							<small>pts</small>
-						</span>
+
+						{#if myId && !user.isSelf}
+							<button
+								class="follow-btn"
+								class:following={isFollowing(user)}
+								disabled={followBusy[user.id]}
+								onclick={(e) => toggleFollow(e, user)}
+							>
+								{isFollowing(user) ? 'Following' : 'Follow'}
+							</button>
+						{/if}
 					</button>
 				{/each}
 			</div>
 		{/if}
-	</div>
 
-	<p class="footer-note">Updated from the past 7 days of activity.</p>
+		<button class="show-more" onclick={() => currentPage.set('search')}>Show more</button>
+	</div>
 
 </aside>
 
 <style>
 	.sidebar {
-		width: 260px;
+		width: 280px;
 		flex-shrink: 0;
 		padding-top: 20px;
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 14px;
 		font-family: var(--font-retro);
 	}
 
@@ -130,128 +199,120 @@
 		border-left:   1px solid var(--bevel-light);
 		border-bottom: 1px solid var(--bevel-dark);
 		border-right:  1px solid var(--bevel-dark);
-		border-radius: 6px;
+		border-radius: 8px;
 		overflow: hidden;
 		box-shadow: var(--inset-shadow);
 	}
 
-	/* ── Panel header ── */
+	/* ── Panel header — aero gradient title bar, X-style copy ── */
 	.panel-head {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		padding: 6px 10px;
-		background: hsl(var(--primary));
+		padding: 10px 14px;
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--primary) / 0.95),
+			hsl(var(--primary) / 0.75)
+		);
 		color: hsl(var(--primary-foreground));
 		border-bottom: 1px solid var(--bevel-dark);
+		text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 	}
 
 	.panel-title {
-		font-size: 10px;
+		font-size: 15px;
 		font-weight: 800;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.01em;
 	}
 
-	.panel-sub {
-		font-size: 8px;
-		font-weight: 600;
-		opacity: 0.6;
-		letter-spacing: 0.06em;
-	}
-
-	/* ── Pill list container ── */
-	/* Tags wrap into a flowing chip cloud instead of a bordered vertical
-	   list — this is the requested "pill-like system": each tag is now a
-	   fully standalone, individually-shadowed rounded chip rather than a
-	   row sharing a divider border with its neighbors. */
-	.pill-wrap {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		padding: 10px;
-		background: hsl(var(--background));
-	}
-
-	.pill-list {
+	/* ── Tags list — vertical rows like X's "What's happening" ── */
+	.tag-list {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		padding: 10px;
 		background: hsl(var(--background));
 	}
 
-	/* ── Shared pill base ── */
-	.pill {
-		border: 1px solid hsl(var(--border));
-		border-radius: 999px;
-		background: hsl(var(--card));
-		color: hsl(var(--foreground));
+	.tag-row {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1px;
+		width: 100%;
+		padding: 9px 14px;
+		border: none;
+		border-bottom: 1px solid hsl(var(--border));
+		background: transparent;
 		font-family: inherit;
 		text-align: left;
 		cursor: pointer;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		transition: background 0.12s, border-color 0.12s, transform 0.08s;
+		transition: background 0.12s;
 	}
 
-	.pill:hover {
+	.tag-row:last-child {
+		border-bottom: none;
+	}
+
+	.tag-row:hover {
 		background: hsl(var(--lynt-focus));
-		border-color: hsl(var(--primary) / 0.4);
 	}
 
-	.pill:active {
-		transform: scale(0.98);
+	.tag-row:active {
 		background: hsl(var(--muted));
 	}
 
-	/* Rank chip inside the pill — small filled circle instead of a squared
-	   divider column, so it reads as part of the pill's shape. */
-	.pill-rank {
-		flex-shrink: 0;
-		width: 16px;
-		height: 16px;
+	.tag-meta {
+		font-size: 10px;
+		color: hsl(var(--muted-foreground));
+	}
+
+	.tag-name {
+		font-size: 13px;
+		font-weight: 800;
+		color: hsl(var(--foreground));
+	}
+
+	.tag-count {
+		font-size: 10px;
+		color: hsl(var(--muted-foreground));
+	}
+
+	/* ── Users list ── */
+	.user-list {
+		display: flex;
+		flex-direction: column;
+		background: hsl(var(--background));
+	}
+
+	.user-row {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		border-radius: 999px;
-		background: hsl(var(--primary));
-		color: hsl(var(--primary-foreground));
-		font-family: 'Courier New', monospace;
-		font-size: 9px;
-		font-weight: 800;
-	}
-
-	/* ── Tag pill specifics ── */
-	.tag-pill {
-		padding: 5px 12px 5px 5px;
-	}
-
-	.pill-tag {
-		font-size: 12px;
-		font-weight: 700;
-		color: hsl(var(--primary));
-		white-space: nowrap;
-	}
-
-	.pill-count {
-		font-size: 9px;
-		font-weight: 700;
-		color: hsl(var(--muted-foreground));
-		background: hsl(var(--muted));
-		border-radius: 999px;
-		padding: 1px 6px;
-	}
-
-	/* ── User pill specifics ── */
-	.user-pill {
+		gap: 8px;
 		width: 100%;
-		padding: 5px 10px 5px 5px;
+		padding: 9px 14px;
+		border: none;
+		border-bottom: 1px solid hsl(var(--border));
+		background: transparent;
+		font-family: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.12s;
+	}
+
+	.user-row:last-child {
+		border-bottom: none;
+	}
+
+	.user-row:hover {
+		background: hsl(var(--lynt-focus));
+	}
+
+	.user-row:active {
+		background: hsl(var(--muted));
 	}
 
 	.avatar {
-		width: 30px;
-		height: 30px;
+		width: 34px;
+		height: 34px;
 		border-radius: 999px;
 		flex-shrink: 0;
 		object-fit: cover;
@@ -267,73 +328,100 @@
 		gap: 1px;
 	}
 
+	.user-name-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+	}
+
 	.user-name {
-		font-size: 11px;
+		font-size: 12px;
 		font-weight: 700;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		display: flex;
-		align-items: center;
-		gap: 3px;
-	}
-
-	.verified-icon {
-		width: 12px;
-		height: 12px;
-		flex-shrink: 0;
-		object-fit: contain;
+		flex-shrink: 1;
+		min-width: 0;
 	}
 
 	.user-handle {
-		font-size: 9px;
+		font-size: 10px;
 		color: hsl(var(--muted-foreground));
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.score-pill {
+	/* ── Follow button — beveled aero pill, like the rest of Lyntr's chrome ── */
+	.follow-btn {
 		flex-shrink: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 4px 10px;
-		background: hsl(var(--muted));
+		padding: 5px 14px;
 		border-radius: 999px;
-		min-width: 32px;
+		font-family: inherit;
+		font-size: 11px;
+		font-weight: 800;
+		cursor: pointer;
+		background: hsl(var(--foreground));
+		color: hsl(var(--background));
+		border-top:    1px solid var(--bevel-light);
+		border-left:   1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right:  1px solid var(--bevel-dark);
+		transition: transform 0.08s, background 0.12s, color 0.12s;
 	}
 
-	.score-pill b {
-		font-family: 'Courier New', monospace;
-		font-size: 10px;
-		line-height: 1;
+	.follow-btn:active {
+		transform: scale(0.96);
+	}
+
+	.follow-btn.following {
+		background: hsl(var(--background));
 		color: hsl(var(--foreground));
+		border-top:    1px solid var(--bevel-dark);
+		border-left:   1px solid var(--bevel-dark);
+		border-bottom: 1px solid var(--bevel-light);
+		border-right:  1px solid var(--bevel-light);
 	}
 
-	.score-pill small {
-		font-size: 7px;
-		color: hsl(var(--muted-foreground));
-		letter-spacing: 0.05em;
-		margin-top: 1px;
+	.follow-btn.following:hover {
+		background: hsl(var(--destructive) / 0.12);
+		color: hsl(var(--destructive));
+		border-color: hsl(var(--destructive) / 0.4);
+	}
+
+	.follow-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	/* ── Show more footer link — X-style ── */
+	.show-more {
+		display: block;
+		width: 100%;
+		padding: 10px 14px;
+		border: none;
+		background: hsl(var(--background));
+		color: hsl(var(--primary));
+		font-family: inherit;
+		font-size: 12px;
+		font-weight: 700;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.12s;
+	}
+
+	.show-more:hover {
+		background: hsl(var(--lynt-focus));
+		text-decoration: underline;
 	}
 
 	/* ── Empty state ── */
 	.empty-row {
-		padding: 12px 10px;
+		padding: 12px 14px;
 		font-size: 11px;
 		color: hsl(var(--muted-foreground));
 		background: hsl(var(--background));
-	}
-
-	/* ── Footer note ── */
-	.footer-note {
-		margin: 0;
-		padding: 0 4px;
-		font-size: 9px;
-		color: hsl(var(--muted-foreground));
-		text-align: center;
-		letter-spacing: 0.02em;
 	}
 
 	@media (max-width: 1100px) {
