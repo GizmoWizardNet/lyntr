@@ -721,3 +721,14 @@ export const devCycleItems = pgTable('dev_cycle_items', {
 }, (table) => ({
     entryIdx: index('dev_cycle_items_entry_id_idx').on(table.entry_id, table.position),
 }));
+
+export const devCycleNotes = pgTable('dev_cycle_notes', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // Full 40-char SHA of the commit this note is pinned to.
+    commit_sha: varchar('commit_sha', { length: 40 }).notNull(),
+    note: text('note').notNull(),
+    author_id: text('author_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+    commitIdx: index('dev_cycle_notes_commit_sha_idx').on(table.commit_sha),
+}));

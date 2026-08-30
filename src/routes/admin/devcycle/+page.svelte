@@ -12,6 +12,86 @@
 	import MarkdownEditor from '../../Forum/MarkdownEditor.svelte';
 	import LoadingSpinner from '../../LoadingSpinner.svelte';
 
+	// ── Commit note bubbles ──────────────────────────────────────────────
+	interface GraphCommit {
+		sha: string;
+		shortSha: string;
+		message: string;
+		authorLogin: string | null;
+		authorName: string;
+		notes: { id: string; note: string }[];
+	}
+	let commits = $state<GraphCommit[]>([]);
+	let commitsLoading = $state(true);
+	let commitFilter = $state('');
+	let noteDraftSha = $state<string | null>(null);
+	let noteDraftText = $state('');
+	let noteSaving = $state(false);
+
+	let filteredCommits = $derived(
+		commitFilter.trim()
+			? commits.filter(
+					(c) =>
+						c.message.toLowerCase().includes(commitFilter.toLowerCase()) ||
+						c.shortSha.includes(commitFilter.toLowerCase())
+				)
+			: commits
+	);
+
+	async function loadCommits() {
+		commitsLoading = true;
+		try {
+			const res = await fetch('/api/devcycle/graph');
+			const data = await res.json();
+			commits = data.commits ?? [];
+		} catch {
+			toast.error('Failed to load commit history');
+		} finally {
+			commitsLoading = false;
+		}
+	}
+
+	function startNote(sha: string) {
+		noteDraftSha = sha;
+		noteDraftText = '';
+	}
+
+	async function saveNote() {
+		if (!noteDraftSha || !noteDraftText.trim()) return;
+		noteSaving = true;
+		try {
+			const res = await fetch('/api/admin/devcycle/notes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ commitSha: noteDraftSha, note: noteDraftText.trim() })
+			});
+			if (!res.ok) throw new Error('failed');
+			toast.success('Note pinned to commit');
+			noteDraftSha = null;
+			noteDraftText = '';
+			await loadCommits();
+		} catch {
+			toast.error('Failed to save note');
+		} finally {
+			noteSaving = false;
+		}
+	}
+
+	async function deleteNote(id: string) {
+		if (!confirm('Remove this note?')) return;
+		try {
+			const res = await fetch('/api/admin/devcycle/notes', {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id })
+			});
+			if (!res.ok) throw new Error('failed');
+			await loadCommits();
+		} catch {
+			toast.error('Failed to delete note');
+		}
+	}
+
 	type Category = 'new' | 'improved' | 'fixed' | 'removed';
 	interface ItemDraft {
 		category: Category;
@@ -141,6 +221,7 @@
 	}
 
 	onMount(load);
+	onMount(loadCommits);
 </script>
 
 <svelte:head>
@@ -218,6 +299,61 @@
 			</CardContent>
 		</Card>
 
+		<Card>
+			<CardHeader>
+				<CardTitle>Commit note bubbles</CardTitle>
+			</CardHeader>
+			<CardContent class="space-y-3">
+				<p class="text-muted-foreground text-xs">
+					Pin a short note to any commit — it shows as a glass bubble on the commit graph at /updates.
+				</p>
+				<Input placeholder="Filter by message or SHA…" bind:value={commitFilter} />
+
+				{#if commitsLoading}
+					<LoadingSpinner />
+				{:else}
+					<div class="commit-note-list">
+						{#each filteredCommits as c (c.sha)}
+							<div class="commit-note-row">
+								<div class="commit-note-meta">
+									<code>{c.shortSha}</code>
+									<span class="commit-note-msg">{c.message}</span>
+								</div>
+
+								{#each c.notes as n (n.id)}
+									<div class="commit-note-existing">
+										<span>{n.note}</span>
+										<Button variant="ghost" size="icon" onclick={() => deleteNote(n.id)}>
+											<Trash2 class="h-3.5 w-3.5" />
+										</Button>
+									</div>
+								{/each}
+
+								{#if noteDraftSha === c.sha}
+									<div class="flex gap-2">
+										<Input
+											class="flex-1"
+											placeholder="Note text…"
+											bind:value={noteDraftText}
+											autofocus
+										/>
+										<Button size="sm" disabled={noteSaving} onclick={saveNote}>Pin</Button>
+										<Button variant="ghost" size="sm" onclick={() => (noteDraftSha = null)}>
+											Cancel
+										</Button>
+									</div>
+								{:else}
+									<Button variant="outline" size="sm" onclick={() => startNote(c.sha)}>
+										+ Add note
+									</Button>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</Card>
+
 		<div class="space-y-3">
 			<h2 class="text-lg font-semibold">All entries</h2>
 			{#each entries as entry (entry.id)}
@@ -272,5 +408,50 @@
 		font-size: 0.8125rem;
 		color: hsl(var(--muted-foreground));
 		font-family: var(--font-retro);
+	}
+
+	.commit-note-list {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		max-height: 420px;
+		overflow-y: auto;
+	}
+	.commit-note-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 8px 10px;
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		background: hsl(var(--muted) / 0.4);
+	}
+	.commit-note-meta {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		font-size: 12px;
+	}
+	.commit-note-meta code {
+		font-family: monospace;
+		background: hsl(var(--muted));
+		border-radius: 3px;
+		padding: 0 4px;
+	}
+	.commit-note-msg {
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.commit-note-existing {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		font-size: 12px;
+		background: hsl(var(--background));
+		border-radius: 6px;
+		padding: 4px 8px;
 	}
 </style>

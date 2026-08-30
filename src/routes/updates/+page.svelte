@@ -7,6 +7,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { renderMarkdown } from '$lib/markdown';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import CommitGraph from '../CommitGraph.svelte';
 
 	type Category = 'new' | 'improved' | 'fixed' | 'removed';
 	interface DevCycleItem {
@@ -78,6 +79,13 @@
 		<p class="text-muted-foreground text-sm">
 			What's shipping on Lyntr — new features, fixes, and everything in between, as it goes out.
 		</p>
+	</div>
+
+	<CommitGraph />
+
+	<div>
+		<h2 class="text-lg font-semibold">Changelog</h2>
+		<p class="text-muted-foreground text-xs">The human-readable version of the graph above.</p>
 	</div>
 
 	{#if loading}

@@ -13,7 +13,6 @@
 	import { working } from '$lib/working';
 	import Report from './Report.svelte';
 	import ParsedContent from './ParsedContent.svelte';
-	import { renderMarkdown } from '$lib/markdown';
 	import NetWorthBadge from './NetWorthBadge.svelte';
 	import UserBadges from './UserBadges.svelte';
 	import UserName from './UserName.svelte';
@@ -98,7 +97,6 @@
 	$: editCharCount = editContent.length;
 	$: editOverLimit = editCharCount > 280;
 	let editMode: 'write' | 'preview' = 'write';
-	$: editPreviewHtml = renderMarkdown(editContent);
 
 	function startEdit() {
 		editContent = content;
@@ -401,9 +399,12 @@
 				{:else}
 					<div class="edit-preview">
 						{#if editContent.trim()}
-							<div class="parsed-content" style="font-size:1rem;line-height:1.55;word-break:break-word;">
-								{@html editPreviewHtml}
-							</div>
+							<ParsedContent
+								content={editContent}
+								className="text-lg"
+								authorHandle={handle}
+								showLinkPreview={false}
+							/>
 						{:else}
 							<span style="font-style:italic;opacity:0.5">Nothing to preview…</span>
 						{/if}

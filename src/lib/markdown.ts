@@ -1,26 +1,3 @@
-/**
- * Lyntr Markdown — zero-dependency social-post parser.
- *
- * Handles: **bold**, *italic*, ***both***, `code`, ```fenced blocks```,
- * # headers, > blockquotes, ~~strike~~, [text](url), plain URLs → links,
- * - / * / + bullet lists and 1. ordered lists (nested, plus - [ ] / - [x]
- * task checkboxes), GFM pipe tables, and \-escaped literal characters.
- *
- * Returns sanitised HTML safe to use with {@html}. $SYMBOL and @mention
- * tokens are left untouched so ParsedContent can handle them separately.
- *
- * ── Escaping model ──────────────────────────────────────────────────────
- * Every block handler passes its line(s) through `inlineMarkdown()` and
- * NEVER escapes the text itself first — `inlineMarkdown` is the single
- * place HTML-escaping happens. It extracts code spans / links / escaped
- * characters into opaque placeholders *before* touching anything else, so:
- *   - bold/italic regexes can never reach into a code span or link label
- *   - leftover plain text gets escaped exactly once (earlier versions of
- *     this file double-escaped paragraph text and forgot to escape header/
- *     blockquote text at all — both are fixed by routing everything through
- *     this one function).
- */
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -87,6 +64,14 @@ function inlineMarkdown(raw: string): string {
 // ── List items ───────────────────────────────────────────────────────────
 const LIST_ITEM_RE = /^(\s*)([-*+]|\d+\.)\s+(.*)$/;
 const TASK_RE = /^\[( |x|X)\]\s+(.*)$/;
+
+// ── Subtext / subscript — Discord-style "-# text" lines, rendered smaller
+// and de-emphasized (visually a subscript line). Deliberately requires a
+// space right after "-#" so it never collides with LIST_ITEM_RE (which
+// needs whitespace immediately after its "-" marker too, and therefore
+// never matches "-#" in the first place — but this stays explicit rather
+// than relying on that as an accident of ordering).
+const SUBTEXT_RE = /^-#\s+(.*)$/;
 
 function renderListItemText(text: string): string {
   const task = text.match(TASK_RE);
@@ -197,6 +182,7 @@ function isBlockStart(line: string): boolean {
     /^>\s?/.test(line) ||
     /^#{1,4}\s+/.test(line) ||
     /^(-{3,}|\*{3,}|_{3,})\s*$/.test(line.trim()) ||
+    SUBTEXT_RE.test(line) ||
     LIST_ITEM_RE.test(line)
   );
 }
@@ -242,6 +228,15 @@ export function renderMarkdown(raw: string): string {
     if (hMatch) {
       const level = hMatch[1].length;
       out.push(`<h${level}>${inlineMarkdown(hMatch[2])}</h${level}>`);
+      i++;
+      continue;
+    }
+
+    // ── Subtext / subscript: "-# text" — each line stands alone rather
+    // than merging with neighbours, matching how Discord treats it.
+    const subMatch = line.match(SUBTEXT_RE);
+    if (subMatch) {
+      out.push(`<p class="lynt-subtext">${inlineMarkdown(subMatch[1])}</p>`);
       i++;
       continue;
     }

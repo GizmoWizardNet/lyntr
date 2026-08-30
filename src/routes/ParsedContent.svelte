@@ -219,6 +219,16 @@
 	.parsed-content :global(em)     { font-style: italic; }
 	.parsed-content :global(s)      { opacity: 0.6; }
 
+	/* -# subtext/subscript lines — smaller, muted, sits slightly below the
+	   baseline of a normal line to read as a subscript-style aside. */
+	.parsed-content :global(p.lynt-subtext) {
+		font-size: 0.78em;
+		line-height: 1.4;
+		margin: 0.15em 0;
+		color: hsl(var(--muted-foreground));
+		vertical-align: sub;
+	}
+
 	.parsed-content :global(code) {
 		font-family: 'Fira Mono', 'Consolas', monospace;
 		font-size: 0.875em;

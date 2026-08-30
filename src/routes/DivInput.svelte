@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { renderMarkdown } from '$lib/markdown';
 	import LinkPreview from './LinkPreview.svelte';
 	import MentionAutocomplete from './MentionAutocomplete.svelte';
+	import ParsedContent from './ParsedContent.svelte';
 
 	interface Props {
 		lynt?: string;
@@ -24,7 +24,6 @@
 	let remaining      = $derived(280 - characterCount);
 
 	let mode: 'write' | 'preview' = $state('write');
-	let previewHtml = $derived(renderMarkdown(lynt));
 
 	// Debounced URL — only fetches OG data 800ms after typing stops
 	let previewUrl: string | null = $state(null);
@@ -144,6 +143,9 @@
 				<button type="button" title="Blockquote" onclick={() => insertPrefix('> ')}>
 					❝
 				</button>
+				<button type="button" title="Subtext" class="mono" onclick={() => insertPrefix('-# ')}>
+					-#
+				</button>
 			</div>
 		{/if}
 	</div>
@@ -203,10 +205,7 @@
 	{:else}
 		<div class="preview-pane">
 			{#if lynt.trim()}
-				<!-- Re-use ParsedContent styles via an inline div; we import markdown directly -->
-				<div class="parsed-content preview-body">
-					{@html previewHtml}
-				</div>
+				<ParsedContent content={lynt} showLinkPreview={false} className="preview-body" />
 				{#if previewUrl}
 					<LinkPreview url={previewUrl} />
 				{/if}
@@ -335,39 +334,16 @@
 		border: var(--ghost-border);
 		box-shadow: var(--inset-shadow);
 	}
-	.preview-body {
+	/* Content styling (headers, lists, tokens, etc.) now comes from
+	   ParsedContent.svelte itself — it renders its own scoped markup here,
+	   so its :global() rules actually reach these elements. Only the base
+	   sizing that ParsedContent doesn't opinionate on lives here. */
+	:global(.preview-body) {
 		font-size: 1rem;
 		line-height: 1.55;
 		word-break: break-word;
 		overflow-wrap: anywhere;
 	}
-	/* Inline markdown element styles (mirrored from ParsedContent) */
-	.preview-body :global(p)          { margin: 0 0 0.25em; }
-	.preview-body :global(h1)         { font-size: 1.35em; font-family: 'Work Sans', sans-serif; font-weight: 700; margin: 0.4em 0 0.2em; }
-	.preview-body :global(h2)         { font-size: 1.2em;  font-family: 'Work Sans', sans-serif; font-weight: 700; margin: 0.4em 0 0.2em; }
-	.preview-body :global(h3)         { font-size: 1.08em; font-family: 'Work Sans', sans-serif; font-weight: 700; margin: 0.4em 0 0.15em; }
-	.preview-body :global(strong)     { font-weight: 700; }
-	.preview-body :global(em)         { font-style: italic; }
-	.preview-body :global(s)          { opacity: 0.6; }
-	.preview-body :global(code)       { font-family: monospace; font-size: 0.875em; background: hsl(var(--input)); border: 1px solid hsl(var(--border)); border-radius: 3px; padding: 1px 5px; }
-	.preview-body :global(pre)        { background: hsl(var(--muted)); border: var(--ghost-border); border-radius: 6px; padding: 10px 14px; box-shadow: var(--inset-shadow); overflow-x: auto; margin: 0.4em 0; position: relative; }
-	.preview-body :global(pre[data-lang]::before) { content: attr(data-lang); position: absolute; top: 5px; right: 10px; font-size: 0.7em; font-weight: 700; opacity: 0.45; text-transform: uppercase; }
-	.preview-body :global(pre code)   { background: none; border: none; padding: 0; box-shadow: none; font-size: 0.85em; }
-	.preview-body :global(blockquote) { border-left: 3px solid hsl(var(--primary)); margin: 0.4em 0; padding: 4px 12px; background: hsl(var(--background)); box-shadow: var(--inset-shadow); border-radius: 0 4px 4px 0; opacity: 0.85; font-style: italic; }
-	.preview-body :global(hr)         { border: none; height: 1px; background: linear-gradient(to right, transparent, hsl(var(--border)/0.8) 20%, hsl(var(--border)/0.8) 80%, transparent); margin: 0.5em 0; }
-	.preview-body :global(a)          { color: hsl(var(--primary)); font-weight: 600; text-decoration: underline dotted; text-underline-offset: 2px; }
-	.preview-body :global(br)         { display: block; content: ''; margin-top: 0.4em; }
-	.preview-body :global(ul)         { margin: 0.3em 0 0.5em; padding-left: 1.4em; list-style-type: disc; }
-	.preview-body :global(ol)         { margin: 0.3em 0 0.5em; padding-left: 1.4em; list-style-type: decimal; }
-	.preview-body :global(ul ul)      { list-style-type: circle; }
-	.preview-body :global(li)         { margin: 0.15em 0; line-height: 1.5; }
-	.preview-body :global(li > .task-item) { display: inline-flex; align-items: baseline; gap: 0.4em; list-style: none; }
-	.preview-body :global(.task-item input[type='checkbox']) { margin: 0; accent-color: hsl(var(--primary)); }
-	.preview-body :global(.task-item .done) { opacity: 0.6; text-decoration: line-through; }
-	.preview-body :global(table)      { border-collapse: collapse; margin: 0.5em 0; font-size: 0.92em; display: block; overflow-x: auto; max-width: 100%; }
-	.preview-body :global(th),
-	.preview-body :global(td)         { border: 1px solid hsl(var(--border)); padding: 4px 10px; }
-	.preview-body :global(th)         { background: hsl(var(--muted)); font-weight: 700; }
 
 	.empty-hint {
 		font-style: italic;
