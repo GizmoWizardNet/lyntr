@@ -215,8 +215,9 @@
     filter 0.1s ease-in-out,
     box-shadow 0.1s ease-in-out,
     background-color 0.1s ease-in-out,
-    color 0.1s ease-in-out !important;
-  transform: none !important;
+    color 0.1s ease-in-out,
+    transform 0.2s ease-in-out !important;
+  transform: rotate(0deg) !important;
   border-radius: 999px !important;
   padding: 6px 10px !important;
   font-family: var(--font-retro);
@@ -225,7 +226,11 @@
 
 .shit:hover {
   filter: none !important;
-  transform: none !important;
+  /* Restored from the original repo (face-hh/lyntr) — this got flattened
+     to `transform: none` at some point during the aero/bevel redesign,
+     which also killed it a second time via a redundant override in
+     OutlineButton.svelte's own scoped styles (removed alongside this). */
+  transform: rotate(3deg) !important;
   background: hsl(var(--primary) / 0.12) !important;
   box-shadow: var(--inset-shadow) !important;
 }
@@ -233,7 +238,7 @@
 .shit.active {
   background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary))) !important;
   color: hsl(var(--primary-foreground)) !important;
-  transform: none !important;
+  transform: rotate(0deg) !important;
   border-top: 1px solid var(--bevel-light) !important;
   border-left: 1px solid var(--bevel-light) !important;
   border-bottom: 1px solid var(--bevel-dark) !important;
