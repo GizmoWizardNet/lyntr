@@ -247,7 +247,7 @@
 </script>
 
 <div onclick={stopPropagation(() => openLynt(id))} class="mb-2 w-full text-left">
-	<div class="lynt-card flex w-full gap-3 overflow-hidden p-3">
+	<div class="lynt-card flex w-full gap-3 p-3">
 		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
 			{#if isClan && contributors.length > 0}
 				<ClanAvatarStack {contributors} size={10} />
