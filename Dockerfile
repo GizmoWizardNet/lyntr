@@ -1,6 +1,11 @@
 FROM node:22
 WORKDIR /app
 
+# Get the latest git commit hash as an env variable
+# and then we'll inject it build time
+ARG PUBLIC_GIT_COMMIT=unknown
+ENV PUBLIC_GIT_COMMIT=$PUBLIC_GIT_COMMIT
+
 COPY . .
 
 RUN npm install
