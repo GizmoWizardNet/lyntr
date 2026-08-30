@@ -105,16 +105,17 @@
 	<Popover.Content class="w-60">
 		<div class="grid gap-4">
 
-			<!-- Dark / Light mode toggle -->
+			<!-- Dark / Light mode toggle — mobile only. Desktop users can
+			     already flip modes via the sun/moon icon in the sidebar. -->
 			<button
 				onclick={toggleMode}
-				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
+				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)] md:hidden"
 			>
 				<HugeIcon icon={themeIcon} size={24} />
 				<span>{themeLabel}</span>
 			</button>
 
-			<div class="h-px bg-border"></div>
+			<div class="h-px bg-border md:hidden"></div>
 
 			<!-- Verify my account -->
 			<button
