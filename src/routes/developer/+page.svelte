@@ -23,6 +23,7 @@
 		VolumeMute02Icon
 	} from '@hugeicons/core-free-icons';
 	import { endpoints, type Endpoint } from './endpoints';
+	import { PUBLIC_GIT_COMMIT } from '$env/static/public';
 
 	// Aged/desaturated accent palette (see app.css --accent-*) instead of
 	// raw Tailwind bg-sky-500/text-emerald-500/etc — those read as a modern
@@ -387,6 +388,10 @@
 		console.log(
 			'%cLyntr Developer API',
 			`color: ${primary}; font-family: monospace; font-size: 20px; font-weight: bold;`
+		);
+		console.log(
+			`%cRunning commit: ${PUBLIC_GIT_COMMIT}`,
+			`color: ${muted}; font-family: monospace; font-size: 12px;`
 		);
 		console.log(
 			'%cDO NOT paste anything in here unless you know exactly what you are doing. ' +
