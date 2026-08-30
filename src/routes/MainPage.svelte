@@ -471,9 +471,12 @@
 	<AchievementPop />
 	<div class="w-full max-w-[1400px]">
 		<div class="flex h-dvh w-full flex-col overflow-hidden md:flex-row">
-			<!-- Bottom nav bar (mobile) / left sidebar (desktop) -->
+			<!-- Bottom nav bar (mobile) / left sidebar (desktop). On the
+			     scrollables page (mobile only) this fades out so the
+			     TikTok-style video feed gets the full viewport — the
+			     desktop sidebar layout (md:static) is untouched. -->
 			<div
-				class="mobile-nav-ribbon fixed inset-x-2 bottom-2 z-50 rounded-[8px] md:static md:inset-auto md:rounded-none"
+				class="mobile-nav-ribbon fixed inset-x-2 bottom-2 z-50 rounded-[8px] transition-opacity duration-200 md:static md:inset-auto md:rounded-none md:!opacity-100 {page === 'scrollables' ? 'max-md:pointer-events-none max-md:opacity-0' : ''}"
 				style="padding-bottom: env(safe-area-inset-bottom, 0px);"
 			>
 				<div class="md:max-w-1/3 flex w-full flex-row items-center gap-1 px-2 py-1.5 md:w-auto md:flex-col md:items-start md:gap-2 md:px-0 md:py-2 md:pt-0">
@@ -496,7 +499,7 @@
 			</div>
 
 			<!-- Main content — scrolls independently above the fixed bottom nav -->
-			<div class="flex h-full w-full flex-col items-center gap-1 overflow-hidden pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:flex-row md:items-start md:pb-0">
+			<div class="flex h-full w-full flex-col items-center gap-1 overflow-hidden pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:flex-row md:items-start md:pb-0 {page === 'scrollables' ? 'max-md:!pb-0' : ''}">
 				<div class="flex h-full w-full max-w-[600px] flex-col overflow-hidden px-3 md:px-1 {lyntOpened && selectedLynt ? 'hidden md:flex' : ''} {page === 'forum' ? 'md:max-w-[900px]' : ''} {page === 'messages' ? 'md:max-w-[700px]' : ''} {page === 'scrollables' ? '!max-w-[480px] !px-0' : ''}">
 					{#if page === 'search'}
 						<Search userId={id} {handleLyntClick} />

@@ -4,6 +4,7 @@
 	import ParsedContent from './ParsedContent.svelte';
 	import GifPicker from './GifPicker.svelte';
 	import UserName from './UserName.svelte';
+	import EmojiIcon from './EmojiIcon.svelte';
 	import { cdnUrl } from './stores';
 	import { toast } from 'svelte-sonner';
 	import { wsClient } from '$lib/ws-client';
@@ -17,7 +18,7 @@
 
 	let { conversationId, myId, onback }: Props = $props();
 
-	const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+	const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '👍', '🔥', '👎', '😡', '🎉', '👀'];
 
 	let conv = $state<any>(null);
 	let messages = $state<any[]>([]);
@@ -610,7 +611,9 @@
 					{#if openReactionPickerFor === msg.id}
 						<div class="reaction-picker">
 							{#each QUICK_REACTIONS as emoji}
-								<button onclick={() => toggleReaction(msg.id, emoji)}>{emoji}</button>
+								<button onclick={() => toggleReaction(msg.id, emoji)}>
+									<EmojiIcon {emoji} size={18} />
+								</button>
 							{/each}
 						</div>
 					{/if}
@@ -619,7 +622,7 @@
 						<div class="reactions-row" class:me={isMe}>
 							{#each msg.reactions as r (r.emoji)}
 								<button class="reaction-chip" class:mine={r.me} onclick={() => toggleReaction(msg.id, r.emoji)}>
-									{r.emoji} {r.count}
+									<EmojiIcon emoji={r.emoji} size={14} /> {r.count}
 								</button>
 							{/each}
 						</div>
@@ -999,18 +1002,22 @@
 
 	.reaction-picker {
 		display: flex;
+		flex-wrap: wrap;
+		max-width: 190px;
 		gap: 2px;
 		background: hsl(var(--popover, var(--background)));
 		border: 1.5px solid hsl(var(--border));
-		border-radius: 9999px;
+		border-radius: 14px;
 		padding: 4px 6px;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 	}
 	.reaction-picker button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		background: transparent;
 		border: none;
 		cursor: pointer;
-		font-size: 16px;
 		padding: 2px;
 		border-radius: 50%;
 	}
@@ -1023,6 +1030,9 @@
 	.seen-label { font-size: 10px; color: var(--muted-foreground, #888); }
 	.reactions-row.me { justify-content: flex-end; }
 	.reaction-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
 		background: hsl(var(--muted));
 		border: 1px solid hsl(var(--border));
 		border-radius: 9999px;

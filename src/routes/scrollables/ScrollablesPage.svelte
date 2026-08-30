@@ -232,6 +232,13 @@
 		</Button>
 	</div>
 
+	<!-- Mobile-only floating post button — the toolbar (with the same
+	     action) fades out on mobile so the video feed can go full-bleed. -->
+	<button class="mobile-post-fab" onclick={() => (uploadOpen = true)} aria-label="Post a scrollable">
+		<Plus class="h-5 w-5" />
+	</button>
+
+
 	<div class="feed-viewport" bind:this={containerEl}>
 		{#if loading}
 			<div class="status">Loading scrollables...</div>
@@ -272,6 +279,7 @@
 		flex-direction: column;
 		height: 100%;
 		width: 100%;
+		position: relative;
 	}
 
 	.toolbar {
@@ -280,6 +288,46 @@
 		justify-content: space-between;
 		padding: 10px 12px;
 		flex-shrink: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	/* Full-bleed on mobile — this is a TikTok-style vertical feed, so the
+	   IQ filter/refresh controls just get in the way of the video. They
+	   stay available on desktop where there's room for them. A floating
+	   "+" (below) keeps posting reachable without the toolbar. */
+	@media (max-width: 767px) {
+		.toolbar {
+			opacity: 0;
+			pointer-events: none;
+			height: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+	}
+
+	.mobile-post-fab {
+		display: none;
+	}
+	@media (max-width: 767px) {
+		.mobile-post-fab {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: absolute;
+			right: 14px;
+			bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+			width: 44px;
+			height: 44px;
+			border-radius: 999px;
+			z-index: 10;
+			background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+			color: hsl(var(--primary-foreground));
+			border-top: 1px solid var(--bevel-light);
+			border-left: 1px solid var(--bevel-light);
+			border-bottom: 1px solid var(--bevel-dark);
+			border-right: 1px solid var(--bevel-dark);
+			box-shadow: var(--hard-shadow);
+		}
 	}
 
 	.iq-filter {

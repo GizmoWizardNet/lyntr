@@ -1,21 +1,8 @@
 <script lang="ts">
-	// ── Achievements page ────────────────────────────────────────
-	// Full catalog (locked + unlocked) with an overall progress bar.
-	// Mounting this page marks any unseen unlocks as seen (PATCH
-	// /api/achievements/unseen) — same "walking in resets the badge"
-	// pattern as Notifications/Messages use, just for achievements
-	// instead, and it's what clears the gold nav badge.
-	//
-	// Unlocking an achievement doesn't auto-pay its Community XP bonus —
-	// each unlocked card shows a Claim button (POST /api/achievements/claim)
-	// so collecting the reward is an active, satisfying step instead of
-	// something that just silently happens in the background.
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
-	import { Progress } from '@/components/ui/progress';
 	import { Badge } from '@/components/ui/badge';
-	import { Button } from '@/components/ui/button';
 	import { tierColor, type AchievementTier } from '$lib/achievements';
 	import { unseenAchievements } from '../stores';
 
@@ -120,20 +107,23 @@
 </script>
 
 <div class="flex h-full w-full flex-col overflow-y-auto px-1 pb-6">
-	<div class="sticky top-0 z-10 bg-background/95 pb-3 pt-2 backdrop-blur">
-		<h1 class="text-xl font-bold">Achievements</h1>
-		<p class="text-muted-foreground text-sm">
-			Milestones for using Lyntr. Each one has a one-time Community XP bonus to claim once unlocked.
-		</p>
+	<div class="sticky top-0 z-10 pb-3 pt-2">
+		<div class="achievements-header">
+			<h1>Achievements</h1>
+			<p>Milestones for using Lyntr. Each one has a one-time Community XP bonus to claim once unlocked.</p>
 
-		{#if !loading}
-			<div class="mt-3 flex items-center gap-3">
-				<Progress value={unlockedCount} max={totalCount} class="h-3 flex-1" />
-				<span class="text-muted-foreground whitespace-nowrap text-sm font-medium">
-					{unlockedCount}/{totalCount}
-				</span>
-			</div>
-		{/if}
+			{#if !loading}
+				<div class="mt-3 flex items-center gap-3">
+					<div class="retro-progress-track">
+						<div
+							class="retro-progress-fill"
+							style="width: {totalCount ? (unlockedCount / totalCount) * 100 : 0}%"
+						></div>
+					</div>
+					<span class="progress-count">{unlockedCount}/{totalCount}</span>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	{#if loading}
@@ -159,7 +149,7 @@
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex flex-wrap items-center gap-1.5">
-							<span class="font-bold">{achievement.name}</span>
+							<span class="font-bold font-[family-name:var(--font-retro)]">{achievement.name}</span>
 							<Badge
 								variant="outline"
 								class="rounded-md text-[10px] capitalize"
@@ -181,14 +171,13 @@
 						</div>
 					</div>
 					{#if claimable}
-						<Button
-							size="sm"
-							class="flex-shrink-0 gap-1"
+						<button
+							class="claim-btn flex-shrink-0"
 							onclick={() => claim(achievement)}
 							disabled={claiming.has(achievement.key)}
 						>
 							Claim +{achievement.coinReward.toLocaleString()}
-						</Button>
+						</button>
 					{:else if achievement.unlocked}
 						<Badge variant="outline" class="flex-shrink-0 gap-1 text-xs">
 							Claimed
@@ -199,3 +188,79 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.achievements-header {
+		padding: 12px 16px;
+		border-radius: var(--radius-md);
+		background: var(--header-bg);
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow);
+	}
+	.achievements-header h1 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-family: var(--font-retro);
+	}
+	.achievements-header p {
+		margin: 4px 0 0;
+		font-size: 0.8125rem;
+		color: hsl(var(--muted-foreground));
+		font-family: var(--font-retro);
+	}
+
+	/* Retro inset trough + gloss fill bar, matching the IQ badge / "new
+	   posts" pill treatment elsewhere, instead of shadcn's flat Progress. */
+	.retro-progress-track {
+		flex: 1;
+		height: 12px;
+		border-radius: 999px;
+		background: hsl(var(--input));
+		border-top: 1px solid var(--bevel-dark);
+		border-left: 1px solid var(--bevel-dark);
+		border-bottom: 1px solid var(--bevel-light);
+		border-right: 1px solid var(--bevel-light);
+		box-shadow: var(--inset-shadow);
+		overflow: hidden;
+	}
+	.retro-progress-fill {
+		height: 100%;
+		background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+		border-radius: inherit;
+		transition: width 0.3s ease;
+	}
+	.progress-count {
+		white-space: nowrap;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		font-family: var(--font-retro);
+		color: hsl(var(--muted-foreground));
+	}
+
+	/* Claim button — same gloss/bevel pill as the rest of Lyntr's primary
+	   actions, instead of shadcn's flat default Button. */
+	.claim-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 12px;
+		border-radius: 6px;
+		font-family: var(--font-retro);
+		font-size: 12px;
+		font-weight: 700;
+		color: hsl(var(--primary-foreground));
+		background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+		border-top: 1px solid var(--bevel-light);
+		border-left: 1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right: 1px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow-sm);
+		cursor: pointer;
+		transition: filter 0.12s;
+	}
+	.claim-btn:hover:not(:disabled) { filter: brightness(1.08); }
+	.claim-btn:disabled { opacity: 0.6; cursor: default; }
+</style>

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import EmojiIcon from './EmojiIcon.svelte';
+
 	// Discord-style quick-react bar for a lynt. Reactions are a lighter-weight
 	// "vibe" layer separate from likes (see the lynt_reactions schema
 	// comment) — no notification, no LyntCoin reward, just an emoji tally
@@ -20,7 +22,10 @@
 		myId: string | null;
 	} = $props();
 
-	const QUICK_EMOJI = ['❤️', '😂', '😮', '😢', '🔥', '👍', '🎉'];
+	// Matches ALLOWED_EMOJI in api/reactions/+server.ts exactly — every
+	// emoji the server will accept is now reachable from the picker, since
+	// custom icons exist for all ten (see lib/emojiIcons.ts).
+	const QUICK_EMOJI = ['❤️', '😂', '😮', '😢', '🔥', '👍', '👎', '😡', '🎉', '👀'];
 
 	let pickerOpen = $state(false);
 	// Optimistic local delta so a click feels instant instead of waiting on
@@ -104,7 +109,7 @@
 			onclick={() => toggle(r.emoji)}
 			title={r.reactedByUser ? 'Remove reaction' : 'React'}
 		>
-			<span>{r.emoji}</span>
+			<span><EmojiIcon emoji={r.emoji} size={15} /></span>
 			<span class="count">{r.count}</span>
 		</button>
 	{/each}
@@ -116,7 +121,9 @@
 		{#if pickerOpen}
 			<div class="picker">
 				{#each QUICK_EMOJI as emoji}
-					<button class="picker-emoji" onclick={() => toggle(emoji)}>{emoji}</button>
+					<button class="picker-emoji" onclick={() => toggle(emoji)}>
+						<EmojiIcon {emoji} size={20} />
+					</button>
 				{/each}
 			</div>
 		{/if}
@@ -176,6 +183,8 @@
 		bottom: calc(100% + 4px);
 		left: 0;
 		display: flex;
+		flex-wrap: wrap;
+		max-width: 176px;
 		gap: 2px;
 		padding: 4px;
 		border-radius: 8px;
@@ -185,9 +194,11 @@
 		z-index: 20;
 	}
 	.picker-emoji {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		background: transparent;
 		border: none;
-		font-size: 18px;
 		padding: 4px;
 		cursor: pointer;
 		border-radius: 6px;
