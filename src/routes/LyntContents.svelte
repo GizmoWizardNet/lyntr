@@ -212,13 +212,14 @@
 <div class={`${$$props.class} flex items-start gap-2`}>
 	{#if includeAvatar}
 		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px]">
-			<Avatar size={12} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
+			<Avatar size={15} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
 		</a>
 	{/if}
 
 	<div class="flex w-full flex-col text-left min-w-0">
-		<div class="flex w-full flex-wrap items-center gap-x-1 gap-y-0.5 {smaller ? 'max-w-[300px]' : ''}">
-			<div class="flex min-w-0 max-w-full items-center gap-1">
+		<div class="flex w-full items-start justify-between gap-1">
+			<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-0.5 {smaller ? 'max-w-[300px]' : ''}">
+				<div class="flex min-w-0 max-w-full items-center gap-1">
 				<HoverCard.Root>
 					<HoverCard.Trigger
 						rel="noreferrer noopener"
@@ -315,6 +316,7 @@
 						</Tooltip.Content>
 					</Tooltip.Root>
 				{/if}
+			</div>
 			</div>
 			<div class="flex-shrink-0">
 				<Popover.Root bind:open={popoverOpened}>
