@@ -28,14 +28,14 @@ The official Discord server for all things Lyntr can be found here: https://disc
 
 ## Development
 
-Lyntr is actively developed, by the community and myself.
+Lyntr is actively developed, by the community and myself. Contribution is welcome from anyone and anywhere. Please read contribution rules below *before* contributing.
 
-Contributors Credit: NotHMRC, Stormzady, and GizmoWizard(myself).
+**Contributors Credit**: NotHMRC, Stormzady, and GizmoWizard(myself).
 
 See the [development updates](https://1lyn.tr/updates) for recent changes
 and the [GitHub issues](https://github.com/GizmoWizardNet/lyntr/issues) for current work.
 
-## Contribution
+## Contribution Rules
 
 - For contribution to the Lyntr project, *please*, **DO NOT** open a PR for small spelling mistakes or one-line fixes. Instead, open an issue and a contributor or myself shall review it shortly.
 
