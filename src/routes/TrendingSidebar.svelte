@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { currentPage, pendingSearchQuery, cdnUrl } from './stores';
 	import UserBadges from './UserBadges.svelte';
+	import UserName from './UserName.svelte';
 
 	interface Props {
 		myId?: string | null;
@@ -142,12 +143,12 @@
 						/>
 						<span class="user-body">
 							<span class="user-name-row">
-								<span
+								<UserName
+									name={user.username}
+									color={user.nameColor}
+									verified={user.verified}
 									class="user-name"
-									style={user.nameColor ? `color: ${user.nameColor}` : ''}
-								>
-									{user.username}
-								</span>
+								/>
 								<UserBadges
 									verified={user.verified}
 									isAdmin={user.isAdmin}
@@ -155,7 +156,7 @@
 									loginStreak={user.loginStreak}
 									followerCount={user.followerCount}
 									followsViewer={user.followsViewer}
-									compact
+									size="tiny"
 								/>
 							</span>
 							<span class="user-handle">@{user.handle}</span>
@@ -335,7 +336,9 @@
 		min-width: 0;
 	}
 
-	.user-name {
+	/* UserName renders its own <span> inside a child component, so this
+	   parent-scoped selector needs :global to actually reach it. */
+	:global(.user-name) {
 		font-size: 12px;
 		font-weight: 700;
 		overflow: hidden;

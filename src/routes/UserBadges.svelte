@@ -10,7 +10,9 @@
 		loginStreak?: number;
 		followerCount?: number;
 		followsViewer?: boolean;
+		/** @deprecated use size="compact" instead */
 		compact?: boolean;
+		size?: 'default' | 'compact' | 'tiny';
 	}
 
 	let {
@@ -20,8 +22,16 @@
 		loginStreak = 0,
 		followerCount = 0,
 		followsViewer = false,
-		compact = false
+		compact = false,
+		size
 	}: Props = $props();
+
+	// `compact` predates `size` — keep it working as `size="compact"` so
+	// existing call sites (ProfilePage, LyntContents, ForumPostCard) don't
+	// need touching.
+	let resolvedSize = $derived(size ?? (compact ? 'compact' : 'default'));
+	let isCompact = $derived(resolvedSize !== 'default');
+	let isTiny = $derived(resolvedSize === 'tiny');
 
 	// ── Star tier ────────────────────────────────────────────────
 	type StarTier = { color: string; label: string } | null;
@@ -47,10 +57,10 @@
 	}
 	let flameColor = $derived(streakColor(loginStreak));
 
-	const iconSize = compact ? 20 : 30;
+	let iconSize = $derived(isTiny ? 13 : isCompact ? 20 : 30);
 </script>
 
-<div class="badges-row" class:compact>
+<div class="badges-row" class:compact={isCompact} class:tiny={isTiny}>
 
 	<!-- Verified -->
 	{#if verified}
@@ -101,12 +111,12 @@
 	{/if}
 
 	<!-- Login streak -->
-	{#if loginStreak > 1 || !compact}
+	{#if loginStreak > 1 || !isCompact}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
 				<span class="streak-wrap">
 					<Flame size={iconSize} color={flameColor} fill={flameColor} strokeWidth={1.5} />
-					{#if !compact}
+					{#if !isCompact}
 						<span class="streak-num" style="color: {flameColor}">{loginStreak}</span>
 					{/if}
 				</span>
@@ -135,8 +145,10 @@
 		flex-shrink: 0; /* never let the whole badge cluster get squeezed by a parent flex row */
 	}
 	.badges-row.compact { gap: 3px; }
+	.badges-row.tiny { gap: 2px; }
 	.badge-img { width: 45px; height: 45px; display: block; flex-shrink: 0; }
 	.badges-row.compact .badge-img { width: 30px; height: 30px; }
+	.badges-row.tiny .badge-img { width: 15px; height: 15px; }
 	.streak-wrap { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
 	.streak-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
 
