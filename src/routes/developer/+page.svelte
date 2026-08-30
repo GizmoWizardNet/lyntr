@@ -415,9 +415,9 @@
 		Back to Home
 	</Button>
 
-	<div>
-		<h1 class="text-2xl font-bold">Developer API</h1>
-		<p class="text-muted-foreground text-sm">
+	<div class="dev-header">
+		<h1>Developer API</h1>
+		<p>
 			Build on top of Lyntr with a REST API authenticated by a client ID and secret. Full docs
 			are below.
 		</p>
@@ -481,7 +481,7 @@
 			{:else}
 				<div class="space-y-3">
 					{#each clients as client (client.id)}
-						<div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+						<div class="credential-row">
 							<div>
 								<div class="font-medium">
 									{client.name}
@@ -722,8 +722,8 @@ for comment in client.all_comments()[:20]: # limit to 20
 								<!-- Front: face-down -->
 								<button
 									type="button"
-									class="absolute inset-0 flex h-full w-full flex-col justify-between rounded-lg border-2 p-3 text-left [backface-visibility:hidden]"
-									style="border-style: outset; background: repeating-linear-gradient(45deg, hsl(var(--primary)/0.09), hsl(var(--primary)/0.09) 7px, hsl(var(--primary)/0.16) 7px, hsl(var(--primary)/0.16) 14px);"
+									class="absolute inset-0 flex h-full w-full flex-col justify-between rounded-lg p-3 text-left [backface-visibility:hidden] card-face"
+									style="background: repeating-linear-gradient(45deg, hsl(var(--primary)/0.09), hsl(var(--primary)/0.09) 7px, hsl(var(--primary)/0.16) 7px, hsl(var(--primary)/0.16) 14px);"
 									onclick={() => toggleFlip(i)}
 									aria-label={`Reveal details for ${ep.method} ${ep.path}`}
 								>
@@ -744,8 +744,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 
 								<!-- Back: compact summary, baked-in 180° so it reads upright once the parent flips -->
 								<div
-									class="bg-card absolute inset-0 flex h-full w-full flex-col justify-between rounded-lg border-2 p-3 [backface-visibility:hidden] [transform:rotateY(180deg)]"
-									style="border-style: outset;"
+									class="bg-card absolute inset-0 flex h-full w-full flex-col justify-between rounded-lg p-3 [backface-visibility:hidden] [transform:rotateY(180deg)] card-face"
 								>
 									<button
 										type="button"
@@ -778,8 +777,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 
 						{#if isFlipped && isExpanded}
 							<div
-								class="bg-card space-y-3 rounded-lg border-2 p-3 text-sm"
-								style="border-style: outset;"
+								class="bg-card space-y-3 rounded-lg p-3 text-sm card-face"
 								transition:slide={{ duration: 220 }}
 							>
 								<p class="text-muted-foreground">{ep.description}</p>
@@ -805,3 +803,56 @@ for comment in client.all_comments()[:20]: # limit to 20
 		</CardContent>
 	</Card>
 </div>
+
+<style>
+	/* Same gradient bevel header bar as devcycle/admin's title — poll-head/
+	   nav-ribbon's visual language — instead of a plain text-2xl heading. */
+	.dev-header {
+		padding: 12px 16px;
+		border-radius: var(--radius-md);
+		background: var(--header-bg);
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow);
+	}
+	.dev-header h1 {
+		margin: 0;
+		font-size: 1.25rem;
+	}
+	.dev-header p {
+		margin: 4px 0 0;
+		font-size: 0.8125rem;
+		color: hsl(var(--muted-foreground));
+		font-family: var(--font-retro);
+	}
+
+	.credential-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 12px;
+		border-radius: var(--radius-sm);
+		border-top: 1.5px solid var(--bevel-light);
+		border-left: 1.5px solid var(--bevel-light);
+		border-bottom: 1.5px solid var(--bevel-dark);
+		border-right: 1.5px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow-sm);
+	}
+
+	/* Replaces the deck's old native border-style:outset — a crude
+	   browser-default gray bevel that ignores the theme entirely — with
+	   the same tokens every other panel on the site uses, so the card
+	   game's frame actually tints with light/dark mode instead of always
+	   rendering flat system gray. */
+	.card-face {
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow-sm);
+	}
+</style>

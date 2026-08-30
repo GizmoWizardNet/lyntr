@@ -140,24 +140,24 @@
 	}
 </script>
 
-<div class="code-block group relative overflow-hidden rounded-lg border">
-	{#if label}
-		<div class="flex items-center justify-between border-b bg-muted/50 px-3 py-1.5">
-			<span class="text-muted-foreground font-mono text-[11px] uppercase tracking-wide">
-				{label}
-			</span>
-		</div>
-	{/if}
+<div class="code-block group relative overflow-hidden">
+	<div class="code-block-titlebar">
+		<span class="titlebar-dots">
+			<span></span><span></span><span></span>
+		</span>
+		{#if label}
+			<span class="titlebar-label">{label}</span>
+		{/if}
+	</div>
 	<button
 		type="button"
 		onclick={copyCode}
-		class="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border bg-background/80 text-muted-foreground opacity-0 backdrop-blur transition-opacity hover:text-foreground group-hover:opacity-100"
-		class:opacity-100={copied}
+		class="copy-btn"
+		class:copied
 		aria-label="Copy code"
-		style={label ? 'top: 2.25rem;' : ''}
 	>
 		{#if copied}
-			<Check class="h-3.5 w-3.5 text-green-500" />
+			<Check class="h-3.5 w-3.5" />
 		{:else}
 			<Copy class="h-3.5 w-3.5" />
 		{/if}
@@ -166,6 +166,75 @@
 </div>
 
 <style>
+	/* Retro "terminal window" chrome — bevel frame + gradient titlebar
+	   (same --header-bg/--bevel-* tokens as the rest of the site) instead
+	   of a plain flat rounded-lg border, so this reads as another chunky
+	   physical panel rather than a generic modern code snippet widget. */
+	.code-block {
+		border-radius: var(--radius-sm);
+		border-top: 1.5px solid var(--bevel-light);
+		border-left: 1.5px solid var(--bevel-light);
+		border-bottom: 1.5px solid var(--bevel-dark);
+		border-right: 1.5px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow-sm);
+	}
+
+	.code-block-titlebar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 8px;
+		background: var(--header-bg);
+		border-bottom: 1px solid var(--bevel-dark);
+	}
+
+	.titlebar-dots {
+		display: inline-flex;
+		gap: 4px;
+	}
+	.titlebar-dots span {
+		width: 7px;
+		height: 7px;
+		border-radius: 999px;
+		background: hsl(var(--muted-foreground) / 0.4);
+	}
+
+	.titlebar-label {
+		font-family: var(--font-retro);
+		color: hsl(var(--muted-foreground));
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+
+	.copy-btn {
+		position: absolute;
+		right: 6px;
+		top: 5px;
+		z-index: 10;
+		display: flex;
+		height: 22px;
+		width: 22px;
+		align-items: center;
+		justify-content: center;
+		border-radius: 5px;
+		border-top: 1px solid var(--bevel-light);
+		border-left: 1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right: 1px solid var(--bevel-dark);
+		background: hsl(var(--background) / 0.6);
+		color: hsl(var(--muted-foreground));
+		opacity: 0;
+		transition: opacity 0.12s ease, color 0.12s ease;
+	}
+	.copy-btn:hover {
+		color: hsl(var(--foreground));
+	}
+	.code-block:hover .copy-btn,
+	.copy-btn.copied {
+		opacity: 1;
+	}
+
 	.code-block pre {
 		font-family:
 			ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
@@ -173,32 +242,36 @@
 		margin: 0;
 	}
 
+	/* Aged accent palette (see app.css --accent-*) instead of a neon
+	   VSCode-dark-theme syntax scheme — the old palette's saturated pinks/
+	   purples/greens read as a modern editor theme dropped into an
+	   otherwise sepia/bevel page. */
 	:global(.code-block .tok-method) {
-		color: #f97583;
+		color: hsl(var(--accent-rose));
 		font-weight: 600;
 	}
 	:global(.code-block .tok-keyword) {
-		color: #c792ea;
+		color: hsl(var(--accent-violet));
 		font-weight: 500;
 	}
 	:global(.code-block .tok-flag) {
-		color: #ffcb6b;
+		color: hsl(var(--accent-amber));
 	}
 	:global(.code-block .tok-string) {
-		color: #a5e844;
+		color: hsl(var(--accent-green));
 	}
 	:global(.code-block .tok-var) {
-		color: #82aaff;
+		color: hsl(var(--accent-blue));
 	}
 	:global(.code-block .tok-comment) {
 		color: hsl(var(--muted-foreground));
 		font-style: italic;
 	}
 	:global(.code-block .tok-key) {
-		color: #82aaff;
+		color: hsl(var(--accent-blue));
 	}
 	:global(.code-block .tok-number) {
-		color: #f78c6c;
+		color: hsl(var(--accent-amber));
 	}
 	:global(.code-block .tok-punct) {
 		color: hsl(var(--muted-foreground));
