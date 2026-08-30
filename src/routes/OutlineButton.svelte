@@ -11,10 +11,6 @@
 		icon: ComponentType<SvelteComponent>;
 		text?: string | undefined;
 		secondary?: string | undefined;
-		/** Overrides the badge's default bg-primary/50 styling — e.g. for
-		 *  Achievements' gold "unseen" badge (bg-amber-500 text-black).
-		 *  Was previously accepted by callers (Navigation.svelte) but never
-		 *  actually declared or applied here, so it silently did nothing. */
 		secondaryClass?: string | undefined;
 		strokeWidth?: number;
 		className?: string;
@@ -175,6 +171,7 @@
 		-webkit-backdrop-filter: blur(var(--aero-blur)) saturate(160%);
 		backdrop-filter: blur(var(--aero-blur)) saturate(160%);
 	}
+
 	.shit::before {
 		content: '';
 		position: absolute;
@@ -185,7 +182,6 @@
 
 	.shit:hover {
 		filter: none;
-		transform: none;
 		background: var(--aero-surface-hover);
 		box-shadow: var(--aero-shadow-active);
 	}
@@ -199,7 +195,6 @@
 		color: hsl(var(--primary-foreground));
 		border-color: var(--aero-border-top);
 		border-bottom-color: rgba(0, 0, 0, 0.3);
-		transform: none;
 		box-shadow: var(--aero-shadow-active);
 	}
 
@@ -288,19 +283,24 @@
 		30% { opacity: 1; }
 		100% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
 	}
+
+	/* lucide-animated's search: x:[0,0,-3,0], y:[0,-4,0,0] over four
+	   evenly-spaced keyframes (Motion's default when no explicit `times`
+	   is given) — a little hop up, then a dab to the lower-left. */
 	@keyframes navSearch {
 		0% { transform: translate(0, 0); }
 		33% { transform: translate(0, -4px); }
 		66% { transform: translate(-3px, 0); }
 		100% { transform: translate(0, 0); }
 	}
+	/* lucide-animated's bell: rotate:[0,-10,10,-10,0], five evenly-spaced
+	   keyframes (0/25/50/75/100%). */
 	@keyframes navBell {
 		0%, 100% { transform: rotate(0deg); }
 		25% { transform: rotate(-10deg); }
 		50% { transform: rotate(10deg); }
 		75% { transform: rotate(-10deg); }
 	}
-
 	@keyframes navMessage {
 		0% { transform: scale(1) rotate(0deg); }
 		25% { transform: scale(1.05) rotate(-7deg); }
