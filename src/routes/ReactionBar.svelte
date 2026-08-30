@@ -20,7 +20,7 @@
 		myId: string | null;
 	} = $props();
 
-	const QUICK_EMOJI = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
+	const QUICK_EMOJI = ['❤️', '😂', '😮', '😢', '🔥', '👍', '🎉'];
 
 	let pickerOpen = $state(false);
 	// Optimistic local delta so a click feels instant instead of waiting on
