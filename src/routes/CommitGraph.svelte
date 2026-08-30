@@ -21,19 +21,80 @@
 		notes: NoteData[];
 	}
 
-	let commits = $state<CommitData[]>([]);
+	let rawCommits = $state<CommitData[]>([]);
 	let repo = $state('');
 	let loading = $state(true);
 	let failed = $state(false);
 	let openNoteFor = $state<string | null>(null);
 
-	// ── Lane layout — a compact version of the algorithm `git log --graph`
-	// uses: walk commits top (newest) to bottom, keep an array of "lanes"
-	// where lanes[i] holds the sha we expect to see next in that lane. When
-	// a commit's sha matches a waiting lane, it settles there; otherwise it
+	// ── Topological ordering ────────────────────────────────────────────
+	// GitHub returns commits in commit-date order, which is usually close
+	// to topological but isn't guaranteed — author/committer date skew,
+	// rebases, and interleaved branches can all put a parent above its own
+	// child. Our lane algorithm below assumes strict "child before parent"
+	// ordering, so we re-sort into a real topological order first (a
+	// commit becomes eligible once every commit that names it as a parent
+	// has already been placed), the same approach `git log --graph` itself
+	// uses rather than pure chronological order. Ties are broken by the
+	// original date-order index, so the result still reads top-to-bottom
+	// like a normal commit list wherever topology doesn't force otherwise.
+	function topoSort(list: CommitData[]): CommitData[] {
+		const shaSet = new Set(list.map((c) => c.sha));
+		const indexOf = new Map(list.map((c, i) => [c.sha, i]));
+		const remainingChildren = new Map<string, number>();
+		for (const c of list) remainingChildren.set(c.sha, remainingChildren.get(c.sha) ?? 0);
+		for (const c of list) {
+			for (const p of c.parents) {
+				if (shaSet.has(p)) remainingChildren.set(p, (remainingChildren.get(p) ?? 0) + 1);
+			}
+		}
+
+		const ready = list
+			.filter((c) => (remainingChildren.get(c.sha) ?? 0) === 0)
+			.map((c) => c.sha);
+
+		const emitted: string[] = [];
+		const emittedSet = new Set<string>();
+		const bySha = new Map(list.map((c) => [c.sha, c]));
+
+		while (ready.length) {
+			// Always take the "readiest" commit closest to the original
+			// date order, so independent branch tips still interleave
+			// roughly by recency instead of in arbitrary discovery order.
+			ready.sort((a, b) => indexOf.get(a)! - indexOf.get(b)!);
+			const sha = ready.shift()!;
+			if (emittedSet.has(sha)) continue;
+			emitted.push(sha);
+			emittedSet.add(sha);
+
+			for (const p of bySha.get(sha)!.parents) {
+				if (!shaSet.has(p)) continue;
+				const rem = (remainingChildren.get(p) ?? 0) - 1;
+				remainingChildren.set(p, rem);
+				if (rem === 0) ready.push(p);
+			}
+		}
+
+		// A real cycle can't happen in git history, but guard against any
+		// commit our loop somehow missed (e.g. malformed API data) rather
+		// than silently dropping rows.
+		for (const c of list) if (!emittedSet.has(c.sha)) emitted.push(c.sha);
+
+		return emitted.map((sha) => bySha.get(sha)!);
+	}
+
+	let commits = $derived(topoSort(rawCommits));
+
+	// ── Lane layout — the same algorithm `git log --graph` uses: walk
+	// commits top (newest) to bottom, keep an array of "lanes" where
+	// lanes[i] holds the sha we expect to see next in that lane. When a
+	// commit's sha matches a waiting lane, it settles there; otherwise it
 	// takes the first free lane. Its first parent continues in the same
-	// lane; any additional parents (merges) open/reuse a lane of their own.
-	type Layout = { lane: number; parentLanes: { sha: string; lane: number }[] };
+	// lane; any additional parents (merges) open/reuse a lane of their
+	// own. Requires topoSort's ordering to be correct, or a parent could
+	// get processed before the commit that's still waiting on it.
+	type ParentLane = { sha: string; lane: number; offWindow?: boolean };
+	type Layout = { lane: number; parentLanes: ParentLane[]; isRoot: boolean };
 
 	function layoutGraph(list: CommitData[]): { layout: Layout[]; laneCount: number } {
 		const shaSet = new Set(list.map((c) => c.sha));
@@ -51,10 +112,20 @@
 			}
 			lanes[lane] = null;
 
-			const parentLanes: { sha: string; lane: number }[] = [];
+			const parentLanes: ParentLane[] = [];
+			const inWindowParents = c.parents.filter((p) => shaSet.has(p));
+
 			c.parents.forEach((psha, pi) => {
-				if (!shaSet.has(psha)) return; // parent outside our fetched window
-				if (pi === 0) {
+				if (!shaSet.has(psha)) {
+					// Parent exists in the real history but fell outside our
+					// fetched window — draw a short fading stub instead of
+					// silently dropping the connector, so it's visually
+					// obvious the graph continues beyond what's loaded.
+					parentLanes.push({ sha: psha, lane, offWindow: true });
+					return;
+				}
+				const inWindowIdx = inWindowParents.indexOf(psha);
+				if (inWindowIdx === 0) {
 					lanes[lane] = psha;
 					parentLanes.push({ sha: psha, lane });
 				} else {
@@ -71,10 +142,15 @@
 				}
 			});
 
-			layout.push({ lane, parentLanes });
+			layout.push({ lane, parentLanes, isRoot: inWindowParents.length === 0 });
 		}
 
-		return { layout, laneCount: Math.max(1, lanes.length) };
+		// Trim trailing lanes nothing ever grew into, so the SVG isn't
+		// wider than it needs to be after lanes free up near the end.
+		let laneCount = lanes.length;
+		while (laneCount > 1 && !layout.some((l) => l.lane === laneCount - 1)) laneCount--;
+
+		return { layout, laneCount: Math.max(1, laneCount) };
 	}
 
 	let graph = $derived(layoutGraph(commits));
@@ -95,9 +171,11 @@
 		return LANE_COLORS[lane % LANE_COLORS.length];
 	}
 
-	function shaIndex(sha: string) {
-		return commits.findIndex((c) => c.sha === sha);
-	}
+	let shaIndex = $derived.by(() => {
+		const map = new Map<string, number>();
+		commits.forEach((c, i) => map.set(c.sha, i));
+		return (sha: string) => map.get(sha) ?? -1;
+	});
 
 	function timeAgo(iso: string) {
 		const diff = Date.now() - new Date(iso).getTime();
@@ -116,7 +194,7 @@
 			if (!res.ok) throw new Error(String(res.status));
 			const data = await res.json();
 			repo = data.repo;
-			commits = data.commits;
+			rawCommits = data.commits;
 		} catch {
 			failed = true;
 		} finally {
@@ -149,9 +227,23 @@
 					{@const l = graph.layout[i]}
 					{#each l.parentLanes as pl (pl.sha)}
 						{@const pIdx = shaIndex(pl.sha)}
-						{#if pIdx !== -1}
-							{@const x1 = PAD_X + l.lane * LANE_W + LANE_W / 2}
-							{@const y1 = i * ROW_H + ROW_H / 2}
+						{@const x1 = PAD_X + l.lane * LANE_W + LANE_W / 2}
+						{@const y1 = i * ROW_H + ROW_H / 2}
+						{#if pl.offWindow}
+							<!-- Parent exists but fell outside our fetched window —
+							     a short fading stub shows history continues rather
+							     than the connector just vanishing. -->
+							<line
+								x1={x1}
+								y1={y1}
+								x2={x1}
+								y2={y1 + ROW_H * 0.4}
+								stroke={laneColor(l.lane)}
+								stroke-width="2.5"
+								stroke-dasharray="2 3"
+								opacity="0.35"
+							/>
+						{:else if pIdx !== -1}
 							{@const x2 = PAD_X + pl.lane * LANE_W + LANE_W / 2}
 							{@const y2 = pIdx * ROW_H + ROW_H / 2}
 							{@const midY = (y1 + y2) / 2}
@@ -175,6 +267,7 @@
 						fill={commit.isMerge ? 'hsl(var(--background))' : laneColor(l.lane)}
 						stroke={laneColor(l.lane)}
 						stroke-width="2.5"
+						stroke-dasharray={l.isRoot ? '2 2' : undefined}
 					/>
 				{/each}
 			</svg>
