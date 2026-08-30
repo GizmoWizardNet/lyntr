@@ -60,7 +60,29 @@
 	}
 
 	const dispatch = createEventDispatcher();
+
+	const INLINE_ANIMATED = new Set(['house', 'webhook', 'user']);
 </script>
+
+{#snippet inlineAnimatedIcon(anim: string, cls: string)}
+	{#if anim === 'house'}
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls}>
+			<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+			<path class="draw-path house-door" pathLength="1" d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+		</svg>
+	{:else if anim === 'webhook'}
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls}>
+			<path class="draw-path webhook-path-1" pathLength="1" d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" />
+			<path class="draw-path webhook-path-2" pathLength="1" d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06" />
+			<path class="draw-path webhook-path-3" pathLength="1" d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8" />
+		</svg>
+	{:else if anim === 'user'}
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" class={cls}>
+			<circle class="draw-path user-circle" pathLength="1" cx="12" cy="8" r="5" />
+			<path class="draw-path user-body" pathLength="1" d="M20 21a8 8 0 0 0-16 0" />
+		</svg>
+	{/if}
+{/snippet}
 
 <div class="relative flex flex-row justify-between gap-1 {className}">
 	{#if popover}
@@ -78,7 +100,11 @@
 							: ''} inline-flex items-center justify-center rounded-xl font-bold text-primary {className}"
 					>
 						<span class="nav-icon {iconAnim ? `nav-icon-${iconAnim}` : ''}">
-						<SvelteComponent_1 {strokeWidth} class="h-6 w-6 {text ? 'mr-1' : ''}" />
+						{#if iconAnim && INLINE_ANIMATED.has(iconAnim)}
+							{@render inlineAnimatedIcon(iconAnim, `h-6 w-6 ${text ? 'mr-1' : ''}`)}
+						{:else}
+							<SvelteComponent_1 {strokeWidth} class="h-6 w-6 {text ? 'mr-1' : ''}" />
+						{/if}
 					</span>
 						{#if text}
 							<span>{text}</span>
@@ -105,10 +131,14 @@
 				: ''} inline-flex items-center justify-center gap-1 rounded-xl font-bold text-primary {className}"
 		>
 			<span class="nav-icon {iconAnim ? `nav-icon-${iconAnim}` : ''}">
-				<SvelteComponent_3
-					{strokeWidth}
-					class="h-6 w-6 {text ? '{!small || isActive ? "hidden md:block" : ""}' : ''}"
-				/>
+				{#if iconAnim && INLINE_ANIMATED.has(iconAnim)}
+					{@render inlineAnimatedIcon(iconAnim, `h-6 w-6 ${text ? '{!small || isActive ? "hidden md:block" : ""}' : ''}`)}
+				{:else}
+					<SvelteComponent_3
+						{strokeWidth}
+						class="h-6 w-6 {text ? '{!small || isActive ? "hidden md:block" : ""}' : ''}"
+					/>
+				{/if}
 			</span>
 			{#if icon === Heart}
 				<span>{text}</span>
@@ -145,13 +175,6 @@
 		-webkit-backdrop-filter: blur(var(--aero-blur)) saturate(160%);
 		backdrop-filter: blur(var(--aero-blur)) saturate(160%);
 	}
-
-	/* Glossy top sheen, the defining Aero trait in the reference
-	   screenshots — a soft light gradient sitting over the top half of
-	   the button, independent of the (semi-transparent) background color
-	   so it reads consistently in both light and dark mode. Layered via
-	   ::before rather than a second background-image on .shit itself so
-	   .active's own gradient background (below) can coexist with it. */
 	.shit::before {
 		content: '';
 		position: absolute;
@@ -195,11 +218,6 @@
 	.animate {
 		animation: popIn 0.3s ease-in-out;
 	}
-
-	/* Resend-style icon micro-interactions: on hover, the icon plays a
-	   short, icon-specific animation once, then — because these keyframes
-	   have no forwards fill-mode — automatically settles back to the
-	   plain, static lucide icon. Re-entering hover replays it. */
 	.nav-icon {
 		display: inline-flex;
 	}
@@ -207,14 +225,35 @@
 		transform-origin: 50% 50%;
 	}
 
-	:global(.shit:hover) .nav-icon-house :global(svg) {
-		animation: navHouse 0.6s ease-in-out;
+	.draw-path {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 0;
 	}
+
+	:global(.shit:hover) .nav-icon-house .house-door {
+		animation: drawIn 0.6s ease-in-out;
+	}
+	:global(.shit:hover) .nav-icon-webhook .webhook-path-1 {
+		animation: drawIn 0.3s ease-out;
+	}
+	:global(.shit:hover) .nav-icon-webhook .webhook-path-2 {
+		animation: drawIn 0.3s ease-out 0.05s backwards;
+	}
+	:global(.shit:hover) .nav-icon-webhook .webhook-path-3 {
+		animation: drawIn 0.3s ease-out 0.1s backwards;
+	}
+	:global(.shit:hover) .nav-icon-user .user-circle {
+		animation: drawInScale 0.35s ease-out;
+	}
+	:global(.shit:hover) .nav-icon-user .user-body {
+		animation: drawIn 0.4s ease-out 0.2s backwards;
+	}
+
 	:global(.shit:hover) .nav-icon-search :global(svg) {
-		animation: navSearch 0.6s ease-in-out;
+		animation: navSearch 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 	}
 	:global(.shit:hover) .nav-icon-bell :global(svg) {
-		animation: navBell 0.6s ease-in-out;
+		animation: navBell 0.5s ease-in-out;
 	}
 	:global(.shit:hover) .nav-icon-message :global(svg) {
 		animation: navMessage 0.5s ease-in-out;
@@ -228,42 +267,44 @@
 	:global(.shit:hover) .nav-icon-inbox :global(svg) {
 		animation: navInbox 0.5s ease-in-out;
 	}
-	:global(.shit:hover) .nav-icon-webhook :global(svg) {
-		animation: navWebhook 0.6s ease-in-out;
+	:global(.shit:hover) .nav-icon-megaphone :global(svg) {
+		animation: navMegaphone 0.5s ease-in-out;
 	}
-	:global(.shit:hover) .nav-icon-user :global(svg) {
-		animation: navUser 0.5s ease-in-out;
+	:global(.shit:hover) .nav-icon-award :global(svg) {
+		animation: navTrophy 0.6s ease-in-out;
 	}
-	:global(.shit:hover) .nav-icon-plus :global(svg) {
-		animation: navPlus 0.5s ease-in-out;
+	:global(.shit:hover) .nav-icon-clapperboard :global(svg) {
+		animation: navMessage 0.5s ease-in-out;
 	}
 
-	@keyframes navHouse {
-		0% { transform: scale(1) translateY(0); }
-		30% { transform: scale(0.85) translateY(2px); }
-		60% { transform: scale(1.12) translateY(-2px); }
-		100% { transform: scale(1) translateY(0); }
+	@keyframes drawIn {
+		0% { stroke-dashoffset: 1; opacity: 0; }
+		30% { opacity: 1; }
+		100% { stroke-dashoffset: 0; opacity: 1; }
+	}
+	/* Same, plus the circle's own scale:[0.5,1] pop from its source. */
+	@keyframes drawInScale {
+		0% { stroke-dashoffset: 1; opacity: 0; transform: scale(0.5); }
+		30% { opacity: 1; }
+		100% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
 	}
 	@keyframes navSearch {
-		0% { transform: rotate(0deg) scale(1); }
-		25% { transform: rotate(-12deg) scale(1.05); }
-		50% { transform: rotate(10deg) scale(1.1); }
-		75% { transform: rotate(-6deg) scale(1.05); }
-		100% { transform: rotate(0deg) scale(1); }
+		0% { transform: translate(0, 0); }
+		33% { transform: translate(0, -4px); }
+		66% { transform: translate(-3px, 0); }
+		100% { transform: translate(0, 0); }
 	}
 	@keyframes navBell {
 		0%, 100% { transform: rotate(0deg); }
-		15% { transform: rotate(-16deg); }
-		30% { transform: rotate(14deg); }
-		45% { transform: rotate(-10deg); }
-		60% { transform: rotate(8deg); }
-		75% { transform: rotate(-4deg); }
-		90% { transform: rotate(2deg); }
+		25% { transform: rotate(-10deg); }
+		50% { transform: rotate(10deg); }
+		75% { transform: rotate(-10deg); }
 	}
+
 	@keyframes navMessage {
 		0% { transform: scale(1) rotate(0deg); }
-		35% { transform: scale(1.15) rotate(-6deg); }
-		70% { transform: scale(0.95) rotate(4deg); }
+		25% { transform: scale(1.05) rotate(-7deg); }
+		60% { transform: scale(1.05) rotate(7deg); }
 		100% { transform: scale(1) rotate(0deg); }
 	}
 	@keyframes navTrophy {
@@ -286,21 +327,10 @@
 		60% { transform: translateY(2px); }
 		100% { transform: translateY(0); }
 	}
-	@keyframes navWebhook {
+	@keyframes navMegaphone {
 		0% { transform: rotate(0deg) scale(1); }
-		25% { transform: rotate(15deg) scale(1.08); }
-		50% { transform: rotate(-12deg) scale(1); }
-		75% { transform: rotate(6deg) scale(1.04); }
-		100% { transform: rotate(0deg) scale(1); }
-	}
-	@keyframes navUser {
-		0% { transform: scale(1) translateY(0); }
-		40% { transform: scale(1.15) translateY(-2px); }
-		100% { transform: scale(1) translateY(0); }
-	}
-	@keyframes navPlus {
-		0% { transform: rotate(0deg) scale(1); }
-		50% { transform: rotate(90deg) scale(1.15); }
+		25% { transform: rotate(-8deg) scale(1.05); }
+		60% { transform: rotate(6deg) scale(1.08); }
 		100% { transform: rotate(0deg) scale(1); }
 	}
 </style>
