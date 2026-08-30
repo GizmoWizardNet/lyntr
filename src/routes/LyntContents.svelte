@@ -212,19 +212,19 @@
 <div class={`${$$props.class} flex items-start gap-2`}>
 	{#if includeAvatar}
 		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px]">
-			<Avatar size={15} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
+			<Avatar size={12} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
 		</a>
 	{/if}
 
-	<div class="flex w-full flex-col text-left">
-		<div class="flex w-full items-center justify-between gap-1 {smaller ? 'max-w-[300px]' : ''}">
-			<div class="flex flex-grow items-center gap-1 overflow-hidden">
+	<div class="flex w-full flex-col text-left min-w-0">
+		<div class="flex w-full flex-wrap items-center gap-x-1 gap-y-0.5 {smaller ? 'max-w-[300px]' : ''}">
+			<div class="flex min-w-0 max-w-full items-center gap-1">
 				<HoverCard.Root>
 					<HoverCard.Trigger
 						rel="noreferrer noopener"
 						class="truncate {smaller
 							? 'max-w-[30%]'
-							: 'max-w-[60%]'} rounded-sm text-xl font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
+							: 'max-w-[45%]'} rounded-sm text-xl font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
 						href="/@{handle}"
 					>
 						<UserName name={username} color={nameColor} {verified} />
@@ -258,13 +258,15 @@
 					{loginStreak}
 					{followerCount}
 					{followsViewer}
-					compact={true}
+					size="compact"
 				/>
 				<span
-					class="py-0.25 flex select-none items-center rounded-[4px] bg-gradient-gloss px-1.5 text-base font-semibold text-primary-foreground font-[family-name:var(--font-retro)] border-t-[1px] border-l-[1px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[1px] border-r-[1px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] shadow-[var(--hard-shadow-sm)] transition-[filter] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+					class="py-0.25 flex shrink-0 select-none items-center rounded-[4px] bg-gradient-gloss px-1.5 text-base font-semibold text-primary-foreground font-[family-name:var(--font-retro)] border-t-[1px] border-l-[1px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[1px] border-r-[1px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] shadow-[var(--hard-shadow-sm)] transition-[filter] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
 					title={isClan ? 'Average IQ across every contributor' : undefined}
 					>{isClan ? (clanAvgIq ?? iq) : iq}</span
 				>
+			</div>
+			<div class="flex shrink-0 items-center gap-1">
 				<HoverCard.Root>
 					<HoverCard.Trigger
 						rel="noreferrer noopener"

@@ -11,7 +11,7 @@
 	let { tabs, currentTab, onTabChange }: Props = $props();
 </script>
 
-<div class="tab-row flex justify-evenly md:justify-center md:gap-3 gap-2">
+<div class="tab-row flex items-center gap-2 overflow-x-auto md:justify-center md:gap-3 md:overflow-visible">
 	{#each tabs as tab}
 		<button
 			type="button"
@@ -32,20 +32,13 @@
 </div>
 
 <style>
-	/* Simple glass — dark translucent pill, thin border, faint shadow, no
-	   blur/shine/saturation stacking. The earlier version reused the same
-	   heavy --aero-* tokens as OutlineButton's circular nav buttons (12px
-	   blur + 160% saturate + a gradient shine layer), which reads fine on
-	   a small icon-only circle but got noisy and "frosted" once stretched
-	   across a whole row of wide text pills — closer to the Smolish-style
-	   reference (flat dark fill, subtle top border, no glare) than the
-	   full aero treatment. */
 	.tab-pill {
 		position: relative;
 		overflow: hidden;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
 		padding: 6px 18px;
 		border-radius: 999px;
 		font-size: 1.05rem;
@@ -55,9 +48,23 @@
 		background: transparent;
 		border: 1px solid transparent;
 		color: hsl(var(--foreground));
+		white-space: nowrap;
 		transition:
 			background 0.15s ease-in-out,
 			border-color 0.15s ease-in-out;
+	}
+	@media (max-width: 480px) {
+		.tab-pill {
+			padding: 5px 12px;
+			font-size: 0.92rem;
+		}
+	}
+
+	.tab-row {
+		scrollbar-width: none;
+	}
+	.tab-row::-webkit-scrollbar {
+		display: none;
 	}
 
 	.tab-pill:hover:not(.active) {
@@ -74,12 +81,6 @@
 		position: relative;
 		z-index: 1;
 	}
-
-	/* The active pill's fill — a separate absolutely-positioned layer
-	   (rather than just setting .tab-pill.active's own background) so it
-	   can fly in/out on tab switch the same way the old underline bar
-	   did, instead of the whole pill hard-cutting between states. Flat
-	   primary color, no gradient/shine — matches the simplified look. */
 	.tab-fill {
 		position: absolute;
 		inset: 0;

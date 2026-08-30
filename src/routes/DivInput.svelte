@@ -229,6 +229,7 @@
 	.tab-bar {
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
 		gap: 2px;
 		border-bottom: 1px solid hsl(var(--border) / 0.5);
 		padding-bottom: 4px;
@@ -261,8 +262,16 @@
 		display: flex;
 		gap: 2px;
 		margin-left: auto;
+		flex-shrink: 0;
+		max-width: 100%;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.toolbar::-webkit-scrollbar {
+		display: none;
 	}
 	.toolbar button {
+		flex-shrink: 0;
 		width: 26px;
 		height: 26px;
 		display: flex;

@@ -81,7 +81,7 @@
 		<Tooltip.Root>
 			<Tooltip.Trigger>
 				<img 
-					src="/admin_badge.gif" 
+					src="/admin_badge.png" 
 					alt="Admin"
 					class="badge-img"
 				/>
@@ -94,7 +94,7 @@
 	{#if contributor}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img src="/badge_contrib.gif" alt="Contributor" class="badge-img" />
+				<img src="/contributor.png" alt="Contributor" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>This user has <span class="rounded-xl bg-border px-1">contributed</span> to Lyntr!</p></Tooltip.Content>
 		</Tooltip.Root>
