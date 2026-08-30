@@ -35,6 +35,8 @@ services:
     restart: unless-stopped
     build:
       context: .
+      args:
+        PUBLIC_GIT_COMMIT: ${GIT_COMMIT}
       dockerfile: ./Dockerfile
     ports:
       - '6000-6002:5999'
