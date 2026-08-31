@@ -184,7 +184,16 @@
 		left: 0;
 		display: flex;
 		flex-wrap: wrap;
-		max-width: 176px;
+		/* Was `max-width: 176px` with no `width` — for an absolutely
+		   positioned flex container with wrap enabled, that's ambiguous:
+		   "every item on its own line" is a valid way to satisfy a
+		   max-width constraint, and that's exactly the (legal, but wrong
+		   for us) layout the shrink-to-fit sizing picked — a single
+		   20px-wide column, ten rows tall. An explicit width removes the
+		   ambiguity; capped by max-width so it still fits a narrow phone
+		   screen instead of overflowing off the left edge of the card. */
+		width: 176px;
+		max-width: calc(100vw - 32px);
 		gap: 2px;
 		padding: 4px;
 		border-radius: 8px;
