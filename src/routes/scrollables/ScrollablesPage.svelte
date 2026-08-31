@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { Plus, SlidersHorizontal } from 'lucide-svelte';
+	import { Plus, SlidersHorizontal, ArrowLeft } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import ScrollableCard from './ScrollableCard.svelte';
 	import ScrollableComments from './ScrollableComments.svelte';
@@ -8,6 +8,7 @@
 	import AutoRefreshControl from '../AutoRefreshControl.svelte';
 	import { Button } from '@/components/ui/button';
 	import { wsClient } from '$lib/ws-client';
+	import { currentPage } from '../stores';
 
 	interface Props {
 		myId: string;
@@ -238,6 +239,15 @@
 		<Plus class="h-5 w-5" />
 	</button>
 
+	<!-- Mobile-only floating back button — icon-only on purpose. This is a
+	     full-bleed TikTok-style feed, so a labeled "Back to Home" button
+	     would break the immersion the full-bleed layout is going for; a
+	     small glass icon in the corner (same visual language as the "+"
+	     FAB) gives an escape hatch without announcing itself. -->
+	<button class="mobile-back-fab" onclick={() => currentPage.set('home')} aria-label="Back to home">
+		<ArrowLeft class="h-5 w-5" />
+	</button>
+
 
 	<div class="feed-viewport" bind:this={containerEl}>
 		{#if loading}
@@ -327,6 +337,33 @@
 			border-bottom: 1px solid var(--bevel-dark);
 			border-right: 1px solid var(--bevel-dark);
 			box-shadow: var(--hard-shadow);
+		}
+	}
+
+	.mobile-back-fab {
+		display: none;
+	}
+	@media (max-width: 767px) {
+		.mobile-back-fab {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: absolute;
+			left: 14px;
+			top: calc(14px + env(safe-area-inset-top, 0px));
+			width: 36px;
+			height: 36px;
+			border-radius: 999px;
+			z-index: 10;
+			/* Deliberately subtler than the post FAB — a low-key glass
+			   escape hatch, not a call-to-action competing with the video. */
+			background: var(--aero-surface);
+			color: #fff;
+			border: 1px solid var(--aero-border-top);
+			border-bottom-color: var(--aero-border-bottom);
+			-webkit-backdrop-filter: blur(var(--aero-blur)) saturate(160%);
+			backdrop-filter: blur(var(--aero-blur)) saturate(160%);
+			box-shadow: var(--aero-shadow);
 		}
 	}
 

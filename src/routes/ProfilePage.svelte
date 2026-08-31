@@ -346,11 +346,11 @@
 				{/if}
 
 				<div class="flex items-center justify-between px-2">
-					<div class="flex items-center gap-4">
+					<div class="flex min-w-0 items-center gap-4">
 						<Avatar size={40} src={avatar} alt={profile.username} border={true} userId={profile.id} />
-						<div class="flex flex-col gap-2">
+						<div class="flex min-w-0 flex-col gap-2">
 							<!-- Name + badges row -->
-							<div class="inline-flex items-center gap-2">
+							<div class="flex flex-wrap items-center gap-2">
 								<Label class="text-2xl font-bold text-primary"><UserName name={profile.username} color={profile.name_color} verified={profile.verified} /></Label>
 								<UserBadges
 									verified={profile.verified}

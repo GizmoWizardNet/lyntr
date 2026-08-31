@@ -256,7 +256,7 @@
 			{/if}
 		</a>
 
-		<div class="flex w-full max-w-[530px] flex-col gap-2">
+		<div class="flex w-full min-w-0 max-w-[530px] flex-col gap-2">
 			<!-- Main lynt -->
 			<LyntContents
 				{truncateContent}
