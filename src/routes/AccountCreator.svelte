@@ -329,7 +329,7 @@
 							{#each topUsers as user}
 								<div class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer"
 									class:border-primary={followedUsers.includes(user.handle)}
-									class:bg-primary/5={followedUsers.includes(user.handle)}
+									class={followedUsers.includes(user.handle) ? 'bg-primary/5' : ''}
 									on:click={() => toggleFollow(user.handle)}
 								>
 									<div class="flex-shrink-0">
