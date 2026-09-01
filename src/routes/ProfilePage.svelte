@@ -58,7 +58,7 @@
 	let isSelf = $state(false);
 	let showSettings = $state(false);
 	let isFollowing = $state(false);
-	// isFollowedBy = the profile person follows ME (viewer) â†’ show rocket on their profile
+	// isFollowedBy = the profile person follows ME (viewer)  - show rocket on their profile
 	let isFollowedBy = $state(false);
 	let followersCount = $state(0);
 	let followingCount = $state(0);
@@ -132,10 +132,6 @@
 		}
 	}
 
-	// Profile lynt/likes list previously had no pagination at all â€” it
-	// loaded one page (50-100 items) and that was it, no way to see
-	// anything older. Same scroll-position pattern as the main feed's
-	// infinite scroll.
 	let userLyntsExhausted = $state(false);
 	let loadingMoreUserLynts = $state(false);
 	let userLyntsContainer: HTMLDivElement = $state();
@@ -153,13 +149,6 @@
 
 	let followInFlight = $state(false);
 
-	// â”€â”€ Aura Verifier Pro 100% Max â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-	// The score itself (profile.aura_score) is now real â€” computed
-	// server-side by recalcAura() from IQ, streak, Community XP,
-	// followers, and achievements â€” recalculated at the same chokepoints
-	// as everything else that awards Community XP. The button rolls a
-	// random one-liner same as before, but it's now flavored by the
-	// user's actual tier instead of being fully random.
 	let vibeLine = $state<string | null>(null);
 	let vibeRolling = $state(false);
 
@@ -198,9 +187,6 @@
 				: `${score.toLocaleString()} Aura and climbing. ${name} is putting in the work.`
 		];
 
-		// Small delay + brief "rolling" state gives the button somewhere
-		// to put a spin animation before the line lands â€” feels more like
-		// a roll than an instant swap.
 		setTimeout(() => {
 			vibeLine = templates[Math.floor(Math.random() * templates.length)];
 			vibeRolling = false;
@@ -208,16 +194,10 @@
 	}
 
 	async function toggleFollow() {
-		// Debounce: while a follow/unfollow request is already in flight,
-		// ignore extra clicks rather than firing a second overlapping
-		// request (the server is now atomic and would handle it fine, but
-		// this keeps the button's visible state from ping-ponging on a
-		// slow connection).
+
 		if (followInFlight) return;
 		followInFlight = true;
 
-		// Optimistic update: flip the UI immediately so the button feels
-		// instant, then roll back if the request actually fails.
 		const previousFollowing = isFollowing;
 		const previousCount = followersCount;
 		isFollowing = !isFollowing;
@@ -230,7 +210,7 @@
 				body: JSON.stringify({ userId: profile.id })
 			});
 			if (response.ok) {
-				// Optimistic state already matches â€” nothing further to do.
+
 			} else if (response.status === 409) {
 				isSelf = true;
 				isFollowing = previousFollowing;
@@ -267,8 +247,7 @@
 			if (response.ok) {
 				const result = await response.json();
 				isFollowing = result.isFollowing;
-				// isFollowedBy: the profile user follows the viewer (me)
-				// This drives the rocket badge on their profile
+
 				isFollowedBy = result.isFollowedBy;
 			} else if (response.status === 409) {
 				isSelf = true;
@@ -284,14 +263,6 @@
 	let avatar: string = $state();
 
 	onMount(async () => {
-		// fetchUserLynts only needs `profileHandle` (a prop, available
-		// immediately) â€” it doesn't depend on the profile fetch resolving,
-		// so kick it off in parallel instead of waterfalling behind
-		// fetchProfile(). checkFollowStatus() does need profile.id, so it
-		// still has to wait for fetchProfile() to finish. This trims a
-		// full network round-trip off the common case, where the lynts
-		// fetch (a heavier feed query) used to only start after the
-		// profile fetch had already completed.
 		const lyntsPromise = fetchUserLynts(false);
 		await fetchProfile();
 		await Promise.all([lyntsPromise, checkFollowStatus()]);
@@ -299,11 +270,6 @@
 		avatar = cdnUrl(profile.id, 'big');
 	});
 
-	// userLyntsContainer only exists once `profile` has loaded and the
-	// {:else if profile} branch below renders â€” onMount runs before that,
-	// so the listener has to attach reactively once the container shows
-	// up (and detach/reattach if it's ever swapped, e.g. navigating
-	// between profiles) rather than once at mount.
 	$effect(() => {
 		const el = userLyntsContainer;
 		if (!el) return;

@@ -18,17 +18,8 @@
 	let totalIQ: number | null = $state();
 	let turnstileToken = $state('');
 
-	// Restructured into two sequential steps — username/nickname first, then
-	// the IQ test — instead of showing both side-by-side at once. People
-	// kept being unsure which one they were supposed to do first when they
-	// were shown together; a linear wizard removes the ambiguity entirely.
 	let step: 'profile' | 'test' | 'tags' | 'follow' | 'submit' = $state('profile');
 
-	// The 20 question IDs IQTest.svelte stores answers under, as bare
-	// (non-namespaced) localStorage keys — kept here too so this component
-	// can fully wipe a stale/finished test's leftover state without IQTest
-	// needing to expose it. Must stay in sync with the `components` map in
-	// IQTest.svelte.
 	const IQ_QUESTION_IDS = [
 		'AGI', 'AudioAgeOfWar', 'AudioRick', 'British', 'CatQuestion', 'Chemistry',
 		'ContentCreators', 'Degree', 'Dexerto', 'GimmickAccount', 'GPT', 'Kubernete',
@@ -36,24 +27,12 @@
 		'SequenceNumber', 'SequenceSymbol', 'ShortFormContent', 'TypingTest'
 	];
 
-	// Nothing previously cleared 'iq_questions' / 'current_question' / each
-	// question's answer key — not even on successful registration. Any
-	// later visit to AccountCreator (switching accounts, a second signup
-	// attempt on the same device/browser, session weirdness) would silently
-	// resume or skip using another attempt's leftover progress. That's the
-	// root of the "permanently stuck on the IQ test" reports: the resumed
-	// state and the account actually being registered could disagree, and
-	// there was no way to restart.
 	function clearIqProgress() {
 		localStorage.removeItem('iq_questions');
 		localStorage.removeItem('current_question');
 		for (const id of IQ_QUESTION_IDS) localStorage.removeItem(id);
 	}
 
-	// Bumping this key forces IQTest to fully remount (Svelte tears down and
-	// re-creates keyed blocks), which re-runs its localStorage init from
-	// scratch — the actual "restart" mechanism, since IQTest owns its own
-	// question order/progress internally.
 	let testInstance = $state(0);
 
 	function restartTest() {
@@ -63,9 +42,6 @@
 	}
 
 	async function authLogin() {
-		// Abandoning account creation to log in as an existing account
-		// instead — clear any in-progress test state so it can't bleed into
-		// a future signup attempt on this device.
 		clearIqProgress();
 		window.location.href = window.location.origin;
 	}
@@ -168,13 +144,8 @@
 			iqReport = res.formattedText;
 			totalIQ = res.totalIQ;
 
-			// Registration succeeded — clear the test progress now instead of
-			// letting it sit in localStorage forever (previously it never
-			// got cleared at all, successful or not).
 			clearIqProgress();
 
-			// Stash user data so +page.svelte can skip the /api/me round-trip
-			// and transition straight into the app once the user dismisses the dialog.
 			dispatch('registered', {
 				id: res.id,
 				username: res.username,
@@ -292,10 +263,7 @@
 
 				{#if allQuestionsCompleted}
 					<div class="mt-5 flex flex-col gap-3">
-						<!-- We moved the Turnstile and submit to the submit step -->
-						<!-- So we don't show anything here; we wait for the submit step -->
-						<!-- But we need to show something? Actually, we automatically go to tags step when test is completed -->
-						<!-- So we don't need to show anything here. -->
+
 					</div>
 				{/if}
 			</div>
