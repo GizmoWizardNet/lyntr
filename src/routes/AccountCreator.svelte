@@ -22,7 +22,7 @@
 	// the IQ test — instead of showing both side-by-side at once. People
 	// kept being unsure which one they were supposed to do first when they
 	// were shown together; a linear wizard removes the ambiguity entirely.
-	let step: 'profile' | 'test' = $state('profile');
+	let step: 'profile' | 'test' | 'tags' | 'follow' | 'submit' = $state('profile');
 
 	// The 20 question IDs IQTest.svelte stores answers under, as bare
 	// (non-namespaced) localStorage keys — kept here too so this component
@@ -74,6 +74,10 @@
 
 	const handleQuestionsCompleted = (event: { detail: boolean }) => {
 		allQuestionsCompleted = event.detail;
+		if (allQuestionsCompleted) {
+			// Move to tags step after IQ test completion
+			step = 'tags';
+		}
 	};
 
 	import { createEventDispatcher } from 'svelte';
@@ -82,6 +86,62 @@
 	function continueToTest() {
 		if (!nickname.trim() || !username.trim()) return;
 		step = 'test';
+	}
+
+	// Tags step
+	let selectedTags: string[] = $state([]);
+	let trendingTags: any[] = $state([]);
+	async function loadTrendingTags() {
+		try {
+			const res = await fetch('/api/trending');
+			if (!res.ok) throw new Error('Failed to load trending tags');
+			const data = await res.json();
+			// The trending endpoint returns { tags: [...], users: [...] }
+			trendingTags = data.tags;
+		} catch (err) {
+			console.error(err);
+			trendingTags = [];
+		}
+	}
+	function selectTag(tag: string) {
+		const index = selectedTags.indexOf(tag);
+		if (index === -1) {
+			selectedTags = [...selectedTags, tag];
+		} else {
+			selectedTags = selectedTags.slice(0, index).concat(selectedTags.slice(index + 1));
+		}
+	}
+	function continueToTags() {
+		// Require at least one tag selected? Not enforced, but we can if we want.
+		step = 'follow';
+	}
+	function backToTest() {
+		step = 'test';
+	}
+
+	// Follow step
+	let followedUsers: string[] = $state([]);
+	let topUsers: any[] = $state([]);
+	async function loadTopUsers() {
+		try {
+			const res = await fetch(`/api/leaderboard?category=followers&limit=10`);
+			if (!res.ok) throw new Error('Failed to load top users');
+			topUsers = await res.json();
+		} catch (err) {
+			console.error(err);
+			topUsers = [];
+		}
+	}
+	function toggleFollow(userHandle: string) {
+		const index = followedUsers.indexOf(userHandle);
+		if (index === -1) {
+			followedUsers = [...followedUsers, userHandle];
+		} else {
+			followedUsers = followedUsers.slice(0, index).concat(followedUsers.slice(index + 1));
+		}
+	}
+	function backToTags() {
+		step = 'tags';
 	}
 
 	const handleSubmit = async () => {
@@ -148,6 +208,9 @@
 			<span class:text-primary={step === 'profile'}>1. Username</span>
 			<span aria-hidden="true">→</span>
 			<span class:text-primary={step === 'test'}>2. IQ Test</span>
+			<span class:text-primary={step === 'tags'}>3. Select Tags</span>
+			<span class:text-primary={step === 'follow'}>4. Follow Users</span>
+			<span class:text-primary={step === 'submit'}>5. Finish</span>
 		</div>
 
 		{#if step === 'profile'}
@@ -195,7 +258,7 @@
 					onclick={authLogin}>Log in</button
 				></span
 			>
-		{:else}
+		{:else if step === 'test'}
 			<div class="w-full">
 				<button class="mb-3 text-sm font-semibold text-muted-foreground hover:text-foreground" onclick={() => (step = 'profile')}>
 					← Back to username
@@ -215,8 +278,7 @@
 						     leftover/incompatible progress from a previous attempt is
 						     sitting in localStorage, this fully wipes it and remounts
 						     IQTest fresh instead of leaving the person with no way
-						     forward. -->
-						<button
+						     forward. --><button
 							class="shrink-0 whitespace-nowrap text-xs font-semibold text-muted-foreground underline hover:text-foreground"
 							onclick={restartTest}
 						>
@@ -230,58 +292,180 @@
 
 				{#if allQuestionsCompleted}
 					<div class="mt-5 flex flex-col gap-3">
-						<Turnstile bind:token={turnstileToken} />
-
-						<AlertDialog.Root>
-							<AlertDialog.Trigger asChild >
-								{#snippet children({ builder })}
-													<Button
-										builders={[builder]}
-										on:click={handleSubmit}
-										disabled={!nickname || !username || !turnstileToken}
-									>
-										Continue
-									</Button>
-																				{/snippet}
-												</AlertDialog.Trigger>
-							<AlertDialog.Content>
-								<AlertDialog.Header>
-									<AlertDialog.Title class="mb-2 text-2xl font-bold"
-										>Welcome to Lyntr!</AlertDialog.Title
-									>
-									<AlertDialog.Description>
-										<div class="space-y-4">
-											<p>
-												Make sure to read the <a href="tos">Terms of Service</a> and
-												<a href="privacy">Privacy Policy</a>.
-											</p>
-											<div class="rounded-md border border-primary p-3">
-												<p class="font-medium">
-													Get verified as well to unlock name colors and get a verified badge.
-												</p>
-												<img
-													src="/verified_steps.png"
-													alt="How to get verified on Lyntr"
-													class="mt-2 w-full rounded"
-												/>
-											</div>
-											{#if iqReport}
-												<div>
-													<h3 class="mb-2 font-semibold">IQ Report:</h3>
-													<pre class="whitespace-pre-wrap text-sm">{iqReport}</pre>
-												</div>
-												<p class="text-right font-semibold">Total IQ: {totalIQ}</p>
-											{/if}
-										</div>
-									</AlertDialog.Description>
-								</AlertDialog.Header>
-								<AlertDialog.Footer>
-									<AlertDialog.Action on:click={() => dispatch('login')}>Continue</AlertDialog.Action>
-								</AlertDialog.Footer>
-							</AlertDialog.Content>
-						</AlertDialog.Root>
+						<!-- We moved the Turnstile and submit to the submit step -->
+						<!-- So we don't show anything here; we wait for the submit step -->
+						<!-- But we need to show something? Actually, we automatically go to tags step when test is completed -->
+						<!-- So we don't need to show anything here. -->
 					</div>
 				{/if}
+			</div>
+		{:else if step === 'tags'}
+			<div class="w-full">
+				<button class="mb-3 text-sm font-semibold text-muted-foreground hover:text-foreground" onclick={() => (step = 'test')}>
+					← Back to IQ Test
+				</button>
+
+				<div class="w-full rounded-md border-2 border-primary p-4">
+					<div class="mb-3 flex items-start justify-between gap-2">
+						<div class="space-y-1">
+							<p class="text-lg font-bold">Select Your Interests</p>
+							<p class="text-sm text-muted-foreground">
+								Choose tags that interest you to customize your feed.
+							</p>
+						</div>
+					</div>
+					{#if trendingTags.length > 0}
+						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{#each trendingTags as tag}
+								<div class="flex items-center gap-2 p-3 border rounded hover:border-primary cursor-pointer"
+									class:border-primary={selectedTags.includes(tag.tag)}
+									class:bg-primary/5={selectedTags.includes(tag.tag)}
+									on:click={() => selectTag(tag.tag)}
+								>
+									<span class="font-medium">#{tag.tag}</span>
+									<span class="text-sm text-muted-foreground">({tag.count})</span>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-center text-muted-foreground">Loading tags...</p>
+					{/if}
+				</div>
+
+				<div class="mt-6 flex justify-between">
+					<Button onclick={backToTest} variant="outline">
+						Back
+					</Button>
+					<Button onclick={continueToTags}>
+						Continue to Follow Users
+					</Button>
+				</div>
+			</div>
+		{:else if step === 'follow'}
+			<div class="w-full">
+				<button class="mb-3 text-sm font-semibold text-muted-foreground hover:text-foreground" onclick={() => (step = 'tags')}>
+					← Back to Tags
+				</button>
+
+				<div class="w-full rounded-md border-2 border-primary p-4">
+					<div class="mb-3 flex items-start justify-between gap-2">
+						<div class="space-y-1">
+							<p class="text-lg font-bold">Follow Interesting Users</p>
+							<p class="text-sm text-muted-foreground">
+								Follow some users to populate your feed.
+							</p>
+						</div>
+					</div>
+					{#if topUsers.length > 0}
+						<div class="space-y-4">
+							{#each topUsers as user}
+								<div class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer"
+									class:border-primary={followedUsers.includes(user.handle)}
+									class:bg-primary/5={followedUsers.includes(user.handle)}
+									on:click={() => toggleFollow(user.handle)}
+								>
+									<div class="flex-shrink-0">
+										<img
+											src={`/avatar/${user.id}.png`}
+											onerror="this.onerror=null;this.src='/default.png';"
+											alt={user.username}
+											class="h-10 w-10 rounded-full"
+										/>
+									</div>
+									<div class="flex-1 space-y-1">
+										<div class="flex justify-between">
+											<div class="flex items-center gap-2">
+												<span class="font-medium">{user.username}</span>
+												@{user.handle}
+											</div>
+											{#if user.verified}
+												<span class="ml-2 text-xs font-semibold text-primary">?</span>
+											{/if}
+										</div>
+										<p class="text-sm text-muted-foreground">
+											{user.followerCount} followers &#8226; {user.lynt_coins} LyntCoins
+										</p>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-center text-muted-foreground">Loading users...</p>
+					{/if}
+				</div>
+
+				<div class="mt-6 flex justify-between">
+					<Button onclick={backToTags} variant="outline">
+						Back
+					</Button>
+					<Button onclick={() => (step = 'submit')}>
+						Continue
+					</Button>
+				</div>
+			</div>
+		{:else if step === 'submit'}
+			<div class="w-full">
+				<div class="w-full rounded-md border-2 border-primary p-4">
+					<div class="mb-3 flex items-start justify-between gap-2">
+						<div class="space-y-1">
+							<p class="text-lg font-bold">Almost there!</p>
+							<p class="text-sm text-muted-foreground">
+								Complete the CAPTCHA to finish signing up.
+							</p>
+						</div>
+					</div>
+
+					<Turnstile bind:token={turnstileToken} />
+
+					<AlertDialog.Root>
+						<AlertDialog.Trigger asChild >
+							{#snippet children({ builder })}
+															<Button
+												builders={[builder]}
+												on:click={handleSubmit}
+												disabled={!nickname || !username || !turnstileToken}
+											>
+												Continue
+											</Button>
+															{/snippet}
+													</AlertDialog.Trigger>
+						<AlertDialog.Content>
+							<AlertDialog.Header>
+								<AlertDialog.Title class="mb-2 text-2xl font-bold"
+									>Welcome to Lyntr!</AlertDialog.Title
+								>
+								<AlertDialog.Description>
+									<div class="space-y-4">
+										<p>
+											Make sure to read the <a href="tos">Terms of Service</a> and
+											<a href="privacy">Privacy Policy</a>.
+										</p>
+										<div class="rounded-md border border-primary p-3">
+											<p class="font-medium">
+												Get verified as well to unlock name colors and get a verified badge.
+											</p>
+											<img
+												src="/verified_steps.png"
+												alt="How to get verified on Lyntr"
+												class="mt-2 w-full rounded"
+											/>
+										</div>
+										{#if iqReport}
+											<div>
+												<h3 class="mb-2 font-semibold">IQ Report:</h3>
+												<pre class="whitespace-pre-wrap text-sm">{iqReport}</pre>
+											</div>
+											<p class="text-right font-semibold">Total IQ: {totalIQ}</p>
+										{/if}
+									</div>
+								</AlertDialog.Description>
+							</AlertDialog.Header>
+							<AlertDialog.Footer>
+								<AlertDialog.Action on:click={() => dispatch('login')}>Continue</AlertDialog.Action>
+							</AlertDialog.Footer>
+						</AlertDialog.Content>
+					</AlertDialog.Root>
+				</div>
 			</div>
 		{/if}
 	</div>

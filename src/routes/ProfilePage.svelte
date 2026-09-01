@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { PUBLIC_CDN_URL } from '$env/static/public';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -58,7 +58,7 @@
 	let isSelf = $state(false);
 	let showSettings = $state(false);
 	let isFollowing = $state(false);
-	// isFollowedBy = the profile person follows ME (viewer) → show rocket on their profile
+	// isFollowedBy = the profile person follows ME (viewer) â†’ show rocket on their profile
 	let isFollowedBy = $state(false);
 	let followersCount = $state(0);
 	let followingCount = $state(0);
@@ -132,7 +132,7 @@
 		}
 	}
 
-	// Profile lynt/likes list previously had no pagination at all — it
+	// Profile lynt/likes list previously had no pagination at all â€” it
 	// loaded one page (50-100 items) and that was it, no way to see
 	// anything older. Same scroll-position pattern as the main feed's
 	// infinite scroll.
@@ -153,10 +153,10 @@
 
 	let followInFlight = $state(false);
 
-	// ── Aura Verifier Pro 100% Max ───────────────────────────────────
-	// The score itself (profile.aura_score) is now real — computed
+	// â”€â”€ Aura Verifier Pro 100% Max â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// The score itself (profile.aura_score) is now real â€” computed
 	// server-side by recalcAura() from IQ, streak, Community XP,
-	// followers, and achievements — recalculated at the same chokepoints
+	// followers, and achievements â€” recalculated at the same chokepoints
 	// as everything else that awards Community XP. The button rolls a
 	// random one-liner same as before, but it's now flavored by the
 	// user's actual tier instead of being fully random.
@@ -199,7 +199,7 @@
 		];
 
 		// Small delay + brief "rolling" state gives the button somewhere
-		// to put a spin animation before the line lands — feels more like
+		// to put a spin animation before the line lands â€” feels more like
 		// a roll than an instant swap.
 		setTimeout(() => {
 			vibeLine = templates[Math.floor(Math.random() * templates.length)];
@@ -230,7 +230,7 @@
 				body: JSON.stringify({ userId: profile.id })
 			});
 			if (response.ok) {
-				// Optimistic state already matches — nothing further to do.
+				// Optimistic state already matches â€” nothing further to do.
 			} else if (response.status === 409) {
 				isSelf = true;
 				isFollowing = previousFollowing;
@@ -285,7 +285,7 @@
 
 	onMount(async () => {
 		// fetchUserLynts only needs `profileHandle` (a prop, available
-		// immediately) — it doesn't depend on the profile fetch resolving,
+		// immediately) â€” it doesn't depend on the profile fetch resolving,
 		// so kick it off in parallel instead of waterfalling behind
 		// fetchProfile(). checkFollowStatus() does need profile.id, so it
 		// still has to wait for fetchProfile() to finish. This trims a
@@ -300,7 +300,7 @@
 	});
 
 	// userLyntsContainer only exists once `profile` has loaded and the
-	// {:else if profile} branch below renders — onMount runs before that,
+	// {:else if profile} branch below renders â€” onMount runs before that,
 	// so the listener has to attach reactively once the container shows
 	// up (and detach/reattach if it's ever swapped, e.g. navigating
 	// between profiles) rather than once at mount.
@@ -374,7 +374,7 @@
 									<span
 										class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full"
 										style={`box-shadow: 0 0 0 1.5px ${tierColor(pinned.tier)};`}
-										title={`${pinned.name} — ${pinned.description}`}
+										title={`${pinned.name} â€” ${pinned.description}`}
 									>
 										<img src={`/achievements/${pinned.icon}`} alt={pinned.name} class="h-4 w-4 object-contain" />
 									</span>
@@ -442,7 +442,7 @@
 					</span>
 					<span class="inline-flex items-center gap-1.5 font-bold text-primary" title="Aura Score">
 						<img src="/aura.png" alt="Aura Score" class="h-6 w-6 flex-shrink-0" />
-						{(profile.aura_score ?? 0).toLocaleString()} Aura · {auraTier(profile.aura_score ?? 0)}
+						{(profile.aura_score ?? 0).toLocaleString()} Aura Â· {auraTier(profile.aura_score ?? 0)}
 					</span>
 				</div>
 
@@ -500,7 +500,7 @@
 									({(profile.achievements ?? []).length}/{ACHIEVEMENT_CATALOG.length})
 								</span>
 							</Label>
-							<span class="text-muted-foreground text-xs">View all →</span>
+							<span class="text-muted-foreground text-xs">View all â†’</span>
 						</button>
 						<Progress
 							value={(profile.achievements ?? []).length}
@@ -515,7 +515,7 @@
 									class="achievement-badge flex h-9 w-9 items-center justify-center rounded-full transition-opacity"
 									class:opacity-30={!unlocked}
 									style={`background: ${unlocked ? tierColor(achievement.tier) + '22' : 'transparent'};`}
-									title={hidden ? '??? — keep using Lyntr to find out.' : `${achievement.name} — ${achievement.description}${unlocked ? '' : ' (locked)'}`}
+									title={hidden ? '??? â€” keep using Lyntr to find out.' : `${achievement.name} â€” ${achievement.description}${unlocked ? '' : ' (locked)'}`}
 								>
 									{#if hidden}
 										<span class="text-muted-foreground text-xs font-bold">?</span>
@@ -586,3 +586,5 @@
 		}
 	}
 </style>
+
+
