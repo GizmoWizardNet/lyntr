@@ -327,10 +327,10 @@
 					{#if topUsers.length > 0}
 						<div class="space-y-4">
 							{#each topUsers as user}
-								<div class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer"
-									class:border-primary={followedUsers.includes(user.handle)}
-									class={followedUsers.includes(user.handle) ? 'bg-primary/5' : ''}
-									on:click={() => toggleFollow(user.handle)}
+							<div
+  								class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer {followedUsers.includes(user.handle) ? 'bg-primary/5' : ''}"
+  								class:border-primary={followedUsers.includes(user.handle)}
+  								on:click={() => toggleFollow(user.handle)}
 								>
 									<div class="flex-shrink-0">
 										<img
