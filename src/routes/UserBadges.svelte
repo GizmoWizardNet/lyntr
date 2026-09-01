@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Tooltip from '@/components/ui/tooltip';
 	import { mode } from 'mode-watcher';
-	import { Star, Flame, Rocket } from 'lucide-svelte';
+	import { Star, Flame } from 'lucide-svelte';
 	
 	interface Props {
 		verified?: boolean;
@@ -126,11 +126,11 @@
 		</Tooltip.Root>
 	{/if}
 
-	<!-- Rocket: this person follows the viewer -->
+	<!-- Supporter: this person follows the viewer -->
 	{#if followsViewer}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<Rocket size={iconSize} color="#6366F1" fill="#6366F1" strokeWidth={1.5} />
+				<img src="/supporter.png" alt="Supporter" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>Follows you :D</p></Tooltip.Content>
 		</Tooltip.Root>
@@ -153,7 +153,7 @@
 	.streak-wrap { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
 	.streak-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
 
-	/* lucide-svelte renders a raw <svg> for each icon (ShieldCheck, Star, Flame, Rocket) —
+	/* lucide-svelte renders a raw <svg> for each icon (ShieldCheck, Star, Flame) —
 	   without this, those svgs shrink individually inside the inline-flex row too */
 	.badges-row :global(svg) {
 		flex-shrink: 0;

@@ -138,8 +138,8 @@
 					style={`border-color: ${achievement.unlocked ? tierColor(achievement.tier) : 'hsl(var(--border))'}; background: ${achievement.unlocked ? tierColor(achievement.tier) + '14' : 'transparent'};`}
 				>
 					<div
-						class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2"
-						style={`border-color: ${achievement.unlocked ? tierColor(achievement.tier) : 'hsl(var(--border))'}; background: ${achievement.unlocked ? tierColor(achievement.tier) + '22' : 'hsl(var(--muted))'};`}
+						class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+						style={`background: ${achievement.unlocked ? tierColor(achievement.tier) + '22' : 'hsl(var(--muted))'};`}
 					>
 						<img
 							src={`/achievements/${achievement.icon}`}
@@ -239,9 +239,7 @@
 		font-family: var(--font-retro);
 		color: hsl(var(--muted-foreground));
 	}
-
-	/* Claim button — same gloss/bevel pill as the rest of Lyntr's primary
-	   actions, instead of shadcn's flat default Button. */
+	
 	.claim-btn {
 		display: inline-flex;
 		align-items: center;

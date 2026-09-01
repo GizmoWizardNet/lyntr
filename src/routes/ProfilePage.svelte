@@ -284,8 +284,17 @@
 	let avatar: string = $state();
 
 	onMount(async () => {
+		// fetchUserLynts only needs `profileHandle` (a prop, available
+		// immediately) — it doesn't depend on the profile fetch resolving,
+		// so kick it off in parallel instead of waterfalling behind
+		// fetchProfile(). checkFollowStatus() does need profile.id, so it
+		// still has to wait for fetchProfile() to finish. This trims a
+		// full network round-trip off the common case, where the lynts
+		// fetch (a heavier feed query) used to only start after the
+		// profile fetch had already completed.
+		const lyntsPromise = fetchUserLynts(false);
 		await fetchProfile();
-		await Promise.all([fetchUserLynts(false), checkFollowStatus()]);
+		await Promise.all([lyntsPromise, checkFollowStatus()]);
 		loading = false;
 		avatar = cdnUrl(profile.id, 'big');
 	});
@@ -503,9 +512,9 @@
 								{@const unlocked = (profile.achievements ?? []).some((a) => a.key === achievement.key)}
 								{@const hidden = achievement.secret && !unlocked}
 								<div
-									class="achievement-badge flex h-9 w-9 items-center justify-center rounded-full border-2 transition-opacity"
+									class="achievement-badge flex h-9 w-9 items-center justify-center rounded-full transition-opacity"
 									class:opacity-30={!unlocked}
-									style={`border-color: ${unlocked ? tierColor(achievement.tier) : 'hsl(var(--muted-foreground))'}; background: ${unlocked ? tierColor(achievement.tier) + '22' : 'transparent'};`}
+									style={`background: ${unlocked ? tierColor(achievement.tier) + '22' : 'transparent'};`}
 									title={hidden ? '??? — keep using Lyntr to find out.' : `${achievement.name} — ${achievement.description}${unlocked ? '' : ' (locked)'}`}
 								>
 									{#if hidden}

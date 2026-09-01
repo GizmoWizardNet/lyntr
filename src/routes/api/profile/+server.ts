@@ -361,17 +361,28 @@ export const GET: RequestHandler = async ({ url }) => {
             			LIMIT 1
               	`;
 
-		const result = await db.execute(query);
+		// The achievements query is independent of the main user query's
+		// *result* — it just needs the same handle/id to resolve the user
+		// row, which it can do itself via a join, mirroring the main
+		// query's WHERE clause. So instead of awaiting the user query,
+		// then awaiting achievements afterward (two round trips back to
+		// back on every single profile visit), fire both at once.
+		const achievementsQuery = sql`
+			SELECT ua.achievement_key, ua.unlocked_at
+			FROM ${userAchievements} ua
+			JOIN ${users} u ON u.id = ua.user_id
+			WHERE ${userHandle ? sql`u.handle = ${userHandle}` : sql`u.id = ${userId}`} AND u.banned = false
+		`;
+
+		const [result, achievementRows] = await Promise.all([
+			db.execute(query),
+			db.execute(achievementsQuery)
+		]);
 		const user = result[0];
 
 		if (!user) {
 			return json({ error: 'User not found' }, { status: 404 });
 		}
-
-		const achievementRows = await db
-			.select({ key: userAchievements.achievement_key, unlockedAt: userAchievements.unlocked_at })
-			.from(userAchievements)
-			.where(eq(userAchievements.user_id, String(user.id)));
 
                 return json({
                         id: user.id,
@@ -396,7 +407,7 @@ export const GET: RequestHandler = async ({ url }) => {
                         lynt_coins: parseInt(String(user.lynt_coins ?? 0)),
                         aura_score: parseInt(String(user.aura_score ?? 0)),
                         pinned_achievement_key: user.pinned_achievement_key ?? null,
-                        achievements: achievementRows.map((a) => ({ key: a.key, unlocked_at: a.unlockedAt })),
+                        achievements: achievementRows.map((a: any) => ({ key: a.achievement_key, unlocked_at: a.unlocked_at })),
                         rugplay_username: user.rugplay_username ?? null,
                         rugplay_enhancements_enabled: user.rugplay_enhancements_enabled ?? false,
                         rugplay_key_valid: user.rugplay_key_valid ?? false,
