@@ -5,6 +5,7 @@
 	import { Input } from '@/components/ui/input';
 	import { Separator } from '@/components/ui/separator';
 	import { Label } from '@/components/ui/label';
+	import { $state } from 'svelte';
 
 	import IQTest from './IQTest.svelte';
 	import Turnstile from './Turnstile.svelte';
@@ -48,11 +49,12 @@
 
 	let allQuestionsCompleted = $state(localStorage.getItem('current_question') === '20' ? true : false);
 
-	const handleQuestionsCompleted = (event: { detail: boolean }) => {
+	const handleQuestionsCompleted = async (event: { detail: boolean }) => {
 		allQuestionsCompleted = event.detail;
 		if (allQuestionsCompleted) {
 			// Move to tags step after IQ test completion
 			step = 'tags';
+			await loadTrendingTags();
 		}
 	};
 
@@ -87,9 +89,10 @@
 			selectedTags = selectedTags.slice(0, index).concat(selectedTags.slice(index + 1));
 		}
 	}
-	function continueToTags() {
+	async function continueToTags() {
 		// Require at least one tag selected? Not enforced, but we can if we want.
 		step = 'follow';
+		await loadTopUsers();
 	}
 	function backToTest() {
 		step = 'test';
@@ -263,7 +266,7 @@
 
 				{#if allQuestionsCompleted}
 					<div class="mt-5 flex flex-col gap-3">
-
+						
 					</div>
 				{/if}
 			</div>
@@ -287,7 +290,7 @@
 							{#each trendingTags as tag}
 								<div class="flex items-center gap-2 p-3 border rounded hover:border-primary cursor-pointer"
 									class:border-primary={selectedTags.includes(tag.tag)}
-									class:bg-primary={selectedTags.includes(tag.tag)}
+									class:bg-primary/5={selectedTags.includes(tag.tag)}
 									on:click={() => selectTag(tag.tag)}
 								>
 									<span class="font-medium">#{tag.tag}</span>
@@ -328,33 +331,34 @@
 						<div class="space-y-4">
 							{#each topUsers as user}
 							<div
-  								class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer {followedUsers.includes(user.handle) ? 'bg-primary/5' : ''}"
-  								class:border-primary={followedUsers.includes(user.handle)}
-  								on:click={() => toggleFollow(user.handle)}
-								>
-									<div class="flex-shrink-0">
-										<img
-											src={`/avatar/${user.id}.png`}
-											onerror="this.onerror=null;this.src='/default.png';"
-											alt={user.username}
-											class="h-10 w-10 rounded-full"
-										/>
-									</div>
-									<div class="flex-1 space-y-1">
-										<div class="flex justify-between">
-											<div class="flex items-center gap-2">
-												<span class="font-medium">{user.username}</span>
-												@{user.handle}
-											</div>
-											{#if user.verified}
-												<span class="ml-2 text-xs font-semibold text-primary">?</span>
-											{/if}
-										</div>
-										<p class="text-sm text-muted-foreground">
-											{user.followerCount} followers &#8226; {user.lynt_coins} LyntCoins
-										</p>
-									</div>
+								class="flex items-start gap-4 p-3 border rounded hover:border-primary cursor-pointer"
+								class:border-primary={followedUsers.includes(user.handle)}
+								class:bg-primary/5={followedUsers.includes(user.handle)}
+								on:click={() => toggleFollow(user.handle)}
+							>
+								<div class="flex-shrink-0">
+									<img
+										src={`/avatar/${user.id}.png`}
+										onerror="this.onerror=null;this.src='/default.png';"
+										alt={user.username}
+										class="h-10 w-10 rounded-full"
+									/>
 								</div>
+								<div class="flex-1 space-y-1">
+									<div class="flex justify-between">
+										<div class="flex items-center gap-2">
+											<span class="font-medium">{user.username}</span>
+											@{user.handle}
+										</div>
+										{#if user.verified}
+											<span class="ml-2 text-xs font-semibold text-primary">?</span>
+										{/if}
+									</div>
+									<p class="text-sm text-muted-foreground">
+										{user.followerCount} followers &#8226; {user.lynt_coins} LyntCoins
+									</p>
+								</div>
+							</div>
 							{/each}
 						</div>
 					{:else}
