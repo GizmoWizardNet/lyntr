@@ -287,7 +287,7 @@
 							{#each trendingTags as tag}
 								<div class="flex items-center gap-2 p-3 border rounded hover:border-primary cursor-pointer"
 									class:border-primary={selectedTags.includes(tag.tag)}
-									class:bg-primary/5={selectedTags.includes(tag.tag)}
+									class:bg-primary={selectedTags.includes(tag.tag)}
 									on:click={() => selectTag(tag.tag)}
 								>
 									<span class="font-medium">#{tag.tag}</span>
