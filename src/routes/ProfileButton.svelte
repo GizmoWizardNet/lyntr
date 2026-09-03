@@ -8,6 +8,7 @@
 	import { toggleMode, mode } from 'mode-watcher';
 	import HugeIcon from './HugeIcon.svelte';
 	import PlatformSettings from './PlatformSettings.svelte';
+	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
 
 	// Hugeicons data — imported from the free icon set.
 	// Run: bun add @hugeicons/core-free-icons
@@ -25,6 +26,7 @@
 
 	let opened = $state(false);
 	let platformSettingsOpen = $state(false);
+	let deleteAccountOpen = $state(false);
 
 	interface Props {
 		src?: string;
@@ -34,27 +36,27 @@
 
 	let { src = 'https://github.com/face-hh.png', name = 'Face oifneoangoaen kfpeakfpae', handle = '@facedevstuff' }: Props = $props();
 
-	function deleteAccount() {
-		if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-			fetch('/api/profile', {
-				method: 'DELETE'
-			})
-				.then((response) => {
-					if (response.ok) {
-						goto('/');
-						window.location.reload();
-					} else {
-						toast.error('Failed to delete account');
-					}
-				})
-				.catch((error) => {
-					toast.error('Error:', error);
-				});
-		}
-	}
-
 	function deleteAllCookies() {
 		localStorage.clear();
+	}
+
+	// The actual DELETE request (with Turnstile token + typed-username
+	// confirmation) is handled inside DeleteAccountDialog; this just runs
+	// once that's succeeded server-side.
+	function onAccountDeleted() {
+		// This was the source of the "delete account sends me back to the
+		// IQ test" bug: reloading without clearing localStorage left a
+		// stale 'user-data' entry cached from the now-deleted account, and
+		// +page.svelte's checkAuthAndProfileStatus() reads that BEFORE the
+		// /api/me round-trip resolves — so the (now dead) account briefly
+		// looked authenticated again, /api/me subsequently 401'd, and the
+		// combination shoved the browser into AccountCreator (which is
+		// where the IQ test lives) instead of the logged-out landing page.
+		// Clearing it here, before the reload, is what makes the reload
+		// see a genuinely logged-out state.
+		deleteAllCookies();
+		goto('/');
+		window.location.reload();
 	}
 
 	async function logout() {
@@ -175,7 +177,7 @@
 
 			<!-- Delete account -->
 			<button
-				onclick={deleteAccount}
+				onclick={() => { opened = false; deleteAccountOpen = true; }}
 				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-red-500 transition-all hover:drop-shadow-[0_0px_12px_rgba(239,68,68,0.6)]"
 			>
 				<HugeIcon icon={UserBlock01Icon} size={24} color="rgb(239 68 68)" />
@@ -196,3 +198,4 @@
 </Popover.Root>
 
 <PlatformSettings bind:open={platformSettingsOpen} />
+<DeleteAccountDialog bind:open={deleteAccountOpen} username={name} onDeleted={onAccountDeleted} />

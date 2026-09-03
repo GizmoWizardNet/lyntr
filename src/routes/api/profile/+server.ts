@@ -761,6 +761,13 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, cookies }) => {
+	const { success } = await sensitiveRatelimit.limit(
+		request.headers.get('CF-Connecting-IP') ?? '127.0.0.1'
+	);
+	if (!success) {
+		return json({ error: 'You are being ratelimited.' }, { status: 429 });
+	}
+
 	const authToken = cookies.get('_TOKEN__DO_NOT_SHARE');
 	if (!authToken) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -772,6 +779,33 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 		userId = decodedToken.userId;
 	} catch (error) {
 		return json({ error: 'Invalid token' }, { status: 401 });
+	}
+.
+	let body: any = {};
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid request body.' }, { status: 400 });
+	}
+
+	const cfIp = request.headers.get('CF-Connecting-IP') ?? undefined;
+	const turnstileOk = await verifyTurnstile(body.turnstileToken ?? '', cfIp);
+	if (!turnstileOk) {
+		return json({ error: 'CAPTCHA verification failed. Please try again.' }, { status: 400 });
+	}
+
+	const [currentUser] = await db
+		.select({ username: users.username })
+		.from(users)
+		.where(eq(users.id, userId))
+		.limit(1);
+
+	if (!currentUser) {
+		return json({ error: 'User not found' }, { status: 404 });
+	}
+
+	if (typeof body.confirmUsername !== 'string' || body.confirmUsername !== currentUser.username) {
+		return json({ error: 'Typed username does not match. Account was not deleted.' }, { status: 400 });
 	}
 
 	try {
@@ -790,34 +824,21 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 				await deleteLynt(lynt.id);
 			}
 			console.timeEnd('Deleting all lynts');
-			// Delete notifications
 			console.time('Deleting all notifications');
 			await tx.delete(notifications).where(eq(notifications.userId, userId));
 			await tx.delete(notifications).where(eq(notifications.sourceUserId, userId));
 			console.timeEnd('Deleting all notifications');
 			console.time('Deleting all history');
-			// Delete history
 			await tx.delete(history).where(eq(history.user_id, userId));
 			console.timeEnd('Deleting all history');
-			// Delete followers
 			console.time('Deleting all followers/following');
 			await tx.delete(followers).where(eq(followers.user_id, userId));
 			await tx.delete(followers).where(eq(followers.follower_id, userId));
 			console.timeEnd('Deleting all followers/following');
 
-			// NEW: Delete any remaining likes by the user
 			console.time('Deleting all remaining likes');
 			await tx.delete(likes).where(eq(likes.user_id, userId));
 			console.timeEnd('Deleting all remaining likes');
-
-			// The FKs below are all `references(() => users.id)` with no
-			// onDelete clause (i.e. RESTRICT), so any leftover row here
-			// blocks the users delete below with a 23503 foreign key
-			// violation — this is exactly what was happening with
-			// user_achievements (added after this endpoint was last
-			// touched, never wired into deletion) and would happen the
-			// same way for bookmarks, forum votes, and the LyntCoins
-			// ledger the moment a deleting user happened to have any.
 			console.time('Deleting all achievements');
 			await tx.delete(userAchievements).where(eq(userAchievements.user_id, userId));
 			console.timeEnd('Deleting all achievements');
@@ -831,18 +852,9 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 			console.timeEnd('Deleting all forum votes');
 
 			console.time('Deleting all LyntCoins ledger rows');
-			// Both directions: rows this user earned, and rows recorded
-			// against them as the `source_user_id` (e.g. someone else got
-			// paid because THIS user liked their post).
 			await tx.delete(lcTransactions).where(or(eq(lcTransactions.user_id, userId), eq(lcTransactions.source_user_id, userId)));
 			console.timeEnd('Deleting all LyntCoins ledger rows');
 
-			// Forum threads/posts are kept (not hard-deleted) on account
-			// deletion, same "preserve the conversation" reasoning as the
-			// existing soft-delete flow for individual forum posts — but
-			// their user_id/closed_by/deleted_by FKs still point at this
-			// user and are just as RESTRICT-blocked as the tables above,
-			// so they get nulled out rather than the rows being dropped.
 			console.time('Detaching forum threads/posts from user');
 			await tx.update(forumThreads).set({ user_id: null }).where(eq(forumThreads.user_id, userId));
 			await tx.update(forumThreads).set({ closed_by: null }).where(eq(forumThreads.closed_by, userId));
@@ -856,10 +868,6 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 			try {
 				deletedUser = await tx.delete(users).where(eq(users.id, userId)).returning();
 			} finally {
-				// Always close the label, even on failure — otherwise a
-				// thrown error here leaves it open and the next deletion
-				// attempt (this session or a retry) logs Node's
-				// "Label already exists" warning on top of the real error.
 				console.timeEnd('Deleting user');
 			}
 
@@ -876,6 +884,10 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 			sameSite: 'strict',
 			maxAge: 31536000 // 1 year
 		});
+
+		cookies.delete('temp-discord-token', { path: '/' });
+		cookies.delete('temp-google-token', { path: '/' });
+		cookies.delete('temp-google-user', { path: '/' });
 
 		return json({ message: 'User and all related data deleted successfully' }, { status: 200 });
 	} catch (error) {
@@ -900,9 +912,6 @@ function sanitizeBool(input: string) {
 	return input === 'true'
 }
 
-// Rugplay usernames follow the same loose convention as Lyntr handles —
-// strip anything that couldn't plausibly be one, cap length, allow
-// unlinking via empty string -> null.
 function sanitizeRugplayUsername(input: string): string | null {
 	const cleaned = input.trim().replace(/[^0-9a-zA-Z_-]/g, '').slice(0, 60);
 	return cleaned.length > 0 ? cleaned : null;
