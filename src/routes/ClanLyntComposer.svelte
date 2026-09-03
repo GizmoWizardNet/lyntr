@@ -5,6 +5,7 @@
 	import UserName from './UserName.svelte';
 	import ClanAvatarStack from './ClanAvatarStack.svelte';
 	import GifPicker from './GifPicker.svelte';
+	import ParsedContent from './ParsedContent.svelte';
 	import { cdnUrl } from './stores';
 
 	const CHAR_LIMIT = 280;
@@ -223,7 +224,14 @@
 			<div class="preview-card">
 				<ClanAvatarStack contributors={previewContributors} size={8} />
 				<div class="preview-body">
-					{#if content.trim()}<p class="preview-content">{content}</p>{/if}
+					{#if content.trim()}
+						<ParsedContent
+							content={content.trim()}
+							className="preview-content"
+							showLinkPreview={false}
+							interactive={false}
+						/>
+					{/if}
 					{#if pendingGif}<img class="preview-gif" src={pendingGif.url} alt="GIF" />{/if}
 					{#if selected.length > 0}
 						<p class="preview-meta">with {selected.length} other{selected.length === 1 ? '' : 's'}</p>
@@ -487,7 +495,6 @@
 	.preview-content {
 		margin: 0;
 		font-size: 13px;
-		white-space: pre-wrap;
 		word-break: break-word;
 	}
 	.preview-gif {

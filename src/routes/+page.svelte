@@ -32,18 +32,12 @@
 		id: ''
 	});
 
-	// Small, common system fonts don't need a Google Fonts fetch — anything
-	// else gets loaded from Google Fonts on the fly, which is what makes
-	// "type literally any font name" work instead of only supporting a
-	// fixed list of presets.
 	const SYSTEM_FONTS = new Set([
 		'Tahoma', 'Geneva', 'Verdana', 'Arial', 'Helvetica', 'Georgia',
 		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
 		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
 	]);
-	// Fonts served from a specific non-Google-Fonts provider — kept in
-	// sync with the identical map in PlatformSettings.svelte. Nasalization
-	// isn't on Google Fonts; it's provided via cdnfonts.com
+
 	// (https://www.cdnfonts.com/nasalization.font).
 	const FONT_PROVIDERS: Record<string, string> = {
 		Nasalization: 'https://fonts.cdnfonts.com/css/nasalization-2'
@@ -78,16 +72,9 @@
 		}
 	}
 
-	// Holds the freshly-created account's data between the 'registered' and
-	// 'login' events fired by AccountCreator, so we can skip the /api/me
-	// round-trip and drop the user straight into the app.
 	let pendingUserData: any = $state(null);
 
 	async function checkAuthAndProfileStatus() {
-		// Either OAuth temp token means the user just came back from an OAuth
-		// flow for an account that doesn't have a profile yet (brand-new
-		// signup — the real session cookie isn't set until registration
-		// completes, so this is the only signal available in that window).
 		const midOAuthSignup = !!(Cookies.get('temp-discord-token') || Cookies.get('temp-google-token'));
 		if (midOAuthSignup) {
 			authenticated = true;
@@ -124,22 +111,9 @@
 				};
 				localStorage.setItem('user-data', JSON.stringify(userData));
 				noAccount = false;
-				// This was the core bug behind "very jank" login: `authenticated`
-				// was previously only ever set true by the transient OAuth cookie
-				// above or a stale localStorage cache — never by an actual
-				// successful session check. Any returning visit without a fresh
-				// OAuth cookie and without (or with cleared) cached user-data —
-				// e.g. right after logging out and back in as someone else —
-				// left `authenticated` false forever, stranding a genuinely
-				// logged-in session on the landing page.
 				authenticated = true;
 			} else {
 				noAccount = true;
-				// A real, non-mid-signup session check failed — don't leave
-				// `authenticated` true from stale cached data above; that
-				// combination (authenticated=true + noAccount=true) incorrectly
-				// dropped a truly logged-out user straight into AccountCreator
-				// instead of the login screen.
 				if (!midOAuthSignup) authenticated = false;
 			}
 		} catch (error) {
@@ -161,27 +135,18 @@
 
 	let { data }: Props = $props();
 
-	// Discord-style responsive tab title: prefix with "(N)" while there are
-	// unread notifications, drop the prefix once they're all read. This runs
-	// client-side and overwrites whatever <svelte:head><title> rendered, so
-	// it stays in sync as $unreadMessages changes without fighting SvelteKit's
-	// head management.
 	$effect(() => {
 		const baseTitle = data.lynt ? `${data.lynt.username} on Lyntr` : 'Lyntr';
 		document.title = $unreadMessages > 0 ? `(${$unreadMessages}) ${baseTitle}` : baseTitle;
 	});
 
-	// Applies as soon as userData is populated (from /api/me on load, from
-	// cached localStorage on repeat visits, or after AccountCreator hands
-	// off a fresh account) and again whenever it's changed live from
-	// PlatformSettings — same pattern as the tab-title effect above.
 	$effect(() => {
 		applyCustomFont(userData.custom_font);
 	});
 
 </script>
 
-<ModeWatcher defaultMode={'light'} />
+<ModeWatcher defaultMode={'system'} />
 <Toaster />
 <WorkingOverlay />
 

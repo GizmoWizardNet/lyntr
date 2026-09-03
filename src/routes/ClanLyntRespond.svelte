@@ -4,12 +4,8 @@
 	import * as Dialog from '@/components/ui/dialog/index';
 	import Avatar from './Avatar.svelte';
 	import UserName from './UserName.svelte';
+	import ParsedContent from './ParsedContent.svelte';
 	import { cdnUrl } from './stores';
-
-	// Matches the 280 limit enforced by /api/clan-lynt and /respond server-
-	// side, plus the same soft +40 typing buffer ClanLyntComposer uses so
-	// the red over-limit counter can actually show before the textarea
-	// physically stops you from typing.
 	const CHAR_LIMIT = 280;
 
 	interface Member {
@@ -24,8 +20,6 @@
 		clanId: string;
 		open: boolean;
 		onClose?: () => void;
-		// Called with { status: 'declined' } or { status: 'published', lynt }
-		// once the person responds, so the caller can update badges/feeds.
 		onResolved?: (result: any) => void;
 	}
 
@@ -77,10 +71,6 @@
 			return;
 		}
 		if (action === 'decline' && !confirmingDecline) {
-			// Decline deletes the whole thing for every contributor — no
-			// undo. One click used to be all it took; now it just arms the
-			// real button, and a second click within this same view is what
-			// actually sends the request.
 			confirmingDecline = true;
 			return;
 		}
@@ -123,10 +113,6 @@
 				This clan lynt is no longer pending.
 			</p>
 		{:else}
-			<!-- Relay stepper — a connected line through every stop, with the
-			     current turn pulsing so it's obvious at a glance who's holding
-			     things up, instead of scanning a flat list for the word
-			     "pending" among a stack of "accepted"s. -->
 			<div class="stepper">
 				{#each members as m, i (m.userId)}
 					<div class="step" class:done={m.status === 'accepted'} class:declined={m.status === 'declined'} class:current={m.status === 'pending' && m === currentMember}>
@@ -182,7 +168,9 @@
 					{/if}
 				</div>
 			{:else}
-				<div class="draft-preview">{content}</div>
+				<div class="draft-preview">
+					<ParsedContent content={content} className="draft-preview-body" showLinkPreview={false} interactive={false} />
+				</div>
 				<p class="hint">Waiting on {currentMember?.username ?? 'someone'}'s turn.</p>
 			{/if}
 		{/if}
@@ -299,7 +287,6 @@
 		border-radius: 6px;
 		background: hsl(var(--secondary) / 0.5);
 		font-size: 14px;
-		white-space: pre-wrap;
 	}
 
 	.hint {
