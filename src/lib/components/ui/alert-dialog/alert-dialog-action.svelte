@@ -2,6 +2,7 @@
 	import { AlertDialog as AlertDialogPrimitive } from "bits-ui-old";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import { cn } from "$lib/utils.js";
+	import { withAsChild } from "../bits-ui-old-as-child";
 
 	type $$Props = AlertDialogPrimitive.ActionProps;
 	type $$Events = AlertDialogPrimitive.ActionEvents;
@@ -16,16 +17,20 @@
 	
 
 	const children_render = $derived(children);
+
+	// See bits-ui-old-as-child.ts: this Action component internally uses the
+	// same builder-snippet convention as Trigger, without declaring it.
+	const Action = withAsChild(AlertDialogPrimitive.Action);
 </script>
 
-<AlertDialogPrimitive.Action
+<Action
 	class={cn(buttonVariants(), className)}
 	{...rest}
 	on:click
 	on:keydown
 	
 >
-	{#snippet children({ builder })}
+	{#snippet children({ builder }: { builder: any })}
 		{@render children_render?.({ builder, })}
 	{/snippet}
-</AlertDialogPrimitive.Action>
+</Action>

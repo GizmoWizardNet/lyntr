@@ -69,7 +69,10 @@
 		decoding="async"
 		class="h-full w-full rounded-full {border ? 'border-2 border-solid border-primary' : ''} {editable ? 'cursor-pointer' : ''} text-center"
 		onclick={handleClick}
+		onkeydown={(e) => editable && (e.key === 'Enter' || e.key === ' ') && handleClick()}
 		onerror={once(handleImageError)}
+		role={editable ? 'button' : undefined}
+		tabindex={editable ? 0 : undefined}
 	/>
 
 	{#if userId && showPresence}

@@ -16,7 +16,15 @@
 	let authenticated: boolean = $state(false);
 	let loading: boolean = $state(true);
 	let noAccount: boolean = $state(false);
-	let userData = $state({
+	let userData = $state<{
+		username: string;
+		handle: string;
+		created_at: string;
+		iq: number;
+		id: string;
+		default_feed?: string;
+		custom_font?: string | null;
+	}>({
 		username: '',
 		handle: '',
 		created_at: '',
@@ -168,7 +176,7 @@
 	// off a fresh account) and again whenever it's changed live from
 	// PlatformSettings — same pattern as the tab-title effect above.
 	$effect(() => {
-		applyCustomFont((userData as any).custom_font);
+		applyCustomFont(userData.custom_font);
 	});
 
 </script>

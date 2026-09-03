@@ -13,7 +13,7 @@
 
 	let { token = $bindable('') }: Props = $props();
 
-	let container: HTMLDivElement = $state();
+	let container: HTMLDivElement | undefined = $state();
 	let widgetId: string | null = $state(null);
 
 	// Turnstile injects window.turnstile via its script tag.

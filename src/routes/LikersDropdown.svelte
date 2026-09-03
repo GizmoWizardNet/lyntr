@@ -21,8 +21,11 @@
 	}
 
 	interface Props {
-		lyntId: string;
+		/** ID of the lynt or scrollable to fetch likers for. */
+		id: string;
 		likeCount: number;
+		/** Which endpoint family to hit — /api/lynt/:id/likers vs /api/scrollables/:id/likers. */
+		kind?: 'lynt' | 'scrollable';
 		// Anchors the dropdown to the button that triggers it. Passed in
 		// rather than doing our own mouseenter/mouseleave binding so the
 		// caller (Lynt.svelte, wrapping OutlineButton) controls exactly
@@ -30,7 +33,7 @@
 		visible: boolean;
 	}
 
-	let { lyntId, likeCount, visible }: Props = $props();
+	let { id, likeCount, kind = 'lynt', visible }: Props = $props();
 
 	let likers: Liker[] = $state([]);
 	let hasMore = $state(false);
@@ -40,18 +43,19 @@
 
 	async function ensureLoaded() {
 		if (likeCount === 0) return;
-		if (loadedFor === lyntId) return;
+		if (loadedFor === id) return;
 
 		const token = ++fetchToken;
 		loading = true;
 		try {
-			const res = await fetch(`/api/lynt/${lyntId}/likers`);
+			const endpoint = kind === 'scrollable' ? `/api/scrollables/${id}/likers` : `/api/lynt/${id}/likers`;
+			const res = await fetch(endpoint);
 			if (token !== fetchToken) return; // stale — a newer request superseded this one
 			if (res.ok) {
 				const data = await res.json();
 				likers = data.likers;
 				hasMore = data.hasMore;
-				loadedFor = lyntId;
+				loadedFor = id;
 			}
 		} catch {
 			// Silent — this is a hover preview, not a critical action. If it

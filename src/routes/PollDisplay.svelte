@@ -194,7 +194,7 @@
 	}
 </script>
 
-<div class="poll" onclick={(e) => e.stopPropagation()}>
+<div class="poll" onclick={(e) => e.stopPropagation()} role="presentation">
 	<div class="poll-head">
 		<BarChart2 size={13} class="icon" />
 		<span class="poll-eyebrow">Poll</span>
@@ -219,6 +219,7 @@
 					class:winner={isWinner}
 					onmouseenter={() => scheduleOptionHover(option.id, true)}
 					onmouseleave={() => scheduleOptionHover(option.id, false)}
+					role="presentation"
 				>
 					<div
 						class="option-fill"
@@ -281,6 +282,7 @@
 			class="vote-count-wrap"
 			onmouseenter={() => scheduleFooterHover(true)}
 			onmouseleave={() => scheduleFooterHover(false)}
+			role="presentation"
 		>
 			<span class="vote-count">{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
 			<PollOptionVotersDropdown

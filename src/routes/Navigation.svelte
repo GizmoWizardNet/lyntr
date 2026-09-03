@@ -40,11 +40,13 @@
 	let unreadDMs = $state(0);
 	let overflowItems = $derived(navItems.filter((i: any) => !i.mobilePrimary));
 
-	function badgeFor(item: any) {
-		return item.label === 'Notifications' && $unreadMessages > 0 ? $unreadMessages :
+	function badgeFor(item: any): string | undefined {
+		const n =
+			item.label === 'Notifications' && $unreadMessages > 0 ? $unreadMessages :
 			item.label === 'Messages' && unreadDMs > 0 ? unreadDMs :
 			item.label === 'Achievements' && $unseenAchievements > 0 ? $unseenAchievements :
 			undefined;
+		return n === undefined ? undefined : String(n);
 	}
 
 	// True if any item hidden behind "More" needs attention, so the trigger
@@ -139,7 +141,7 @@
 	<div class="relative flex-1 md:hidden">
 		<Popover.Root bind:open={moreOpen}>
 			<Popover.Trigger asChild>
-				{#snippet children({ builder })}
+				{#snippet children({ builder }: { builder: any })}
 					<button
 						{...builder}
 						onclick={() => (moreOpen = !moreOpen)}
@@ -152,11 +154,12 @@
 			<Popover.Content class="w-56 p-2" align="end" sideOffset={12}>
 				<div class="flex flex-col gap-1">
 					{#each overflowItems as item}
+						{@const Icon = item.icon}
 						<button
 							class="flex items-center gap-3 rounded-[4px] p-2 text-left text-sm font-medium hover:bg-accent"
 							onclick={() => { moreOpen = false; handleNavClick(item.page); }}
 						>
-							<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.5} />
+							<Icon class="h-5 w-5" strokeWidth={2.5} />
 							<span>{item.label}</span>
 							{#if badgeFor(item) !== undefined}
 								<span class="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary/50 text-xs">{badgeFor(item)}</span>

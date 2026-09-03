@@ -51,7 +51,16 @@
 		rugplay_enhancements_enabled?: boolean;
 		rugplay_key_valid?: boolean;
 		rugplay_key_set?: boolean;
-	} = $state();
+		name_color?: string | null;
+		contributor?: boolean;
+		profile_song_type?: 'upload' | 'youtube' | null;
+		profile_song_url?: string | null;
+		profile_song_title?: string | null;
+		profile_song_volume?: number;
+		profile_song_loop?: boolean;
+		email_notifications_enabled?: boolean;
+		notification_email_set?: boolean;
+	} | undefined = $state();
 
 	let userLynts: any[] = $state([]);
 	let loading = $state(true);
@@ -84,9 +93,9 @@
 			if (response.status === 200) {
 				const data = await response.json();
 				profile = data;
-				isSelf = profile.id === myId;
-				followersCount = profile.followers;
-				followingCount = profile.following;
+				isSelf = data.id === myId;
+				followersCount = data.followers;
+				followingCount = data.following;
 			} else {
 				toast.error(`Failed to load profile. Error: ${response.status}`);
 			}
@@ -134,7 +143,7 @@
 
 	let userLyntsExhausted = $state(false);
 	let loadingMoreUserLynts = $state(false);
-	let userLyntsContainer: HTMLDivElement = $state();
+	let userLyntsContainer: HTMLDivElement | undefined = $state();
 
 	function handleUserLyntsScroll() {
 		if (!userLyntsContainer || userLyntsExhausted || loadingMoreUserLynts) return;
@@ -153,7 +162,7 @@
 	let vibeRolling = $state(false);
 
 	function vibeCheck() {
-		if (vibeRolling) return;
+		if (vibeRolling || !profile) return;
 		vibeRolling = true;
 		vibeLine = null;
 
@@ -195,7 +204,7 @@
 
 	async function toggleFollow() {
 
-		if (followInFlight) return;
+		if (followInFlight || !profile) return;
 		followInFlight = true;
 
 		const previousFollowing = isFollowing;
@@ -242,6 +251,7 @@
 	}
 
 	async function checkFollowStatus() {
+		if (!profile) return;
 		try {
 			const response = await fetch(`/api/follow?userId=${profile.id}`);
 			if (response.ok) {
@@ -260,14 +270,14 @@
 		}
 	}
 
-	let avatar: string = $state();
+	let avatar: string | undefined = $state();
 
 	onMount(async () => {
 		const lyntsPromise = fetchUserLynts(false);
 		await fetchProfile();
 		await Promise.all([lyntsPromise, checkFollowStatus()]);
 		loading = false;
-		avatar = cdnUrl(profile.id, 'big');
+		if (profile) avatar = cdnUrl(profile.id, 'big');
 	});
 
 	$effect(() => {
@@ -352,7 +362,7 @@
 							{#if profile.profile_song_type}
 								<ProfileSongPlayer
 									type={profile.profile_song_type}
-									url={profile.profile_song_url}
+									url={profile.profile_song_url ?? null}
 									title={profile.profile_song_title}
 									volume={profile.profile_song_volume}
 									loop={profile.profile_song_loop}
@@ -371,6 +381,7 @@
 											variant="outline"
 											class="w-full"
 											on:click={async () => {
+												if (!profile) return;
 												await fetch('/api/dm/conversations', {
 													method: 'POST',
 													headers: { 'Content-Type': 'application/json' },
@@ -396,12 +407,20 @@
 				</div>
 
 				<div class="mt-4 inline-flex flex-wrap items-center gap-4">
-					<span class="cursor-pointer font-bold text-primary hover:underline" onclick={toggleFollowingPopup}>
+					<button
+						type="button"
+						class="cursor-pointer bg-transparent p-0 font-bold text-primary hover:underline"
+						onclick={toggleFollowingPopup}
+					>
 						{followingCount.toLocaleString()} following
-					</span>
-					<span class="cursor-pointer font-bold text-primary hover:underline" onclick={toggleFollowersPopup}>
+					</button>
+					<button
+						type="button"
+						class="cursor-pointer bg-transparent p-0 font-bold text-primary hover:underline"
+						onclick={toggleFollowersPopup}
+					>
 						{followersCount.toLocaleString()} followers
-					</span>
+					</button>
 					<span class="inline-flex items-center gap-1.5 font-bold text-primary" title="Community XP">
 						<img src="/gem_badge.png" alt="Community XP" class="h-7 w-7 flex-shrink-0" />
 						{(profile.lynt_coins ?? 0).toLocaleString()} XP

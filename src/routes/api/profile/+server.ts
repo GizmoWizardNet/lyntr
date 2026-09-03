@@ -267,7 +267,7 @@ export const POST: RequestHandler = async ({
 		const uniqueUserId = String(userId.getUniqueID());
 		const cleanedHandle = body.handle.replace(/[^0-9a-z_-]/gi, '').toLowerCase();
 
-		const jwt = await createAuthJWT({ userId: uniqueUserId });
+		const jwt = await createAuthJWT({ userId: uniqueUserId, timestamp: Date.now() });
 
 		const [newUser] = await db
 			.insert(users)

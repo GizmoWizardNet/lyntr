@@ -1,8 +1,11 @@
 import { LinkPreview as HoverCardPrimitive } from "bits-ui-old";
+import { withAsChild } from "../bits-ui-old-as-child";
 
 import Content from "./hover-card-content.svelte";
 const Root = HoverCardPrimitive.Root;
-const Trigger = HoverCardPrimitive.Trigger;
+// See bits-ui-old-as-child.ts: bits-ui-old's types never declare `asChild`,
+// which every Trigger usage in this app relies on at runtime.
+const Trigger = withAsChild(HoverCardPrimitive.Trigger);
 
 export {
 	Root,

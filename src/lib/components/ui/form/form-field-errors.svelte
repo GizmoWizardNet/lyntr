@@ -26,10 +26,10 @@
 	
 	
 >
-	{#snippet children({ errors, fieldErrorsAttrs, errorAttrs })}
-		{#if children_render}{@render children_render({ errors, fieldErrorsAttrs, errorAttrs, })}{:else}
+	{#snippet children({ errors, errorProps })}
+		{#if children_render}{@render children_render({ errors, errorProps, })}{:else}
 			{#each errors as error}
-				<div {...errorAttrs} class={cn(errorClasses)}>{error}</div>
+				<div {...errorProps} class={cn(errorClasses)}>{error}</div>
 			{/each}
 		{/if}
 	{/snippet}

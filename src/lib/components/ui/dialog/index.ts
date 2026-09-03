@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "bits-ui-old";
+import { withAsChild } from "../bits-ui-old-as-child";
 
 import Title from "./dialog-title.svelte";
 import Portal from "./dialog-portal.svelte";
@@ -9,8 +10,10 @@ import Content from "./dialog-content.svelte";
 import Description from "./dialog-description.svelte";
 
 const Root = DialogPrimitive.Root;
-const Trigger = DialogPrimitive.Trigger;
-const Close = DialogPrimitive.Close;
+// See bits-ui-old-as-child.ts: bits-ui-old's types never declare `asChild`,
+// which every Trigger usage in this app relies on at runtime.
+const Trigger = withAsChild(DialogPrimitive.Trigger);
+const Close = withAsChild(DialogPrimitive.Close);
 
 export {
 	Root,

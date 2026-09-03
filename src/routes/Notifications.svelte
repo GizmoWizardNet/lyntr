@@ -145,7 +145,7 @@
 	function formatDate(_date: string) {
 		let date = new Date(_date);
 
-		const options = { year: 'numeric', month: 'long' };
+		const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
 		return date.toLocaleDateString(undefined, options);
 	}
 

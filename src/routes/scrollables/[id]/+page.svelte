@@ -50,6 +50,7 @@
 	}
 
 	function copyLink() {
+		if (!scrollable) return;
 		navigator.clipboard.writeText(shareScrollableUrl(scrollable.id));
 		toast.success('Link copied!');
 	}
@@ -117,7 +118,7 @@
 				<a class="author-row" href="/@{scrollable.handle}">
 					<Avatar src={cdnUrl(scrollable.userId, 'small')} alt="" userId={scrollable.userId} showPresence={false} />
 					<div class="author-text">
-						<UserName name={scrollable.username} color={scrollable.nameColor} verified={scrollable.verified} />
+						<UserName name={scrollable.username} color={scrollable.nameColor} verified={scrollable.verified ?? false} />
 						<span class="handle">@{scrollable.handle}</span>
 					</div>
 				</a>

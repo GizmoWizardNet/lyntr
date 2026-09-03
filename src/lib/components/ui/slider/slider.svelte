@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Slider as SliderPrimitive } from "bits-ui-old";
 	import { cn } from "$lib/utils.js";
+	import { withAsChild } from "../bits-ui-old-as-child";
 
 	type $$Props = SliderPrimitive.Props;
 
@@ -11,16 +12,20 @@
 	}
 
 	let { class: className = undefined, value = $bindable([0]), ...rest }: Props = $props();
-	
+
+	// See bits-ui-old-as-child.ts: bits-ui-old's types don't declare a
+	// `children` snippet receiving `{ thumbs }`, even though Root relies
+	// on it at runtime for rendering draggable thumb elements.
+	const SliderRoot = withAsChild(SliderPrimitive.Root);
 </script>
 
-<SliderPrimitive.Root
+<SliderRoot
 	bind:value
 	class={cn("relative flex w-full touch-none select-none items-center", className)}
 	{...rest}
 	
 >
-	{#snippet children({ thumbs })}
+	{#snippet children({ thumbs }: { thumbs: number[] })}
 		<span class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
 			<SliderPrimitive.Range class="absolute h-full bg-primary" />
 		</span>
@@ -31,4 +36,4 @@
 			/>
 		{/each}
 	{/snippet}
-</SliderPrimitive.Root>
+</SliderRoot>

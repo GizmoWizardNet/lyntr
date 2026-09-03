@@ -163,14 +163,14 @@
 		return true;
 	}
 
-	function handleRepost(e: MouseEvent) {
+	function handleRepost(e: CustomEvent<MouseEvent>) {
 		// Block opening the dialog if the user already reposted this lynt.
 		// Don't toggle openDialog manually here — Dialog.Trigger already
 		// does that via bind:open, and doing it twice causes the dialog
 		// to flash open then immediately close.
 		if (repostedByUser || requireAuth('repost')) {
-			e.preventDefault();
-			e.stopPropagation();
+			e.detail.preventDefault();
+			e.detail.stopPropagation();
 		}
 	}
 
@@ -217,7 +217,7 @@
 
 	let image: File | null = null;
 	let imagePreview: string | null = $state(null);
-	let fileinput: HTMLInputElement = $state();
+	let fileinput: HTMLInputElement | undefined = $state();
 
 	const onFileSelected = (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -246,7 +246,13 @@
 	}
 </script>
 
-<div onclick={stopPropagation(() => openLynt(id))} class="mb-2 w-full text-left">
+<div
+	onclick={stopPropagation(() => openLynt(id))}
+	onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && stopPropagation(() => openLynt(id))(e)}
+	role="button"
+	tabindex="0"
+	class="mb-2 w-full text-left"
+>
 	<div class="lynt-card flex w-full gap-3 p-3">
 		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
 			{#if isClan && contributors.length > 0}
@@ -294,12 +300,18 @@
 				/>
 			{/if}
 
-			{#if reposted && parentId}				<div onclick={stopPropagation(() => openLynt(parentId))}>
+			{#if reposted && parentId}
+				<div
+					onclick={stopPropagation(() => openLynt(parentId))}
+					onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && stopPropagation(() => openLynt(parentId))(e)}
+					role="button"
+					tabindex="0"
+				>
 					<div class="repost-quote p-4 drop-shadow">
 						{#if parentUserHandle}
 							<LyntContents
 								truncateContent={true}
-								content={parentContent}
+								content={parentContent ?? ''}
 								userId={parentUserId}
 								isAuthor={parentUserId === myId}
 								bio={parentUserBio}
@@ -337,8 +349,8 @@
 					/>
 
 					<Dialog.Root bind:open={openDialog}>
-						<Dialog.Trigger >
-							{#snippet children({ builder })}
+						<Dialog.Trigger asChild>
+							{#snippet children({ builder }: { builder: any })}
 														<OutlineButton
 									{...builder}
 									on:click={handleRepost}
@@ -362,7 +374,7 @@
 											</div>
 										{/if}
 									</div>
-									<button onclick={() => fileinput.click()}>
+									<button onclick={() => fileinput?.click()}>
 										<ImageUp class="upload" />
 									</button>
 									<input
@@ -421,7 +433,7 @@
 							colorOnClick={true}
 							outline={true}
 						/>
-						<LikersDropdown lyntId={id} {likeCount} visible={likersHover} />
+						<LikersDropdown id={id} {likeCount} visible={likersHover} />
 					</div>
 				</div>
 				<ReactionBar lyntId={id} {reactions} myId={myId} />

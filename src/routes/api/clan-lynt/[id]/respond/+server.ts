@@ -17,10 +17,11 @@ export const POST: RequestHandler = async ({ params, request, cookies }) => {
 
 	let editedContent: string | undefined;
 	if (body.action === 'accept' && typeof body.content === 'string' && body.content.trim()) {
-		editedContent = body.content.trim();
-		if (editedContent.length > 280) return json({ error: 'Content is too long' }, { status: 400 });
-		const verdict = await moderateContent(editedContent);
+		const trimmed = body.content.trim();
+		if (trimmed.length > 280) return json({ error: 'Content is too long' }, { status: 400 });
+		const verdict = await moderateContent(trimmed);
 		if (!verdict.allowed) return json({ error: verdict.reason }, { status: 400 });
+		editedContent = trimmed;
 	}
 
 	try {

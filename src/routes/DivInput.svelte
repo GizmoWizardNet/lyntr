@@ -15,8 +15,8 @@
 
 	let { lynt = $bindable(''), onImagePaste }: Props = $props();
 
-	let writeAreaEl: HTMLDivElement = $state();
-	let mentionAutocomplete: MentionAutocomplete = $state();
+	let writeAreaEl: HTMLDivElement | undefined = $state();
+	let mentionAutocomplete: MentionAutocomplete | undefined = $state();
 
 	let characterCount = $derived(lynt.length);
 	let isOverLimit    = $derived(characterCount > 280);

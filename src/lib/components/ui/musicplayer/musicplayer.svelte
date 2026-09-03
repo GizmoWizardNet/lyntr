@@ -15,7 +15,7 @@
 
     let { audioSrc }: Props = $props();
 
-    let audio: HTMLAudioElement = $state();
+    let audio: HTMLAudioElement | undefined = $state();
     let progress = $state(0);
     let remaining = $state('0:00');
     let duration = 0;
@@ -27,7 +27,7 @@
         audio = new Audio(audioSrc);
         audio.addEventListener('timeupdate', updateProgress);
         audio.addEventListener('loadedmetadata', () => {
-            duration = audio.duration;
+            duration = audio?.duration ?? 0;
         });
         audio.addEventListener('ended', () => {
             playing = false;
@@ -46,6 +46,7 @@
     });
     
     function togglePlay() {
+        if (!audio) return;
         if (playing) {
             audio.pause();
         } else {
@@ -55,8 +56,9 @@
     }
 
     function updateProgress() {
+        if (!audio) return;
         progress = (audio.currentTime / audio.duration) * 100;
-        remaining = formatTime(audio?.currentTime || 0)
+        remaining = formatTime(audio.currentTime || 0)
     }
 
     function formatTime(seconds: number) {
@@ -91,7 +93,7 @@
 
     <Popover.Root portal={null}>
         <Popover.Trigger asChild >
-            {#snippet children({ builder })}
+            {#snippet children({ builder }: { builder: any })}
                         <Button class="h-9 rounded-full" builders={[builder]}>
                     {#if volumeArray[0] <= 0}
                         <VolumeX class="h-4 w-4" />

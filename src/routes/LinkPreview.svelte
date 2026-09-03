@@ -63,11 +63,11 @@
 
 {#if state === 'loading'}
   <div class="og-card og-skeleton" aria-hidden="true">
-    <div class="og-skeleton-img" />
+    <div class="og-skeleton-img"></div>
     <div class="og-skeleton-body">
-      <div class="og-skeleton-line short" />
-      <div class="og-skeleton-line" />
-      <div class="og-skeleton-line medium" />
+      <div class="og-skeleton-line short"></div>
+      <div class="og-skeleton-line"></div>
+      <div class="og-skeleton-line medium"></div>
     </div>
   </div>
 {:else if state === 'loaded' && data}
@@ -172,6 +172,7 @@
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-shadow: 1px 1px 2px rgba(60,30,0,0.07);
@@ -183,6 +184,7 @@
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

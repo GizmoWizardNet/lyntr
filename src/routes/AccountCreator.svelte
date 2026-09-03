@@ -487,7 +487,7 @@
                                     <div class="flex-shrink-0">
                                         <img
                                             src={`/avatar/${user.id}.png`}
-                                            on:error={(event) => {
+                                            onerror={(event) => {
                                                 const img =
                                                     event.currentTarget as HTMLImageElement;
                                                 img.onerror = null;
@@ -569,7 +569,7 @@
 
                     <AlertDialog.Root>
                         <AlertDialog.Trigger asChild>
-                            {#snippet children({ builder })}
+                            {#snippet children({ builder }: { builder: any })}
                                 <Button
                                     builders={[builder]}
                                     onclick={handleSubmit}

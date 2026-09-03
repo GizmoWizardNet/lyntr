@@ -123,11 +123,12 @@
 					}
 					return lynt;
 				});
-				if (selectedLynt?.id === data.lyntId) {
+				if (selectedLynt && selectedLynt.id === data.lyntId) {
+					const current = selectedLynt;
 					selectedLynt = {
-						...selectedLynt,
+						...current,
 						likeCount: data.likeCount,
-						likedByUser: data.liked !== undefined ? data.liked : selectedLynt.likedByUser
+						likedByUser: data.liked !== undefined ? data.liked : current.likedByUser
 					};
 				}
 				comments = comments.map((c) => {
@@ -148,11 +149,12 @@
 					}
 					return lynt;
 				});
-				if (selectedLynt?.id === data.lyntId) {
+				if (selectedLynt && selectedLynt.id === data.lyntId) {
+					const current = selectedLynt;
 					selectedLynt = {
-						...selectedLynt,
+						...current,
 						repostCount: data.repostCount,
-						repostedByUser: data.reposted !== undefined ? data.reposted : selectedLynt.repostedByUser
+						repostedByUser: data.reposted !== undefined ? data.reposted : current.repostedByUser
 					};
 				}
 				comments = comments.map((c) => {
@@ -223,7 +225,7 @@
 				feed = feed.map((lynt) =>
 					lynt.id === data.lyntId ? { ...lynt, commentCount: data.commentCount } : lynt
 				);
-				if (selectedLynt?.id === data.lyntId) {
+				if (selectedLynt && selectedLynt.id === data.lyntId) {
 					selectedLynt = { ...selectedLynt, commentCount: data.commentCount };
 				}
 			}),
@@ -313,7 +315,7 @@
 		fetchFeed();
 	}
 
-	let feedContainer: HTMLDivElement = $state();
+	let feedContainer: HTMLDivElement | undefined = $state();
 	let loadingBottomFeed = false;
 
 	function handleScroll() {

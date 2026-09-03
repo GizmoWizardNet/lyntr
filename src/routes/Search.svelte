@@ -93,7 +93,7 @@
 				{#if searchResults.length > 0}
 					<div class="flex flex-col gap-4 px-1">
 						{#each searchResults as lynt}
-							<Lynt {...lynt} myId={userId} on:lyntClick={handleLyntClick} />
+							<Lynt {...lynt} myId={userId} lyntClick={handleLyntClick} />
 						{/each}
 					</div>
 				{:else}

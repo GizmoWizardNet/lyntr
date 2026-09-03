@@ -6,7 +6,7 @@
 	type $$Props = HTMLAttributes<HTMLSpanElement>;
 	interface Props {
 		class?: string | undefined | null;
-		children?: import('svelte').Snippet<[any]>;
+		children?: import('svelte').Snippet<[]>;
 		[key: string]: any
 	}
 
@@ -21,7 +21,5 @@
 	{...rest}
 	
 >
-	{#snippet children({ descriptionAttrs })}
-		{@render children_render?.({ descriptionAttrs, })}
-	{/snippet}
+	{@render children_render?.()}
 </FormPrimitive.Description>

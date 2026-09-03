@@ -15,9 +15,9 @@
 	let { class: className = undefined, children, ...rest }: Props = $props();
 	
 
-	const { labelAttrs } = getFormControl();
+	const { labelProps } = getFormControl({});
 </script>
 
-<Label {...$labelAttrs} class={cn("data-[fs-error]:text-destructive", className)} {...rest}>
-	{@render children?.({ labelAttrs, })}
+<Label {...labelProps} class={cn("data-[fs-error]:text-destructive", className)} {...rest}>
+	{@render children?.({ labelAttrs: labelProps })}
 </Label>

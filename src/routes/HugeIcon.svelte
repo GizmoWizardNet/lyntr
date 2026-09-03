@@ -9,8 +9,12 @@
 
 	
 	interface Props {
-		// Icon data is an array of [tagName, attrs] tuples
-		icon: Array<[string, Record<string, string>]>;
+		// Icon data is an array of [tagName, attrs] tuples. The upstream
+		// @hugeicons/core-free-icons package types attr values as
+		// `string | number` (e.g. numeric opacity/stroke-width values), so we
+		// mirror that here instead of the narrower `Record<string, string>`
+		// which caused type errors at every call site.
+		icon: readonly (readonly [string, { readonly [key: string]: string | number }])[];
 		size?: number;
 		strokeWidth?: number;
 		color?: string;
@@ -24,6 +28,28 @@
 		color = 'currentColor',
 		className = ''
 	}: Props = $props();
+
+	// SVG attributes require strings; the underlying icon data can carry
+	// numeric values (e.g. opacity: 1), so normalize everything to string here
+	// rather than at every call site.
+	function str(value: string | number | undefined): string | undefined {
+		return value === undefined ? undefined : String(value);
+	}
+
+	const LINECAPS = new Set(['butt', 'round', 'square', 'inherit']);
+	const LINEJOINS = new Set(['miter', 'round', 'bevel', 'arcs', 'miter-clip', 'inherit']);
+
+	function linecap(value: string | number | undefined) {
+		const v = str(value);
+		return v && LINECAPS.has(v) ? (v as 'butt' | 'round' | 'square' | 'inherit') : undefined;
+	}
+
+	function linejoin(value: string | number | undefined) {
+		const v = str(value);
+		return v && LINEJOINS.has(v)
+			? (v as 'miter' | 'round' | 'bevel' | 'arcs' | 'miter-clip' | 'inherit')
+			: undefined;
+	}
 </script>
 
 <svg
@@ -38,23 +64,23 @@
 	{#each icon as [tag, attrs]}
 		{#if tag === 'path'}
 			<path
-				d={attrs.d}
-				stroke={attrs.stroke ?? color}
+				d={str(attrs.d)}
+				stroke={str(attrs.stroke) ?? color}
 				stroke-width={attrs.strokeWidth ?? strokeWidth}
-				stroke-linecap={attrs.strokeLinecap ?? undefined}
-				stroke-linejoin={attrs.strokeLinejoin ?? undefined}
-				fill={attrs.fill ?? 'none'}
-				opacity={attrs.opacity ?? undefined}
+				stroke-linecap={linecap(attrs.strokeLinecap)}
+				stroke-linejoin={linejoin(attrs.strokeLinejoin)}
+				fill={str(attrs.fill) ?? 'none'}
+				opacity={attrs.opacity}
 			/>
 		{:else if tag === 'circle'}
 			<circle
 				cx={attrs.cx}
 				cy={attrs.cy}
 				r={attrs.r}
-				stroke={attrs.stroke ?? color}
+				stroke={str(attrs.stroke) ?? color}
 				stroke-width={attrs.strokeWidth ?? strokeWidth}
-				fill={attrs.fill ?? 'none'}
-				opacity={attrs.opacity ?? undefined}
+				fill={str(attrs.fill) ?? 'none'}
+				opacity={attrs.opacity}
 			/>
 		{:else if tag === 'rect'}
 			<rect
@@ -62,11 +88,11 @@
 				y={attrs.y}
 				width={attrs.width}
 				height={attrs.height}
-				rx={attrs.rx ?? undefined}
-				stroke={attrs.stroke ?? color}
+				rx={attrs.rx}
+				stroke={str(attrs.stroke) ?? color}
 				stroke-width={attrs.strokeWidth ?? strokeWidth}
-				fill={attrs.fill ?? 'none'}
-				opacity={attrs.opacity ?? undefined}
+				fill={str(attrs.fill) ?? 'none'}
+				opacity={attrs.opacity}
 			/>
 		{/if}
 	{/each}

@@ -88,7 +88,7 @@
 
 	// Avatar state (unchanged from original)
 	let avatarSrc: any;
-	function handleAvatarChange(shit) {
+	function handleAvatarChange(shit: CustomEvent<{ file: any }>) {
 		avatarSrc = shit.detail.file;
 	}
 
@@ -97,7 +97,7 @@
 	let bannerPreview: string | null = $state(banner
 		? `${PUBLIC_CDN_URL}/lyntr/${banner}`
 		: null);
-	let bannerInput: HTMLInputElement = $state();
+	let bannerInput: HTMLInputElement | undefined = $state();
 
 	function onBannerSelected(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -323,7 +323,7 @@
 			{/if}
 			<button
 				class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity rounded-lg"
-				onclick={() => bannerInput.click()}
+				onclick={() => bannerInput?.click()}
 			>
 				<ImageUp class="h-6 w-6 text-white" />
 			</button>

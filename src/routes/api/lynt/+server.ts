@@ -373,6 +373,9 @@ export const GET: RequestHandler = async ({
 	if (admin === process.env.ADMIN_KEY && process.env.SUDO_USER_ID) {
 		userId = process.env.SUDO_USER_ID;
 	} else {
+		if (!authCookie) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
+		}
 		try {
 			const jwtPayload = await verifyAuthJWT(authCookie);
 

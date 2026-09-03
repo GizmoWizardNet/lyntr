@@ -142,7 +142,7 @@
 		{:else if seg.type === 'symbol'}
 			<HoverCard.Root openDelay={150} closeDelay={100}>
 				<HoverCard.Trigger asChild >
-					{#snippet children({ builder })}
+					{#snippet children({ builder }: { builder: any })}
 												<button {...builder} use:builder.action class="symbol-token">
 							${seg.value}
 						</button>

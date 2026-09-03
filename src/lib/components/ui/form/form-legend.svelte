@@ -6,7 +6,7 @@
 
 	interface Props {
 		class?: $$Props["class"];
-		children?: import('svelte').Snippet<[any]>;
+		children?: import('svelte').Snippet<[]>;
 		[key: string]: any
 	}
 
@@ -21,7 +21,5 @@
 	class={cn("text-sm font-medium leading-none data-[fs-error]:text-destructive", className)}
 	
 >
-	{#snippet children({ legendAttrs })}
-		{@render children_render?.({ legendAttrs, })}
-	{/snippet}
+	{@render children_render?.()}
 </FormPrimitive.Legend>

@@ -97,7 +97,7 @@
 					src="https://rugplay.com/api/proxy/s3/{c.icon}"
 					alt={c.name}
 					class="icon"
-					on:error={(e) => e.currentTarget.style.display = 'none'}
+					on:error={(e) => ((e.currentTarget as HTMLElement).style.display = 'none')}
 				/>
 				<div class="info">
 					<span class="name">{c.name}</span>

@@ -36,20 +36,20 @@
 		if (minutes > 0) return `${minutes}m`;
 		return `${seconds}s`;
 	}
-	function formatDate(date) {
-		if (typeof date === 'string') date = new Date(date);
+	function formatDate(date: string | number | Date) {
+		const d = date instanceof Date ? date : new Date(date);
 
-		const options = {
+		const options: Intl.DateTimeFormatOptions = {
 			year: 'numeric',
 			month: 'long'
 		};
-		return date.toLocaleDateString(undefined, options);
+		return d.toLocaleDateString(undefined, options);
 	}
 
-	function formatDateTooltip(date) {
-		date = new Date(date);
+	function formatDateTooltip(date: string | number | Date) {
+		const d = date instanceof Date ? date : new Date(date);
 
-		const options = {
+		const options: Intl.DateTimeFormatOptions = {
 			hour: '2-digit',
 			minute: '2-digit',
 			month: 'short',
@@ -57,7 +57,7 @@
 			year: 'numeric'
 		};
 
-		return date.toLocaleString(undefined, options);
+		return d.toLocaleString(undefined, options);
 	}
 
 	let popoverOpened = false;
@@ -320,10 +320,12 @@
 			</div>
 			<div class="flex-shrink-0">
 				<Popover.Root bind:open={popoverOpened}>
-					<Popover.Trigger asChild let:builder>
-						<button {...builder} on:click|stopPropagation={() => (popoverOpened = !popoverOpened)}>
-							<Ellipsis />
-						</button>
+					<Popover.Trigger asChild>
+						{#snippet children({ builder }: { builder: any })}
+							<button {...builder} on:click|stopPropagation={() => (popoverOpened = !popoverOpened)}>
+								<Ellipsis />
+							</button>
+						{/snippet}
 					</Popover.Trigger>
 					<Popover.Content class="flex w-auto flex-col p-2">
 						{#if isAuthor}
@@ -383,7 +385,7 @@
 
 		<!-- Content / inline editor toggle -->
 		{#if editing}
-			<div class="mt-2 flex flex-col gap-2" on:click|stopPropagation>
+			<div class="mt-2 flex flex-col gap-2" on:click|stopPropagation role="presentation">
 				<!-- Write / Preview tab bar -->
 				<div class="edit-tab-bar">
 					<button class="edit-tab" class:active={editMode === 'write'} on:click={() => (editMode = 'write')}>Write</button>
@@ -399,7 +401,7 @@
 						rows="4"
 						bind:value={editContent}
 						maxlength="290"
-					/>
+					></textarea>
 				{:else}
 					<div class="edit-preview">
 						{#if editContent.trim()}
@@ -443,7 +445,7 @@
 {#if images && images.length > 1}
 	<div class="lynt-image-gallery" class:count-3={images.length === 3}>
 		{#each images as img (img.key)}
-			<img class="gallery-img" src={cdnUrl(img.key)} alt="Attached image" loading="lazy" decoding="async" />
+			<img class="gallery-img" src={cdnUrl(img.key)} alt="Attached" loading="lazy" decoding="async" />
 		{/each}
 	</div>
 {:else if (images && images.length === 1) || has_image}

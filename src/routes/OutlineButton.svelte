@@ -55,7 +55,7 @@
 		dispatch('click', event);
 	}
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{ click: MouseEvent }>();
 
 	const INLINE_ANIMATED = new Set(['house', 'webhook', 'user']);
 </script>
@@ -84,7 +84,7 @@
 	{#if popover}
 		<Popover.Root bind:open={opened} portal={null}>
 			<Popover.Trigger asChild >
-				{#snippet children({ builder })}
+				{#snippet children({ builder }: { builder: any })}
 								{@const SvelteComponent_1 = icon}
 				<button
 						{...builder}

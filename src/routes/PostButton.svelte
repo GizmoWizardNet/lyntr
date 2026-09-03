@@ -10,7 +10,7 @@
 
 	interface Props {
 		userId: string;
-		class?: $$Props['class'];
+		class?: string;
 		children?: import('svelte').Snippet;
 		// Called immediately with the newly-created lynt so the caller can
 		// prepend it to the feed without waiting on a WebSocket round-trip —
@@ -21,7 +21,7 @@
 	let { userId, class: className = undefined, children, onPosted }: Props = $props();
 
 	let opened = $state(false);
-	let composer: Composer = $state();
+	let composer: Composer | undefined = $state();
 	// Every post starts with this choice — solo goes straight into the
 	// existing single-author flow, clan swaps in the friend-relay composer.
 	// Nothing publishes until either the solo post lands or the last clan

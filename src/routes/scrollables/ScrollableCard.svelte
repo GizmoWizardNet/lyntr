@@ -156,7 +156,13 @@
 </script>
 
 <div class="scrollable-card">
-	<div class="video-wrap" onclick={togglePlay}>
+	<div
+		class="video-wrap"
+		onclick={togglePlay}
+		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && togglePlay()}
+		role="button"
+		tabindex="0"
+	>
 		{#if renderVideo}
 			<video
 				bind:this={videoEl}
@@ -194,7 +200,7 @@
 		     the mute button so both live in one predictable corner. -->
 		<Popover.Root bind:open={speedMenuOpen}>
 			<Popover.Trigger asChild>
-				{#snippet children({ builder })}
+				{#snippet children({ builder }: { builder: any })}
 					<button
 						{...builder}
 						class="speed-btn"
@@ -204,7 +210,7 @@
 					</button>
 				{/snippet}
 			</Popover.Trigger>
-			<Popover.Content class="w-24 p-1" align="end" onclick={(e) => e.stopPropagation()}>
+			<Popover.Content class="w-24 p-1" align="end" onclick={(e: MouseEvent) => e.stopPropagation()}>
 				{#each SPEED_OPTIONS as speed}
 					<button
 						class="speed-option"
@@ -257,7 +263,7 @@
 		{#if scrollable.userId === myId}
 			<Popover.Root bind:open={moreOpen}>
 				<Popover.Trigger asChild>
-					{#snippet children({ builder })}
+					{#snippet children({ builder }: { builder: any })}
 						<button {...builder} onclick={() => (moreOpen = !moreOpen)} class="rail-btn">
 							<MoreHorizontal class="h-7 w-7" />
 						</button>

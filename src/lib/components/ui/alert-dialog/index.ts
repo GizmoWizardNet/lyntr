@@ -1,4 +1,5 @@
 import { AlertDialog as AlertDialogPrimitive } from "bits-ui-old";
+import { withAsChild } from "../bits-ui-old-as-child";
 
 import Title from "./alert-dialog-title.svelte";
 import Action from "./alert-dialog-action.svelte";
@@ -11,7 +12,9 @@ import Content from "./alert-dialog-content.svelte";
 import Description from "./alert-dialog-description.svelte";
 
 const Root = AlertDialogPrimitive.Root;
-const Trigger = AlertDialogPrimitive.Trigger;
+// See bits-ui-old-as-child.ts: bits-ui-old's types never declare `asChild`,
+// which every Trigger usage in this app relies on at runtime.
+const Trigger = withAsChild(AlertDialogPrimitive.Trigger);
 
 export {
 	Root,

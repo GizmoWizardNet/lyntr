@@ -1,4 +1,4 @@
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 import { getLynt } from "$lib/server/lynt"
 import { stripMarkdownForOg } from '$lib/ogText';
 import { PUBLIC_CDN_URL } from '$env/static/public';
@@ -14,7 +14,7 @@ const TIMESTAMP_OPTS: Intl.DateTimeFormatOptions = {
     year: 'numeric',
 };
 
-export const load: PageLoad  = async ({ url, cookies }) => {
+export const load: PageServerLoad  = async ({ url, cookies }) => {
     const id = url.searchParams.get('id');
     const lynt = await getLynt(id || '');
 

@@ -12,12 +12,12 @@
 	// something that just silently happens in the background.
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import LoadingSpinner from './LoadingSpinner.svelte';
 	import { Progress } from '@/components/ui/progress';
 	import { Badge } from '@/components/ui/badge';
 	import { Button } from '@/components/ui/button';
 	import { tierColor, type AchievementTier } from '$lib/achievements';
-	import { unseenAchievements } from '../stores';
+	import { unseenAchievements } from './stores';
 
 	interface AchievementRow {
 		key: string;

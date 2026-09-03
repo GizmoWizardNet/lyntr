@@ -12,13 +12,13 @@ export const users = pgTable('users', {
     token: text('token').default("a"),
     email: text('email').notNull(),
     verified: boolean('verified').default(false),
-    banner: text('banner').default(null),
+    banner: text('banner'),
     // Badges
     is_admin: boolean('is_admin').default(false).notNull(),
     login_streak: integer('login_streak').default(1).notNull(),
-    last_login_date: date('last_login_date').default(null),
+    last_login_date: date('last_login_date'),
     // Linked Rugplay account (rugplay.com) — used to show a "biggest bag" net-worth flex badge.
-    rugplay_username: varchar('rugplay_username', { length: 60 }).default(null),
+    rugplay_username: varchar('rugplay_username', { length: 60 }),
     // ── Rugplay Enhancements (BYO API key) ──────────────────────────────
     // Opt-in, off by default. When enabled with a valid key, $SYMBOL embeds
     // on this user's own Lynts are fetched using THEIR Rugplay API key
@@ -26,25 +26,25 @@ export const users = pgTable('users', {
     // everyone else's 2,000/day quota.
     rugplay_enhancements_enabled: boolean('rugplay_enhancements_enabled').default(false).notNull(),
     // AES-256-GCM ciphertext (iv + tag + data, base64), never sent to any client.
-    rugplay_api_key_enc: text('rugplay_api_key_enc').default(null),
+    rugplay_api_key_enc: text('rugplay_api_key_enc'),
     // Cached result of the last validation call against Rugplay's API.
     rugplay_key_valid: boolean('rugplay_key_valid').default(false).notNull(),
-    rugplay_key_checked_at: timestamp('rugplay_key_checked_at').default(null),
+    rugplay_key_checked_at: timestamp('rugplay_key_checked_at'),
 
     // Set manually by admins only — never toggled by any automated logic.
     contributor: boolean('contributor').default(false).notNull(),
 
     // Cosmetic username color, one of the ids in $lib/nameColors.ts.
     // null = the default theme color (what everyone had before this feature).
-    name_color: text('name_color').default(null),
+    name_color: text('name_color'),
 
     // Profile song (MySpace-style). type is 'upload' | 'youtube' | null.
     // For 'upload', url is the S3/MinIO object key. For 'youtube', url is
     // just the 11-char video id. Only one song at a time — setting a new
     // one (of either type) replaces the other.
-    profile_song_type: text('profile_song_type').default(null),
-    profile_song_url: text('profile_song_url').default(null),
-    profile_song_title: text('profile_song_title').default(null),
+    profile_song_type: text('profile_song_type'),
+    profile_song_url: text('profile_song_url'),
+    profile_song_title: text('profile_song_title'),
     profile_song_volume: integer('profile_song_volume').default(50).notNull(),
     profile_song_loop: boolean('profile_song_loop').default(true).notNull(),
 
@@ -63,8 +63,8 @@ export const users = pgTable('users', {
     // /api/platform-settings, then applied client-side as a CSS custom
     // property (see `--font-retro` in app.css) plus an on-the-fly Google
     // Fonts <link> for names that aren't already a system font.
-    custom_font: text('custom_font').default(null),
-    notification_email: text('notification_email').default(null),
+    custom_font: text('custom_font'),
+    notification_email: text('notification_email'),
 
     // ── LyntCoins (LC) ───────────────────────────────────────────────
     // Spendable balance. Never decremented except by the future shop/spend
@@ -74,7 +74,7 @@ export const users = pgTable('users', {
     // Reset (along with lc_pool_date) the next time they earn on a new day.
     lc_earned_today: integer('lc_earned_today').default(0).notNull(),
     // The UTC date (YYYY-MM-DD) lc_earned_today/lc_posts_today apply to.
-    lc_pool_date: date('lc_pool_date').default(null),
+    lc_pool_date: date('lc_pool_date'),
     // How many original (non-repost) posts this user has made today —
     // drives the diminishing-returns post reward.
     lc_posts_today: integer('lc_posts_today').default(0).notNull(),
@@ -89,7 +89,7 @@ export const users = pgTable('users', {
     // against a real achievements table for the same reason
     // user_achievements.achievement_key isn't: the catalog is code, not a
     // table. Validated at write time (PATCH /api/achievements/pin) instead.
-    pinned_achievement_key: text('pinned_achievement_key').default(null),
+    pinned_achievement_key: text('pinned_achievement_key'),
 });
 
 export const lynts = pgTable('lynts', {
@@ -106,12 +106,12 @@ export const lynts = pgTable('lynts', {
     has_image: boolean('has_image').default(false),
     // GIF attachment (Klipy) — mutually exclusive with has_image/poll,
     // same "one attachment slot" model as the rest of the composer.
-    gif_url: text('gif_url').default(null),
-    gif_preview_url: text('gif_preview_url').default(null),
+    gif_url: text('gif_url'),
+    gif_preview_url: text('gif_preview_url'),
     created_at: timestamp('created_at').defaultNow(),
     reposted: boolean('reposted').default(false),
     parent: text('parent').references((): AnyPgColumn => lynts.id),
-    edited_at: timestamp('edited_at').default(null),
+    edited_at: timestamp('edited_at'),
     // Clan Lynting — true once the relay chain (see clan_lynts below)
     // finished and this row got its real INSERT. Never true for a lynt
     // that's still mid-relay — those don't have a lynts row at all yet,
@@ -122,7 +122,7 @@ export const lynts = pgTable('lynts', {
     // Deliberately a snapshot, not a live join — contributors' IQ can
     // keep changing after the lynt is posted and the displayed number
     // shouldn't drift out from under a published post.
-    clan_avg_iq: integer('clan_avg_iq').default(null),
+    clan_avg_iq: integer('clan_avg_iq'),
 }, (table) => {
     return {
         // Every "New"/"For you"/handle feed orders by this — without it,
@@ -168,8 +168,8 @@ export const clanLynts = pgTable('clan_lynts', {
     // place rather than versioned; the relay isn't meant to keep a full
     // edit history, just the latest draft.
     content: text('content').notNull(),
-    gif_url: text('gif_url').default(null),
-    gif_preview_url: text('gif_preview_url').default(null),
+    gif_url: text('gif_url'),
+    gif_preview_url: text('gif_preview_url'),
     // Index into clan_lynt_members.position for whose turn it currently is.
     current_step: integer('current_step').default(0).notNull(),
     // 'pending' while relaying, 'completed' once published, 'declined' if
@@ -189,7 +189,7 @@ export const clanLyntMembers = pgTable('clan_lynt_members', {
     user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     position: integer('position').notNull(),
     status: text('status').default('pending').notNull(),
-    responded_at: timestamp('responded_at').default(null),
+    responded_at: timestamp('responded_at'),
 }, (table) => ({
     pk: primaryKey({ columns: [table.clan_id, table.user_id], name: 'clan_lynt_members_pkey' }),
     clanPositionIdx: index('clan_lynt_members_clan_id_position_idx').on(table.clan_id, table.position),
@@ -250,14 +250,14 @@ export const userAchievements = pgTable('user_achievements', {
     // unlocked yet — drives the gold unread badge in the nav, same shape
     // as `notifications.read` but nullable-timestamp instead of boolean
     // so "when did they see it" is available for free if ever needed.
-    seen_at: timestamp('seen_at').default(null),
+    seen_at: timestamp('seen_at'),
     // Null = unlocked but the Community XP bonus hasn't been collected yet.
     // Unlocking an achievement no longer auto-pays it out — the
     // Achievements page shows a "Claim" button on unlocked-but-unclaimed
     // cards, and POST /api/achievements/claim is what actually credits the
     // coins and sets this. Keeps the reward as an active, satisfying
     // action instead of something that just silently happens.
-    claimed_at: timestamp('claimed_at').default(null),
+    claimed_at: timestamp('claimed_at'),
 }, (table) => {
     return {
         pk: primaryKey({ columns: [table.user_id, table.achievement_key], name: 'user_achievements_pkey' }),
@@ -327,7 +327,7 @@ export const forumThreads = pgTable('forum_threads', {
     pinned: boolean('pinned').default(false).notNull(),
     closed: boolean('closed').default(false).notNull(),
     closed_by: text('closed_by').references(() => users.id),
-    closed_at: timestamp('closed_at').default(null),
+    closed_at: timestamp('closed_at'),
 });
 
 export const forumPosts = pgTable('forum_posts', {
@@ -339,12 +339,12 @@ export const forumPosts = pgTable('forum_posts', {
     // UI can render it like an OP instead of a reply.
     is_op: boolean('is_op').default(false).notNull(),
     created_at: timestamp('created_at').defaultNow(),
-    edited_at: timestamp('edited_at').default(null),
+    edited_at: timestamp('edited_at'),
     // Soft-delete: admins "delete" a post for moderation but we keep the row
     // around so vote history / thread post-counts / reply chains stay sane.
     deleted: boolean('deleted').default(false).notNull(),
     deleted_by: text('deleted_by').references(() => users.id),
-    deleted_at: timestamp('deleted_at').default(null),
+    deleted_at: timestamp('deleted_at'),
 });
 
 export const forumPostVotes = pgTable('forum_post_votes', {
@@ -382,9 +382,9 @@ export const polls = pgTable('polls', {
     title: varchar('title', { length: 140 }).notNull(),
     multi_select: boolean('multi_select').default(false).notNull(),
     // null = never auto-resolves; creator must manually resolve
-    resolve_at: timestamp('resolve_at').default(null),
+    resolve_at: timestamp('resolve_at'),
     // set when the poll is resolved (manually or by schedule)
-    resolved_at: timestamp('resolved_at').default(null),
+    resolved_at: timestamp('resolved_at'),
     created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -457,8 +457,8 @@ export const dmConversations = pgTable('dm_conversations', {
     // false = 1-to-1 DM, true = group DM
     is_group: boolean('is_group').default(false).notNull(),
     // Group-only fields. Null for 1:1 DMs.
-    name: varchar('name', { length: 100 }).default(null),
-    icon_url: text('icon_url').default(null),
+    name: varchar('name', { length: 100 }),
+    icon_url: text('icon_url'),
     owner_id: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
     created_at: timestamp('created_at').defaultNow(),
     // Cache of last message for the conversation list preview
@@ -481,13 +481,13 @@ export const dmMembers = pgTable('dm_members', {
     // 'member' can leave and add others (Discord-style, no strict admin tiers for now).
     role: text('role').notNull().default('member'),
     // Per-member override for how the group displays in their own client.
-    nickname: varchar('nickname', { length: 60 }).default(null),
+    nickname: varchar('nickname', { length: 60 }),
     muted: boolean('muted').default(false).notNull(),
     pinned: boolean('pinned').default(false).notNull(),
     joined_at: timestamp('joined_at').defaultNow(),
-    left_at: timestamp('left_at').default(null), // soft — lets history stay intact for other members
+    left_at: timestamp('left_at'), // soft — lets history stay intact for other members
     // Read-receipt state, migrated in from dm_reads.
-    last_read_message_id: uuid('last_read_message_id').default(null),
+    last_read_message_id: uuid('last_read_message_id'),
     last_read_at: timestamp('last_read_at').defaultNow(),
 }, (table) => ({
     pk: primaryKey({ columns: [table.conversation_id, table.user_id], name: 'dm_members_pkey' }),
@@ -499,19 +499,19 @@ export const dmMessages = pgTable('dm_messages', {
     conversation_id: uuid('conversation_id').notNull().references(() => dmConversations.id, { onDelete: 'cascade' }),
     sender_id: text('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     // null content is valid when the message is a GIF or attachment only
-    content: text('content').default(null),
+    content: text('content'),
     // GIF from Tenor — store the embed URL directly
-    gif_url: text('gif_url').default(null),
-    gif_preview_url: text('gif_preview_url').default(null),
+    gif_url: text('gif_url'),
+    gif_preview_url: text('gif_preview_url'),
     // Attachment stored in MinIO (same bucket as lynt images)
-    attachment_url: text('attachment_url').default(null),
-    attachment_name: text('attachment_name').default(null),
-    attachment_size: integer('attachment_size').default(null), // bytes
-    attachment_type: text('attachment_type').default(null),    // MIME
+    attachment_url: text('attachment_url'),
+    attachment_name: text('attachment_name'),
+    attachment_size: integer('attachment_size'), // bytes
+    attachment_type: text('attachment_type'),    // MIME
     // Reply-to another message in the same conversation. Self-referencing FK.
     reply_to_id: uuid('reply_to_id').references((): AnyPgColumn => dmMessages.id, { onDelete: 'set null' }),
-    edited_at: timestamp('edited_at').default(null),
-    deleted_at: timestamp('deleted_at').default(null), // soft delete
+    edited_at: timestamp('edited_at'),
+    deleted_at: timestamp('deleted_at'), // soft delete
     created_at: timestamp('created_at').defaultNow(),
 }, (table) => ({
     convIdx: index('dm_messages_conversation_id_idx').on(table.conversation_id, table.created_at),
@@ -575,7 +575,7 @@ export const apiClients = pgTable('api_clients', {
     secret_last4: text('secret_last4').notNull(),
     revoked: boolean('revoked').default(false).notNull(),
     created_at: timestamp('created_at').defaultNow(),
-    last_used_at: timestamp('last_used_at').default(null),
+    last_used_at: timestamp('last_used_at'),
     // Bumped every time the secret is regenerated — lets us tell "brand new
     // credential" apart from "same credential, rotated secret" in logs.
     secret_version: integer('secret_version').default(1).notNull(),
@@ -601,7 +601,7 @@ export const pushSubscriptions = pgTable('push_subscriptions', {
     p256dh: text('p256dh').notNull(),
     auth: text('auth').notNull(),
     // User-agent snippet for display (optional, helps debug stale subs)
-    user_agent: text('user_agent').default(null),
+    user_agent: text('user_agent'),
     created_at: timestamp('created_at').defaultNow(),
 }, (table) => ({
     // One subscription row per (user, endpoint) — prevents duplicates when
@@ -627,7 +627,7 @@ export const scrollables = pgTable('scrollables', {
     video_key: text('video_key').notNull(),
     // Client-captured poster frame, uploaded as `${thumbnail_key}.webp`.
     // Nullable: falls back to a plain video-icon placeholder in the UI.
-    thumbnail_key: text('thumbnail_key').default(null),
+    thumbnail_key: text('thumbnail_key'),
     duration_seconds: integer('duration_seconds').notNull(),
     file_size_bytes: integer('file_size_bytes').notNull(),
     views: integer('views').default(0).notNull(),
@@ -661,8 +661,8 @@ export const scrollableComments = pgTable('scrollable_comments', {
     user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
     // Same "one attachment slot" model as the lynt composer's GIF field.
-    gif_url: text('gif_url').default(null),
-    gif_preview_url: text('gif_preview_url').default(null),
+    gif_url: text('gif_url'),
+    gif_preview_url: text('gif_preview_url'),
     created_at: timestamp('created_at').defaultNow(),
 }, (table) => ({
     scrollableCreatedAtIdx: index('scrollable_comments_scrollable_id_created_at_idx').on(table.scrollable_id, table.created_at),
@@ -695,13 +695,13 @@ export const lyntReactions = pgTable('lynt_reactions', {
 // the way catplay's "What's New" list does.
 export const devCycleEntries = pgTable('dev_cycle_entries', {
     id: uuid('id').defaultRandom().primaryKey(),
-    version: varchar('version', { length: 32 }).default(null), // e.g. "2.4.0" — null for undated/ongoing notes
+    version: varchar('version', { length: 32 }), // e.g. "2.4.0" — null for undated/ongoing notes
     title: varchar('title', { length: 120 }).notNull(),
     body: text('body').notNull(), // markdown
     author_id: text('author_id').notNull().references(() => users.id, { onDelete: 'set null' }),
     // Published entries show on /updates; drafts only show in the admin editor.
     published: boolean('published').default(false).notNull(),
-    published_at: timestamp('published_at').default(null),
+    published_at: timestamp('published_at'),
     created_at: timestamp('created_at').defaultNow(),
     updated_at: timestamp('updated_at').defaultNow(),
 }, (table) => ({

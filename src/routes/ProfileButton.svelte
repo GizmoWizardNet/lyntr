@@ -79,7 +79,7 @@
 
 <Popover.Root bind:open={opened}>
 	<Popover.Trigger asChild >
-		{#snippet children({ builder })}
+		{#snippet children({ builder }: { builder: any })}
 				<button
 				{...builder}
 				onclick={() => (opened = !opened)}

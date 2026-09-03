@@ -17,7 +17,7 @@ export interface LeaderboardEntry {
 	handle: string;
 	username: string;
 	nameColor?: string | null;
-	verified?: boolean;
+	verified?: boolean | null;
 	value: number;
 	rank: number; // 1-based
 }
@@ -140,7 +140,7 @@ async function computeNetWorthLeaderboard(): Promise<LeaderboardEntry[]> {
 	if (!apiKey) return [];
 
 	const linked = await db
-		.select({ id: users.id, handle: users.handle, username: users.username, nameColor: users.name_color, rugplay_username: users.rugplay_username })
+		.select({ id: users.id, handle: users.handle, username: users.username, nameColor: users.name_color, verified: users.verified, rugplay_username: users.rugplay_username })
 		.from(users)
 		.where(isNotNull(users.rugplay_username));
 	if (linked.length === 0) return [];

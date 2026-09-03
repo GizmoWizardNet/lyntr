@@ -57,7 +57,7 @@
 		checkAuthAndProfileStatus();
 	});
 
-	let handle = $derived($page.params.handle.replace(/^@/, ''));
+	let handle = $derived(($page.params.handle ?? '').replace(/^@/, ''));
 </script>
 
 <ModeWatcher defaultMode={'light'} />

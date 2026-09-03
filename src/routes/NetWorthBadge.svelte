@@ -76,13 +76,13 @@
 			src="https://rugplay.com/rugplay.svg"
 			alt="Rugplay"
 			class="rugplay-logo"
-			on:error={(e) => (e.currentTarget.style.display = 'none')}
+			on:error={(e) => ((e.currentTarget as HTMLElement).style.display = 'none')}
 		/>
 		<img
 			src="https://rugplay.com/api/proxy/s3/{s.coin.icon}"
 			alt={s.coin.name}
 			class="icon"
-			on:error={(e) => (e.currentTarget.style.display = 'none')}
+			on:error={(e) => ((e.currentTarget as HTMLElement).style.display = 'none')}
 		/>
 		<span class="label">Biggest bag:</span>
 		<span class="value">{fmt(s.value)}</span>
