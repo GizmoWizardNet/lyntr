@@ -7,6 +7,10 @@
     import { Label } from '@/components/ui/label';
     import IQTest from './IQTest.svelte';
     import Turnstile from './Turnstile.svelte';
+    import Avatar from './Avatar.svelte';
+    import UserName from './UserName.svelte';
+    import UserBadges from './UserBadges.svelte';
+    import { cdnUrl } from './stores';
     import { toast } from 'svelte-sonner';
     import { working } from '$lib/working';
     import { PUBLIC_DISCORD_CLIENT_ID } from '$env/static/public';
@@ -146,11 +150,6 @@
                 throw new Error('Failed to load top users');
             }
 
-            // /api/leaderboard returns { category, entries, limit, offset,
-            // hasMore } — not a bare array. Pulling the whole response into
-            // topUsers left `.length` undefined forever, so the list never
-            // rendered and there was no loading/error fallback either,
-            // making the step look permanently stuck.
             const data = await res.json();
             topUsers = data.entries ?? [];
         } catch (err) {
@@ -405,49 +404,35 @@
                     ← Back to IQ Test
                 </button>
 
-                <div class="w-full rounded-md border-2 border-primary p-4">
-                    <div class="mb-3 flex items-start justify-between gap-2">
-                        <div class="space-y-1">
-                            <p class="text-lg font-bold">
-                                Select Your Interests
-                            </p>
-
-                            <p class="text-sm text-muted-foreground">
-                                Choose tags that interest you to customize
-                                your feed.
-                            </p>
-                        </div>
+                <div class="aero-panel w-full">
+                    <div class="panel-head">
+                        <span class="panel-title">What's happening</span>
                     </div>
 
-                    {#if trendingTags.length > 0}
-                        <div
-                            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                        >
-                            {#each trendingTags as tag}
-                                <div
-                                    class="flex items-center gap-2 rounded border p-3 hover:border-primary cursor-pointer {selectedTags.includes(tag.tag) ? 'bg-primary/5' : ''}"
-                                    class:border-primary={selectedTags.includes(
-                                        tag.tag
-                                    )}
-                                    onclick={() => selectTag(tag.tag)}
-                                >
-                                    <span class="font-medium">
-                                        #{tag.tag}
-                                    </span>
-
-                                    <span
-                                        class="text-sm text-muted-foreground"
-                                    >
-                                        ({tag.count})
-                                    </span>
-                                </div>
-                            {/each}
-                        </div>
-                    {:else}
-                        <p class="text-center text-muted-foreground">
-                            Loading tags...
+                    <div class="panel-body">
+                        <p class="mb-3 text-sm text-muted-foreground">
+                            Pick a few tags that interest you — this shapes
+                            what shows up in your feed.
                         </p>
-                    {/if}
+
+                        {#if trendingTags.length > 0}
+                            <div class="tag-chip-wrap">
+                                {#each trendingTags as tag}
+                                    <button
+                                        type="button"
+                                        class="tag-chip"
+                                        class:selected={selectedTags.includes(tag.tag)}
+                                        onclick={() => selectTag(tag.tag)}
+                                    >
+                                        <span class="tag-chip-name">#{tag.tag}</span>
+                                        <span class="tag-chip-count">{tag.count}</span>
+                                    </button>
+                                {/each}
+                            </div>
+                        {:else}
+                            <p class="empty-row">Loading tags...</p>
+                        {/if}
+                    </div>
                 </div>
 
                 <div class="mt-6 flex justify-between">
@@ -473,91 +458,69 @@
                     ← Back to Tags
                 </button>
 
-                <div class="w-full rounded-md border-2 border-primary p-4">
-                    <div class="mb-3 flex items-start justify-between gap-2">
-                        <div class="space-y-1">
-                            <p class="text-lg font-bold">
-                                Follow Interesting Users
-                            </p>
-
-                            <p class="text-sm text-muted-foreground">
-                                Follow some users to populate your feed.
-                            </p>
-                        </div>
+                <div class="aero-panel w-full">
+                    <div class="panel-head">
+                        <span class="panel-title">Who to follow</span>
                     </div>
 
-                    {#if topUsersLoading}
-                        <p class="text-center text-muted-foreground">
-                            Loading users...
+                    <div class="panel-body">
+                        <p class="mb-3 text-sm text-muted-foreground">
+                            Follow some users to populate your feed.
                         </p>
-                    {:else if topUsersError}
-                        <p class="text-center text-muted-foreground">
-                            Couldn't load suggested users. <button
-                                type="button"
-                                class="underline"
-                                onclick={loadTopUsers}
-                            >Try again</button>
-                        </p>
-                    {:else if topUsers.length > 0}
-                        <div class="space-y-4">
-                            {#each topUsers as user}
-                                <div
-                                    class="flex items-start gap-4 rounded border p-3 hover:border-primary cursor-pointer {followedUsers.includes(user.handle) ? 'bg-primary/5' : ''}"
-                                    class:border-primary={followedUsers.includes(
-                                        user.handle
-                                    )}
-                                    onclick={() =>
-                                        toggleFollow(user.handle)}
-                                >
-                                    <div class="flex-shrink-0">
-                                        <img
-                                            src={`/avatar/${user.userId}.png`}
-                                            onerror={(event) => {
-                                                const img =
-                                                    event.currentTarget as HTMLImageElement;
-                                                img.onerror = null;
-                                                img.src = '/default.png';
-                                            }}
+
+                        {#if topUsersLoading}
+                            <p class="empty-row">Loading users...</p>
+                        {:else if topUsersError}
+                            <p class="empty-row">
+                                Couldn't load suggested users. <button
+                                    type="button"
+                                    class="underline"
+                                    onclick={loadTopUsers}
+                                >Try again</button>
+                            </p>
+                        {:else if topUsers.length > 0}
+                            <div class="user-list">
+                                {#each topUsers as user}
+                                    <button
+                                        type="button"
+                                        class="user-row"
+                                        class:selected={followedUsers.includes(user.handle)}
+                                        onclick={() => toggleFollow(user.handle)}
+                                    >
+                                        <Avatar
+                                            size={11}
+                                            src={cdnUrl(user.userId, 'small')}
                                             alt={user.username}
-                                            class="h-10 w-10 rounded-full"
+                                            showPresence={false}
                                         />
-                                    </div>
 
-                                    <div class="flex-1 space-y-1">
-                                        <div class="flex justify-between">
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <span class="font-medium">
-                                                    {user.username}
-                                                </span>
+                                        <span class="user-body">
+                                            <span class="user-name-row">
+                                                <UserName
+                                                    name={user.username}
+                                                    color={user.nameColor}
+                                                    verified={user.verified}
+                                                    class="user-name"
+                                                />
+                                                <UserBadges
+                                                    verified={user.verified}
+                                                    followerCount={user.value}
+                                                    size="tiny"
+                                                />
+                                            </span>
+                                            <span class="user-handle">@{user.handle}</span>
+                                        </span>
 
-                                                @{user.handle}
-                                            </div>
-
-                                            {#if user.verified}
-                                                <span
-                                                    class="ml-2 text-xs font-semibold text-primary"
-                                                >
-                                                    ?
-                                                </span>
-                                            {/if}
-                                        </div>
-
-                                        <p
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {user.value.toLocaleString()} followers
-                                        </p>
-                                    </div>
-                                </div>
-                            {/each}
-                        </div>
-                    {:else}
-                        <p class="text-center text-muted-foreground">
-                            No suggested users right now.
-                        </p>
-                    {/if}
+                                        <span class="follow-pill" class:following={followedUsers.includes(user.handle)}>
+                                            {followedUsers.includes(user.handle) ? 'Following' : 'Follow'}
+                                        </span>
+                                    </button>
+                                {/each}
+                            </div>
+                        {:else}
+                            <p class="empty-row">No suggested users right now.</p>
+                        {/if}
+                    </div>
                 </div>
 
                 <div class="mt-6 flex justify-between">
@@ -682,3 +645,189 @@
         {/if}
     </div>
 </div>
+
+<style>
+    .aero-panel {
+        background: hsl(var(--card));
+        border-top:    1px solid var(--bevel-light);
+        border-left:   1px solid var(--bevel-light);
+        border-bottom: 1px solid var(--bevel-dark);
+        border-right:  1px solid var(--bevel-dark);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: var(--inset-shadow);
+        font-family: var(--font-retro);
+    }
+
+    .panel-head {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        background: linear-gradient(
+            to bottom,
+            hsl(var(--primary) / 0.95),
+            hsl(var(--primary) / 0.75)
+        );
+        color: hsl(var(--primary-foreground));
+        border-bottom: 1px solid var(--bevel-dark);
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-title {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+    }
+
+    .panel-body {
+        padding: 14px;
+        background: hsl(var(--background));
+    }
+
+    .empty-row {
+        padding: 4px 0;
+        font-size: 12px;
+        color: hsl(var(--muted-foreground));
+        text-align: center;
+    }
+
+    /* ── Tag chips — beveled pills instead of plain bordered boxes ── */
+    .tag-chip-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        background: hsl(var(--background));
+        border-top:    1px solid var(--bevel-light);
+        border-left:   1px solid var(--bevel-light);
+        border-bottom: 1px solid var(--bevel-dark);
+        border-right:  1px solid var(--bevel-dark);
+        box-shadow: var(--hard-shadow-sm);
+        transition: transform 0.08s, background 0.12s, color 0.12s;
+    }
+
+    .tag-chip:hover {
+        filter: brightness(1.06);
+    }
+
+    .tag-chip:active {
+        transform: scale(0.97);
+    }
+
+    .tag-chip-name {
+        font-weight: 800;
+        color: hsl(var(--foreground));
+    }
+
+    .tag-chip-count {
+        font-size: 10px;
+        color: hsl(var(--muted-foreground));
+    }
+    .tag-chip.selected {
+        background: hsl(var(--primary) / 0.12);
+        border-top:    1px solid var(--bevel-dark);
+        border-left:   1px solid var(--bevel-dark);
+        border-bottom: 1px solid var(--bevel-light);
+        border-right:  1px solid var(--bevel-light);
+        box-shadow: var(--inset-shadow);
+    }
+
+    .tag-chip.selected .tag-chip-name {
+        color: hsl(var(--primary));
+    }
+
+    .user-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 9px 10px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+
+    .user-row:hover {
+        background: hsl(var(--lynt-focus));
+    }
+
+    .user-row.selected {
+        background: hsl(var(--primary) / 0.08);
+    }
+
+    .user-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .user-name-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    :global(.user-name) {
+        font-size: 13px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .user-handle {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .follow-pill {
+        flex-shrink: 0;
+        padding: 5px 14px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        background: hsl(var(--foreground));
+        color: hsl(var(--background));
+        border-top:    1px solid var(--bevel-light);
+        border-left:   1px solid var(--bevel-light);
+        border-bottom: 1px solid var(--bevel-dark);
+        border-right:  1px solid var(--bevel-dark);
+    }
+
+    .follow-pill.following {
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        border-top:    1px solid var(--bevel-dark);
+        border-left:   1px solid var(--bevel-dark);
+        border-bottom: 1px solid var(--bevel-light);
+        border-right:  1px solid var(--bevel-light);
+    }
+</style>
