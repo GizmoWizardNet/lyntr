@@ -131,8 +131,12 @@
     // Follow step
     let followedUsers = $state<string[]>([]);
     let topUsers = $state<any[]>([]);
+    let topUsersLoading = $state(false);
+    let topUsersError = $state(false);
 
     async function loadTopUsers() {
+        topUsersLoading = true;
+        topUsersError = false;
         try {
             const res = await fetch(
                 '/api/leaderboard?category=followers&limit=10'
@@ -142,10 +146,19 @@
                 throw new Error('Failed to load top users');
             }
 
-            topUsers = await res.json();
+            // /api/leaderboard returns { category, entries, limit, offset,
+            // hasMore } — not a bare array. Pulling the whole response into
+            // topUsers left `.length` undefined forever, so the list never
+            // rendered and there was no loading/error fallback either,
+            // making the step look permanently stuck.
+            const data = await res.json();
+            topUsers = data.entries ?? [];
         } catch (err) {
             console.error(err);
             topUsers = [];
+            topUsersError = true;
+        } finally {
+            topUsersLoading = false;
         }
     }
 
@@ -473,7 +486,19 @@
                         </div>
                     </div>
 
-                    {#if topUsers.length > 0}
+                    {#if topUsersLoading}
+                        <p class="text-center text-muted-foreground">
+                            Loading users...
+                        </p>
+                    {:else if topUsersError}
+                        <p class="text-center text-muted-foreground">
+                            Couldn't load suggested users. <button
+                                type="button"
+                                class="underline"
+                                onclick={loadTopUsers}
+                            >Try again</button>
+                        </p>
+                    {:else if topUsers.length > 0}
                         <div class="space-y-4">
                             {#each topUsers as user}
                                 <div
@@ -486,7 +511,7 @@
                                 >
                                     <div class="flex-shrink-0">
                                         <img
-                                            src={`/avatar/${user.id}.png`}
+                                            src={`/avatar/${user.userId}.png`}
                                             onerror={(event) => {
                                                 const img =
                                                     event.currentTarget as HTMLImageElement;
@@ -522,8 +547,7 @@
                                         <p
                                             class="text-sm text-muted-foreground"
                                         >
-                                            {user.followerCount} followers •
-                                            {user.lynt_coins} LyntCoins
+                                            {user.value.toLocaleString()} followers
                                         </p>
                                     </div>
                                 </div>
@@ -531,7 +555,7 @@
                         </div>
                     {:else}
                         <p class="text-center text-muted-foreground">
-                            Loading users...
+                            No suggested users right now.
                         </p>
                     {/if}
                 </div>
