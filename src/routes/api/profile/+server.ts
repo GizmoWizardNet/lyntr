@@ -780,7 +780,7 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 	} catch (error) {
 		return json({ error: 'Invalid token' }, { status: 401 });
 	}
-.
+
 	let body: any = {};
 	try {
 		body = await request.json();
