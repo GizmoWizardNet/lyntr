@@ -3,11 +3,13 @@
 	import { currentPage, pendingSearchQuery, cdnUrl } from './stores';
 	import UserBadges from './UserBadges.svelte';
 	import UserName from './UserName.svelte';
+	import ParsedContent from './ParsedContent.svelte';
 
 	interface Props {
 		myId?: string | null;
+		onOpenLynt?: ((id: string) => void) | null;
 	}
-	let { myId = null }: Props = $props();
+	let { myId = null, onOpenLynt = null }: Props = $props();
 
 	type TrendingTag = {
 		tag: string;
@@ -32,12 +34,28 @@
 		isSelf: boolean;
 	};
 
+	type FeaturedLynt = {
+		id: string;
+		content: string;
+		handle: string;
+		username: string;
+		userId: string;
+		nameColor: string | null;
+		verified: boolean;
+		createdAt: string;
+		likeCount: number;
+		commentCount: number;
+		repostCount: number;
+	};
+
 	let tags: TrendingTag[] = $state([]);
 	let users: TrendingUser[] = $state([]);
 	let loading = $state(true);
 
-	// Local optimistic follow-state overrides, keyed by user id, so a click
-	// updates the button instantly instead of waiting on a re-fetch.
+	let featured: FeaturedLynt | null = $state(null);
+	let featuredLoading = $state(true);
+	let featuredError = $state(false);
+
 	let followOverrides: Record<string, boolean> = $state({});
 	let followBusy: Record<string, boolean> = $state({});
 
@@ -53,6 +71,26 @@
 		} finally {
 			loading = false;
 		}
+
+		// Same "most-liked lynt in the last 24h" query the Discord bot's
+		// /featured command uses (see src/lib/server/featured.ts) — just
+		// exposed through a public, unauthenticated endpoint instead of the
+		// admin-key-gated one the bot calls server-to-server.
+		try {
+			const response = await fetch('/api/featured');
+			if (response.status === 404) {
+				featured = null;
+			} else if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			} else {
+				featured = await response.json();
+			}
+		} catch (error) {
+			console.error('Failed to load featured lynt:', error);
+			featuredError = true;
+		} finally {
+			featuredLoading = false;
+		}
 	});
 
 	function isFollowing(user: TrendingUser) {
@@ -66,6 +104,16 @@
 
 	function openUser(handle: string) {
 		currentPage.set('profile' + handle);
+	}
+
+	function openFeatured() {
+		if (!featured) return;
+		if (onOpenLynt) {
+			onOpenLynt(featured.id);
+		} else {
+			currentPage.set('home');
+			window.location.href = `/?id=${featured.id}`;
+		}
 	}
 
 	async function toggleFollow(e: MouseEvent, user: TrendingUser) {
@@ -99,6 +147,7 @@
 	<div class="panel">
 		<div class="panel-head">
 			<span class="panel-title">What's happening</span>
+			<img src="/pin.png" alt="" class="panel-pin" />
 		</div>
 
 		{#if loading}
@@ -124,6 +173,7 @@
 	<div class="panel">
 		<div class="panel-head">
 			<span class="panel-title">Who to follow</span>
+			<img src="/pin.png" alt="" class="panel-pin" />
 		</div>
 
 		{#if loading}
@@ -180,6 +230,57 @@
 		<button class="show-more" onclick={() => currentPage.set('search')}>Show more</button>
 	</div>
 
+	<div class="panel">
+		<div class="panel-head">
+			<span class="panel-title">Featured</span>
+			<img src="/pin.png" alt="" class="panel-pin" />
+		</div>
+
+		{#if featuredLoading}
+			<div class="empty-row">Loading...</div>
+		{:else if featuredError}
+			<div class="empty-row">Couldn't load the featured lynt.</div>
+		{:else if !featured}
+			<div class="empty-row">Nothing featured yet — check back later.</div>
+		{:else}
+			<button class="featured-row" onclick={openFeatured}>
+				<div class="featured-head">
+					<img
+						src={cdnUrl(featured.userId, 'small')}
+						alt=""
+						class="avatar"
+						loading="lazy"
+						decoding="async"
+					/>
+					<span class="user-body">
+						<span class="user-name-row">
+							<UserName
+								name={featured.username}
+								color={featured.nameColor}
+								verified={featured.verified}
+								class="user-name"
+							/>
+						</span>
+						<span class="user-handle">@{featured.handle}</span>
+					</span>
+				</div>
+
+				<ParsedContent
+					content={featured.content}
+					className="featured-content"
+					showLinkPreview={false}
+					interactive={false}
+				/>
+
+				<div class="featured-stats">
+					<span>❤️ {featured.likeCount}</span>
+					<span>💬 {featured.commentCount}</span>
+					<span>🔁 {featured.repostCount}</span>
+				</div>
+			</button>
+		{/if}
+	</div>
+
 </aside>
 
 <style>
@@ -193,7 +294,6 @@
 		font-family: var(--font-retro);
 	}
 
-	/* ── Panel shell — matches lynt-card bevel system ── */
 	.panel {
 		background: hsl(var(--card));
 		border-top:    1px solid var(--bevel-light);
@@ -205,10 +305,10 @@
 		box-shadow: var(--inset-shadow);
 	}
 
-	/* ── Panel header — aero gradient title bar, X-style copy ── */
 	.panel-head {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		padding: 10px 14px;
 		background: linear-gradient(
 			to bottom,
@@ -218,6 +318,14 @@
 		color: hsl(var(--primary-foreground));
 		border-bottom: 1px solid var(--bevel-dark);
 		text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+	}
+
+	.panel-pin {
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+		object-fit: contain;
+		filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
 	}
 
 	.panel-title {
@@ -336,8 +444,6 @@
 		min-width: 0;
 	}
 
-	/* UserName renders its own <span> inside a child component, so this
-	   parent-scoped selector needs :global to actually reach it. */
 	:global(.user-name) {
 		font-size: 12px;
 		font-weight: 700;
@@ -356,7 +462,6 @@
 		white-space: nowrap;
 	}
 
-	/* ── Follow button — beveled aero pill, like the rest of Lyntr's chrome ── */
 	.follow-btn {
 		flex-shrink: 0;
 		padding: 5px 14px;
@@ -425,6 +530,55 @@
 		font-size: 11px;
 		color: hsl(var(--muted-foreground));
 		background: hsl(var(--background));
+	}
+
+	/* ── Featured lynt panel ── */
+	.featured-row {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		width: 100%;
+		padding: 12px 14px;
+		border: none;
+		background: hsl(var(--background));
+		font-family: inherit;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.12s;
+	}
+
+	.featured-row:hover {
+		background: hsl(var(--lynt-focus));
+	}
+
+	.featured-row:active {
+		background: hsl(var(--muted));
+	}
+
+	.featured-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	:global(.featured-content) {
+		font-size: 12px;
+		line-height: 1.45;
+		color: hsl(var(--foreground));
+		word-break: break-word;
+		overflow-wrap: anywhere;
+		/* Featured card is a teaser, not the full post — clip long lynts. */
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.featured-stats {
+		display: flex;
+		gap: 12px;
+		font-size: 11px;
+		color: hsl(var(--muted-foreground));
 	}
 
 	@media (max-width: 1100px) {
