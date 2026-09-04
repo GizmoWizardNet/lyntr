@@ -5,7 +5,6 @@
 	import OutlineButton from './OutlineButton.svelte';
 	import { currentPage } from './stores';
 	import { goto } from '$app/navigation';
-	import { toggleMode, mode } from 'mode-watcher';
 	import PostButton from './PostButton.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { unreadMessages, unseenAchievements } from "./stores";
@@ -103,14 +102,6 @@
 <div
 	class="nav-ribbon inline-flex w-full flex-row items-center gap-1 p-[8px] md:min-w-[250px] md:flex-col md:items-start md:gap-2 md:p-[12px]"
 >
-	<button class="hidden w-full items-center justify-center md:flex" onclick={toggleMode}>
-		<img
-			class="size-12 cursor-pointer"
-			src={mode.current === "dark" ? "moon.png" : "sun.png"}
-			alt={mode.current === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-		/>
-	</button>
-
 	<!-- Desktop: every item, full-height sidebar, unchanged -->
 	{#each navItems as item}
 		<OutlineButton

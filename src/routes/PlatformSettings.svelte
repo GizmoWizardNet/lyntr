@@ -3,6 +3,8 @@
 	import { Button } from '@/components/ui/button';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
+	import { Monitor } from 'lucide-svelte';
+	import { setMode, resetMode, userPrefersMode } from 'mode-watcher';
 	import {
 		isPushSupported,
 		subscribeToPush,
@@ -214,6 +216,43 @@
 		</Dialog.Header>
 
 		<div class="flex flex-col gap-4 py-2">
+			<!-- ── Theme ──────────────────────────────────────────────────── -->
+			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+				<span class="text-sm font-semibold">Theme</span>
+				<p class="text-xs text-muted-foreground">
+					System follows your browser/OS setting automatically.
+				</p>
+				<div class="flex gap-1.5">
+					<Button
+						variant={userPrefersMode.current === 'system' ? 'default' : 'outline'}
+						size="sm"
+						class="flex-1 gap-1.5"
+						onclick={resetMode}
+					>
+						<img src="/system.png" alt="" class="size-4" />
+						System
+					</Button>
+					<Button
+						variant={userPrefersMode.current === 'light' ? 'default' : 'outline'}
+						size="sm"
+						class="flex-1 gap-1.5"
+						onclick={() => setMode('light')}
+					>
+						<img src="/sun.png" alt="" class="size-4" />
+						Light
+					</Button>
+					<Button
+						variant={userPrefersMode.current === 'dark' ? 'default' : 'outline'}
+						size="sm"
+						class="flex-1 gap-1.5"
+						onclick={() => setMode('dark')}
+					>
+						<img src="/moon.png" alt="" class="size-4" />
+						Dark
+					</Button>
+				</div>
+			</div>
+
 			<!-- ── Default feed ──────────────────────────────────────────── -->
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Default feed</span>

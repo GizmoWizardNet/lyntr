@@ -2,17 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { resolveRugplayKeyForHandle } from '@/server/rugplayKeys';
 
-// In-process cache: symbol -> { data, expiresAt }
 const cache = new Map<string, { data: any; expiresAt: number }>();
-const CACHE_TTL = 30_000; // 30 seconds — Rugplay has 2k/day limit so we cache aggressively
+const CACHE_TTL = 30_000;
 
 export const GET: RequestHandler = async ({ params, url }) => {
 	const symbol = params.symbol?.toUpperCase();
 	if (!symbol) return json({ error: 'Missing symbol' }, { status: 400 });
 
-	// authorHandle = the handle of whoever posted the Lynt this $SYMBOL came
-	// from. If they've opted into Rugplay Enhancements with a valid key, we
-	// use THEIR key (their own quota) instead of the shared site key.
 	const authorHandle = url.searchParams.get('authorHandle');
 
 	let apiKey: string | undefined;
@@ -25,16 +21,12 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		if (lookup.status === 'no_valid_key') {
 			return json({ status: 'disabled', reason: 'no_valid_key' });
 		}
-		apiKey = lookup.apiKey; // server-side only — never echoed back to the client
+		apiKey = lookup.apiKey;
 	} else {
-		// Backward-compatible fallback: shared site key.
 		apiKey = process.env.RUGPLAY_API_KEY;
 	}
 
 	if (!apiKey) return json({ error: 'Rugplay API key not configured' }, { status: 503 });
-
-	// Serve from cache if fresh. Coin data is public/shared regardless of
-	// whose key fetched it, so caching by symbol alone is fine here.
 	const cached = cache.get(symbol);
 	if (cached && Date.now() < cached.expiresAt) {
 		return json(cached.data);
@@ -42,7 +34,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 
 	try {
 		const res = await fetch(`https://rugplay.com/api/v1/coin/${symbol}`, {
-			headers: { Authorization: `Bearer ${apiKey}` }
+			headers: { Authorization: `Bearer ${apiKey}` },
+			signal: AbortSignal.timeout(6_000)
 		});
 
 		if (res.status === 404) return json({ error: 'Coin not found' }, { status: 404 });
@@ -54,8 +47,12 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		return json({ status: 'ok', ...data });
 	} catch (err) {
 		console.error('Rugplay proxy error:', err);
-		return json({ error: 'Failed to fetch coin data' }, { status: 502 });
+		const stale = cache.get(symbol);
+		if (stale) return json(stale.data);
+		const timedOut = err instanceof Error && err.name === 'TimeoutError';
+		return json(
+			{ error: timedOut ? 'Rugplay took too long to respond' : 'Failed to fetch coin data' },
+			{ status: 502 }
+		);
 	}
 };
-
-
