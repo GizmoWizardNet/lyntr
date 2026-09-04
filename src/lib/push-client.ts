@@ -1,10 +1,3 @@
-/**
- * Client-side Web Push helpers.
- *
- * Registers the service worker, requests Notification permission, and
- * saves/removes the PushSubscription via /api/push/subscribe.
- */
-
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
 	const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
 	const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -30,27 +23,12 @@ export async function getRegistration(): Promise<ServiceWorkerRegistration | nul
 	}
 }
 
-/** Returns the current subscription state for the active SW registration. */
 export async function getCurrentSubscription(): Promise<PushSubscription | null> {
 	const reg = await navigator.serviceWorker.getRegistration('/');
 	if (!reg) return null;
 	return reg.pushManager.getSubscription();
 }
 
-/**
- * Subscribes the current device to push notifications.
- * - Requests notification permission if not already granted.
- * - Fetches the VAPID public key from the server.
- * - Creates a PushSubscription and saves it to /api/push/subscribe.
- *
- * If the server save fails, the browser-level subscription is rolled back
- * (unsubscribed) rather than left dangling — otherwise the UI would read
- * "subscribed" from the browser on every future load while the server has
- * no record of it, so no push ever actually arrives and nothing ever
- * surfaces why. Better to fail visibly and let the person retry.
- *
- * Returns 'subscribed' | 'denied' | 'error'.
- */
 export async function subscribeToPush(): Promise<'subscribed' | 'denied' | 'error'> {
 	let subscription: PushSubscription | null = null;
 	try {
@@ -61,6 +39,11 @@ export async function subscribeToPush(): Promise<'subscribed' | 'denied' | 'erro
 
 		const reg = await getRegistration();
 		if (!reg) return 'error';
+
+		await navigator.serviceWorker.ready;
+
+		const existing = await reg.pushManager.getSubscription();
+		if (existing) await existing.unsubscribe().catch(() => {});
 
 		// Fetch VAPID public key
 		const keyRes = await fetch('/api/push/subscribe');
@@ -95,16 +78,6 @@ export async function subscribeToPush(): Promise<'subscribed' | 'denied' | 'erro
 	}
 }
 
-/**
- * Re-sends the current browser-level subscription to the server if one
- * exists locally. Call this on mount alongside getCurrentSubscription() —
- * it's the self-healing counterpart to the rollback above: if the
- * subscription ever landed in the DB dropping a row (a bad migration, a
- * manual DB edit, whatever), the toggle would otherwise keep showing
- * "subscribed" forever from the browser's perspective while silently
- * receiving nothing. Idempotent — the server upserts on (user, endpoint),
- * so calling this on every mount is cheap and safe.
- */
 export async function resyncSubscription(sub: PushSubscription): Promise<boolean> {
 	try {
 		const res = await fetch('/api/push/subscribe', {
@@ -118,10 +91,6 @@ export async function resyncSubscription(sub: PushSubscription): Promise<boolean
 	}
 }
 
-/**
- * Unsubscribes the current device from push notifications.
- * Removes the subscription from the browser AND the server.
- */
 export async function unsubscribeFromPush(): Promise<boolean> {
 	try {
 		const sub = await getCurrentSubscription();

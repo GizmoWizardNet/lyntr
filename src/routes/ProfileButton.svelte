@@ -32,28 +32,16 @@
 		src?: string;
 		name?: string;
 		handle?: string;
+		userId?: string;
 	}
 
-	let { src = 'https://github.com/face-hh.png', name = 'Face oifneoangoaen kfpeakfpae', handle = '@facedevstuff' }: Props = $props();
+	let { src = 'https://github.com/face-hh.png', name = 'Face oifneoangoaen kfpeakfpae', handle = '@facedevstuff', userId = '' }: Props = $props();
 
 	function deleteAllCookies() {
 		localStorage.clear();
 	}
 
-	// The actual DELETE request (with Turnstile token + typed-username
-	// confirmation) is handled inside DeleteAccountDialog; this just runs
-	// once that's succeeded server-side.
 	function onAccountDeleted() {
-		// This was the source of the "delete account sends me back to the
-		// IQ test" bug: reloading without clearing localStorage left a
-		// stale 'user-data' entry cached from the now-deleted account, and
-		// +page.svelte's checkAuthAndProfileStatus() reads that BEFORE the
-		// /api/me round-trip resolves — so the (now dead) account briefly
-		// looked authenticated again, /api/me subsequently 401'd, and the
-		// combination shoved the browser into AccountCreator (which is
-		// where the IQ test lives) instead of the logged-out landing page.
-		// Clearing it here, before the reload, is what makes the reload
-		// see a genuinely logged-out state.
 		deleteAllCookies();
 		goto('/');
 		window.location.reload();
@@ -197,5 +185,5 @@
 	</Popover.Content>
 </Popover.Root>
 
-<PlatformSettings bind:open={platformSettingsOpen} />
+<PlatformSettings bind:open={platformSettingsOpen} {userId} />
 <DeleteAccountDialog bind:open={deleteAccountOpen} username={name} onDeleted={onAccountDeleted} />

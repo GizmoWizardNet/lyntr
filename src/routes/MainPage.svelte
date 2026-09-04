@@ -494,7 +494,7 @@
 						<PostButton userId={id} onPosted={(newLynt) => {
 						if (!feed.some((f) => f.id === newLynt.id)) feed = [newLynt, ...feed];
 					}} />
-						<ProfileButton src={cdnUrl(id, 'medium')} name={username} handle="@{handle}" />
+						<ProfileButton src={cdnUrl(id, 'medium')} name={username} handle="@{handle}" userId={id} />
 					</div>
 				</div>
 				<Separator class="hidden h-[1px] w-full md:block md:h-full md:w-[1px]" />

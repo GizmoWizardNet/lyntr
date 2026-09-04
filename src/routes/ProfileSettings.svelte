@@ -28,8 +28,6 @@
 		profileSongTitle?: string | null;
 		profileSongVolume?: number;
 		profileSongLoop?: boolean;
-		emailNotificationsEnabled?: boolean;
-		notificationEmailSet?: boolean;
 		pushNotificationsEnabled?: boolean;
 		onback: () => void;
 	}
@@ -50,8 +48,6 @@
 		profileSongTitle = $bindable(null),
 		profileSongVolume = $bindable(50),
 		profileSongLoop = $bindable(true),
-		emailNotificationsEnabled = false,
-		notificationEmailSet = false,
 		pushNotificationsEnabled = false,
 		onback
 	}: Props = $props();
@@ -65,19 +61,6 @@
 	let keyIsValid = $state(rugplayKeyValid);
 	let apiKeyInput = $state(''); // only sent to the server if non-empty (i.e. user is setting/replacing it)
 	let removeKeyRequested = $state(false);
-
-	// Email notifications — mirror the Rugplay key pattern.
-	// The actual address is never echoed back; we only know if one is set.
-	let emailNotifsEnabled = $state(emailNotificationsEnabled);
-	let emailIsSet = $state(notificationEmailSet);
-	let emailInput = $state('');
-	let removeEmailRequested = $state(false);
-
-	function removeEmail() {
-		emailInput = '';
-		removeEmailRequested = true;
-		emailIsSet = false;
-	}
 
 	function removeKey() {
 		apiKeyInput = '';
@@ -246,13 +229,7 @@
 						rugplay_username: rugplayUsername ?? '',
 						rugplay_enhancements_enabled: enhancementsEnabled,
 						name_color: nameColor,
-						...(apiKeyToSend !== undefined ? { rugplay_api_key: apiKeyToSend } : {}),
-						email_notifications_enabled: emailNotifsEnabled,
-						...(removeEmailRequested
-							? { notification_email: null }
-							: emailInput.trim()
-							? { notification_email: emailInput.trim() }
-							: {})
+						...(apiKeyToSend !== undefined ? { rugplay_api_key: apiKeyToSend } : {})
 					})
 				});
 			}
@@ -266,12 +243,6 @@
 				nameColor = result.user?.name_color ?? nameColor;
 				apiKeyInput = '';
 				removeKeyRequested = false;
-				emailNotifsEnabled = result.user?.email_notifications_enabled ?? emailNotifsEnabled;
-				if (emailInput.trim() || removeEmailRequested) {
-					emailIsSet = !removeEmailRequested;
-					emailInput = '';
-					removeEmailRequested = false;
-				}
 			} else {
 				const errBody = await response.json().catch(() => ({}));
 				toast.error(errBody.error ?? `Something happened! Error: ${response.status} | ${response.statusText}`);
@@ -553,57 +524,6 @@
 		</div>
 
 
-			<!-- ── Email notifications ──────────────────────────────────────── -->
-			<div class="flex w-full flex-col gap-1.5">
-				<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
-					<label class="flex cursor-pointer items-center gap-2 text-sm">
-						<input type="checkbox" bind:checked={emailNotifsEnabled} class="h-4 w-4" />
-						<span>
-							<span class="font-semibold">Email notifications</span>
-							<span class="text-muted-foreground"> — get notified by email when someone likes, replies, follows, or messages you.</span>
-						</span>
-					</label>
-
-					{#if emailNotifsEnabled}
-						<div class="flex flex-col gap-2">
-							<Label for="notification-email">Notification email</Label>
-
-							{#if emailIsSet && !emailInput && !removeEmailRequested}
-								<div class="flex items-center gap-2">
-									<span class="flex-1 rounded border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">
-										An email address is set. Enter a new one to replace it.
-									</span>
-									<button
-										type="button"
-										class="text-xs text-destructive underline underline-offset-2 hover:opacity-80"
-										onclick={removeEmail}
-									>
-										Remove
-									</button>
-								</div>
-							{:else if removeEmailRequested}
-								<span class="text-sm text-muted-foreground italic">
-									Email address will be removed when you save.
-								</span>
-							{/if}
-
-							{#if !removeEmailRequested}
-								<Input
-									type="email"
-									id="notification-email"
-									placeholder={emailIsSet ? 'Enter a new address to replace it\u2026' : 'you@example.com'}
-									bind:value={emailInput}
-									autocomplete="email"
-								/>
-							{/if}
-
-							<span class="text-xs text-muted-foreground">
-								Only used for notifications — never shown publicly or shared.
-							</span>
-						</div>
-					{/if}
-				</div>
-			</div>
 	</div>
 
 	<div class="flex flex-shrink-0 justify-end border-t border-border p-3">

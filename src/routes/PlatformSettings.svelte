@@ -1,6 +1,8 @@
 <script lang="ts">
 	import * as Dialog from '@/components/ui/dialog';
 	import { Button } from '@/components/ui/button';
+	import { Label } from '@/components/ui/label';
+	import { Input } from '@/components/ui/input';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import { Monitor } from 'lucide-svelte';
@@ -16,9 +18,10 @@
 
 	interface Props {
 		open: boolean;
+		userId?: string;
 	}
 
-	let { open = $bindable(false) }: Props = $props();
+	let { open = $bindable(false), userId = '' }: Props = $props();
 
 	// ── Default feed ──────────────────────────────────────────────────────
 	const FEED_OPTIONS = ['For you', 'New', 'Following', 'Bookmarked'];
@@ -143,6 +146,85 @@
 		}
 	}
 
+	// ── Email notifications ───────────────────────────────────────────────
+	// Moved here from the profile-settings page — same server fields
+	// (email_notifications_enabled / notification_email on `users`), just a
+	// standalone save via PATCH /api/profile instead of being bundled into
+	// the big profile-edit form.
+	let emailNotifsEnabled = $state(false);
+	let emailIsSet = $state(false);
+	let emailInput = $state('');
+	let removeEmailRequested = $state(false);
+	let loadingEmail = $state(true);
+	let savingEmail = $state(false);
+
+	async function loadEmailNotifs() {
+		if (!userId) {
+			loadingEmail = false;
+			return;
+		}
+		loadingEmail = true;
+		try {
+			const res = await fetch(`/api/profile?id=${encodeURIComponent(userId)}`);
+			if (res.ok) {
+				const data = await res.json();
+				emailNotifsEnabled = data.email_notifications_enabled ?? false;
+				emailIsSet = data.notification_email_set ?? false;
+			}
+		} finally {
+			loadingEmail = false;
+		}
+	}
+
+	function removeEmail() {
+		emailInput = '';
+		removeEmailRequested = true;
+		emailIsSet = false;
+	}
+
+	async function saveEmailToggle(nextEnabled: boolean) {
+		emailNotifsEnabled = nextEnabled;
+		savingEmail = true;
+		try {
+			const res = await fetch('/api/profile', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email_notifications_enabled: nextEnabled }),
+			});
+			if (!res.ok) {
+				emailNotifsEnabled = !nextEnabled; // roll back
+				toast.error('Could not save that setting.');
+			}
+		} finally {
+			savingEmail = false;
+		}
+	}
+
+	async function saveEmailAddress() {
+		if (!removeEmailRequested && !emailInput.trim()) return;
+		savingEmail = true;
+		try {
+			const res = await fetch('/api/profile', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					notification_email: removeEmailRequested ? null : emailInput.trim()
+				}),
+			});
+			if (res.ok) {
+				emailIsSet = !removeEmailRequested;
+				emailInput = '';
+				removeEmailRequested = false;
+				toast.success(emailIsSet ? 'Notification email saved.' : 'Notification email removed.');
+			} else {
+				const data = await res.json().catch(() => ({}));
+				toast.error(data.error ?? 'Could not save that email address.');
+			}
+		} finally {
+			savingEmail = false;
+		}
+	}
+
 	// ── Push notifications ──────────────────────────────────────────────
 	let pushSupported = $state(false);
 	let pushEnabled = $state(false);
@@ -205,6 +287,7 @@
 	$effect(() => {
 		if (open) {
 			loadDefaultFeed();
+			loadEmailNotifs();
 		}
 	});
 </script>
@@ -220,36 +303,36 @@
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Theme</span>
 				<p class="text-xs text-muted-foreground">
-					System follows your browser/OS setting automatically.
+					Choose how Lyntr looks on this device.
 				</p>
-				<div class="flex gap-1.5">
-					<Button
-						variant={userPrefersMode.current === 'system' ? 'default' : 'outline'}
-						size="sm"
-						class="flex-1 gap-1.5"
+				<div class="theme-grid">
+					<button
+						type="button"
+						class="theme-tile"
+						class:selected={userPrefersMode.current === 'system'}
 						onclick={resetMode}
 					>
-						<img src="/system.png" alt="" class="size-4" />
-						System
-					</Button>
-					<Button
-						variant={userPrefersMode.current === 'light' ? 'default' : 'outline'}
-						size="sm"
-						class="flex-1 gap-1.5"
+						<img src="/system.png" alt="" class="theme-tile-icon" />
+						<span class="theme-tile-label">System</span>
+					</button>
+					<button
+						type="button"
+						class="theme-tile"
+						class:selected={userPrefersMode.current === 'light'}
 						onclick={() => setMode('light')}
 					>
-						<img src="/sun.png" alt="" class="size-4" />
-						Light
-					</Button>
-					<Button
-						variant={userPrefersMode.current === 'dark' ? 'default' : 'outline'}
-						size="sm"
-						class="flex-1 gap-1.5"
+						<img src="/sun.png" alt="" class="theme-tile-icon" />
+						<span class="theme-tile-label">Light</span>
+					</button>
+					<button
+						type="button"
+						class="theme-tile"
+						class:selected={userPrefersMode.current === 'dark'}
 						onclick={() => setMode('dark')}
 					>
-						<img src="/moon.png" alt="" class="size-4" />
-						Dark
-					</Button>
+						<img src="/moon.png" alt="" class="theme-tile-icon" />
+						<span class="theme-tile-label">Dark</span>
+					</button>
 				</div>
 			</div>
 
@@ -311,11 +394,11 @@
 				</div>
 			</div>
 
-			<!-- ── Push notifications ────────────────────────────────────── -->
+			<!-- ── Push notifications-->
 			<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
 				{#if !pushSupported}
 					<p class="text-sm text-muted-foreground">
-						Push notifications are not supported in this browser.
+						Push notifications are not supported in this browser. >:)
 					</p>
 				{:else if pushPermission === 'denied'}
 					<p class="text-sm text-muted-foreground">
@@ -344,6 +427,73 @@
 					{/if}
 				{/if}
 			</div>
+
+			<!-- ── Email notifications ───────────────────────────────────── -->
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
+				{#if loadingEmail}
+					<p class="text-xs text-muted-foreground">Loading...</p>
+				{:else if !userId}
+					<p class="text-sm text-muted-foreground">Email notifications aren't available right now.</p>
+				{:else}
+					<label class="flex cursor-pointer items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							checked={emailNotifsEnabled}
+							disabled={savingEmail}
+							onchange={(e) => saveEmailToggle((e.currentTarget as HTMLInputElement).checked)}
+							class="h-4 w-4"
+						/>
+						<span>
+							<span class="font-semibold">Email notifications</span>
+							<span class="text-muted-foreground"> — get notified by email when someone likes, replies, follows, or messages you.</span>
+						</span>
+					</label>
+
+					{#if emailNotifsEnabled}
+						<div class="flex flex-col gap-2">
+							<Label for="notification-email">Notification email</Label>
+
+							{#if emailIsSet && !emailInput && !removeEmailRequested}
+								<div class="flex items-center gap-2">
+									<span class="flex-1 rounded border border-border bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+										An email address is set. Enter a new one to replace it.
+									</span>
+									<button
+										type="button"
+										class="text-xs text-destructive underline underline-offset-2 hover:opacity-80"
+										onclick={() => { removeEmail(); saveEmailAddress(); }}
+									>
+										Remove
+									</button>
+								</div>
+							{:else}
+								<div class="flex gap-2">
+									<Input
+										type="email"
+										id="notification-email"
+										placeholder={emailIsSet ? 'Enter a new address to replace it\u2026' : 'you@example.com'}
+										bind:value={emailInput}
+										disabled={savingEmail}
+										autocomplete="email"
+										class="flex-1"
+									/>
+									<Button
+										size="sm"
+										disabled={savingEmail || !emailInput.trim()}
+										onclick={saveEmailAddress}
+									>
+										Save
+									</Button>
+								</div>
+							{/if}
+
+							<span class="text-xs text-muted-foreground">
+								Only used for notifications — never shown publicly or shared.
+							</span>
+						</div>
+					{/if}
+				{/if}
+			</div>
 		</div>
 
 		<div class="flex justify-end">
@@ -351,3 +501,72 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style>
+	.theme-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+	}
+
+	.theme-tile {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 16px 8px;
+		border-radius: 10px;
+		font-family: inherit;
+		cursor: pointer;
+		color: hsl(var(--foreground));
+		background: hsl(var(--secondary));
+		border-top:    1px solid var(--bevel-light);
+		border-left:   1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right:  1px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow-sm);
+		transition: filter 0.12s, transform 0.08s;
+	}
+
+	.theme-tile:hover {
+		filter: brightness(1.1);
+	}
+
+	.theme-tile:active {
+		transform: scale(0.98);
+	}
+
+	.theme-tile-icon {
+		width: 22px;
+		height: 22px;
+		object-fit: contain;
+		color: hsl(var(--foreground));
+	}
+
+	.theme-tile-label {
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.theme-tile.selected {
+		background: hsl(var(--primary));
+		color: hsl(var(--primary-foreground));
+		border-top:    1px solid var(--bevel-dark);
+		border-left:   1px solid var(--bevel-dark);
+		border-bottom: 1px solid var(--bevel-light);
+		border-right:  1px solid var(--bevel-light);
+		box-shadow: var(--inset-shadow);
+	}
+
+	.theme-tile.selected .theme-tile-icon {
+		color: hsl(var(--primary-foreground));
+	}
+
+	img.theme-tile-icon {
+		filter: none;
+	}
+	.theme-tile.selected img.theme-tile-icon {
+		filter: brightness(0) invert(1);
+	}
+</style>

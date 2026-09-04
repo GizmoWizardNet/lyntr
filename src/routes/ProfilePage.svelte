@@ -305,8 +305,6 @@
 		profileSongTitle={profile.profile_song_title}
 		profileSongVolume={profile.profile_song_volume}
 		profileSongLoop={profile.profile_song_loop}
-		emailNotificationsEnabled={profile.email_notifications_enabled}
-		notificationEmailSet={profile.notification_email_set}
 		onback={() => (showSettings = false)}
 	/>
 {:else if loading}
@@ -571,5 +569,3 @@
 		}
 	}
 </style>
-
-
