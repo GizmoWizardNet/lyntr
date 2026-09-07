@@ -20,7 +20,6 @@
 		popover?: string | null;
 		animate?: boolean;
 		small?: boolean;
-		/** Plays a one-shot lucide-style hover micro-animation, then settles back to the static icon. */
 		iconAnim?: string | null;
 	}
 
@@ -277,24 +276,18 @@
 		30% { opacity: 1; }
 		100% { stroke-dashoffset: 0; opacity: 1; }
 	}
-	/* Same, plus the circle's own scale:[0.5,1] pop from its source. */
 	@keyframes drawInScale {
 		0% { stroke-dashoffset: 1; opacity: 0; transform: scale(0.5); }
 		30% { opacity: 1; }
 		100% { stroke-dashoffset: 0; opacity: 1; transform: scale(1); }
 	}
 
-	/* lucide-animated's search: x:[0,0,-3,0], y:[0,-4,0,0] over four
-	   evenly-spaced keyframes (Motion's default when no explicit `times`
-	   is given) — a little hop up, then a dab to the lower-left. */
 	@keyframes navSearch {
 		0% { transform: translate(0, 0); }
 		33% { transform: translate(0, -4px); }
 		66% { transform: translate(-3px, 0); }
 		100% { transform: translate(0, 0); }
 	}
-	/* lucide-animated's bell: rotate:[0,-10,10,-10,0], five evenly-spaced
-	   keyframes (0/25/50/75/100%). */
 	@keyframes navBell {
 		0%, 100% { transform: rotate(0deg); }
 		25% { transform: rotate(-10deg); }
@@ -332,5 +325,39 @@
 		25% { transform: rotate(-8deg) scale(1.05); }
 		60% { transform: rotate(6deg) scale(1.08); }
 		100% { transform: rotate(0deg) scale(1); }
+	}
+
+	.gold-sheen {
+		position: relative;
+		overflow: hidden;
+		color: #3a2400;
+		background-image:
+			radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85), transparent 45%),
+			linear-gradient(115deg, #a86a00 0%, #ffd76a 20%, #fff6d6 35%, #e8b400 50%, #ffe98a 65%, #a86a00 85%, #ffd76a 100%);
+		background-size: 200% 200%, 250% 100%;
+		animation:
+			goldSheenShift 3.2s linear infinite,
+			goldSheenGlow 2s ease-in-out infinite;
+		box-shadow:
+			0 0 0 1px rgba(255, 215, 100, 0.6),
+			0 0 6px 1px rgba(255, 205, 60, 0.55);
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+	}
+
+	@keyframes goldSheenShift {
+		0% { background-position: 0% 50%, 0% 50%; }
+		100% { background-position: 0% 50%, 250% 50%; }
+	}
+
+	@keyframes goldSheenGlow {
+		0%, 100% { box-shadow: 0 0 0 1px rgba(255, 215, 100, 0.6), 0 0 4px 1px rgba(255, 205, 60, 0.45); }
+		50% { box-shadow: 0 0 0 1px rgba(255, 225, 140, 0.85), 0 0 9px 3px rgba(255, 205, 60, 0.75); }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.gold-sheen {
+			animation: none;
+			background-position: 0% 50%, 40% 50%;
+		}
 	}
 </style>

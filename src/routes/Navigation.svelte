@@ -127,7 +127,7 @@
 			iconAnim={item.anim}
 			text={item.label}
 			secondary={badgeFor(item)}
-			secondaryClass={item.label === 'Achievements' ? 'bg-amber-500 text-black' : undefined}
+			secondaryClass={item.label === 'Achievements' ? 'gold-sheen' : undefined}
 			className="hidden border-none md:flex md:w-auto !rounded-full"
 			on:click={() => handleNavClick(item.page)}
 		/>
@@ -139,7 +139,7 @@
 				icon={item.icon}
 				iconAnim={item.anim}
 				secondary={badgeFor(item)}
-				secondaryClass={item.label === 'Achievements' ? 'bg-amber-500 text-black' : undefined}
+				secondaryClass={item.label === 'Achievements' ? 'gold-sheen' : undefined}
 				className="flex-1 border-none md:hidden !rounded-full"
 				on:click={() => handleNavClick(item.page)}
 			/>
@@ -170,7 +170,7 @@
 							<Icon class="h-5 w-5" strokeWidth={2.5} />
 							<span>{item.label}</span>
 							{#if badgeFor(item) !== undefined}
-								<span class="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary/50 text-xs">{badgeFor(item)}</span>
+								<span class="ml-auto flex h-5 w-5 items-center justify-center rounded-full text-xs {item.label === 'Achievements' ? 'gold-sheen' : 'bg-primary/50'}">{badgeFor(item)}</span>
 							{/if}
 						</button>
 					{/each}
