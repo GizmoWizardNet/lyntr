@@ -425,7 +425,7 @@
 					</span>
 					<span class="inline-flex items-center gap-1.5 font-bold text-primary" title="Aura Score">
 						<img src="/aura.png" alt="Aura Score" class="h-6 w-6 flex-shrink-0" />
-						{(profile.aura_score ?? 0).toLocaleString()} Aura Â· {auraTier(profile.aura_score ?? 0)}
+						{(profile.aura_score ?? 0).toLocaleString()} Aura · {auraTier(profile.aura_score ?? 0)}
 					</span>
 				</div>
 
