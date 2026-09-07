@@ -5,7 +5,7 @@
 	import { Input } from '@/components/ui/input';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
-	import { Monitor } from 'lucide-svelte';
+	import { Monitor, Sun, Moon } from 'lucide-svelte';
 	import { setMode, resetMode, userPrefersMode } from 'mode-watcher';
 	import {
 		isPushSupported,
@@ -312,7 +312,7 @@
 						class:selected={userPrefersMode.current === 'system'}
 						onclick={resetMode}
 					>
-						<img src="/system.png" alt="" class="theme-tile-icon" />
+						<Monitor class="theme-tile-icon" />
 						<span class="theme-tile-label">System</span>
 					</button>
 					<button
@@ -321,7 +321,7 @@
 						class:selected={userPrefersMode.current === 'light'}
 						onclick={() => setMode('light')}
 					>
-						<img src="/sun.png" alt="" class="theme-tile-icon" />
+						<Sun class="theme-tile-icon" />
 						<span class="theme-tile-label">Light</span>
 					</button>
 					<button
@@ -330,7 +330,7 @@
 						class:selected={userPrefersMode.current === 'dark'}
 						onclick={() => setMode('dark')}
 					>
-						<img src="/moon.png" alt="" class="theme-tile-icon" />
+						<Moon class="theme-tile-icon" />
 						<span class="theme-tile-label">Dark</span>
 					</button>
 				</div>
