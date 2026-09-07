@@ -74,12 +74,8 @@
 		followsViewer?: boolean;
 		poll?: any | null;
 		reactions?: { emoji: string; count: number; reactedByUser: boolean }[];
-		// Cosmetic name color (see $lib/nameColors.ts)
 		nameColor?: string | null;
 		parentUserNameColor?: string | null;
-		// Clan Lynting — isClan flips the header to a group-avatar stack,
-		// drops individual badges, and shows clanAvgIq instead of the
-		// author's own IQ. contributors is empty for a normal solo lynt.
 		isClan?: boolean;
 		clanAvgIq?: number | null;
 		contributors?: { userId: string; username: string; handle: string }[];
@@ -143,20 +139,11 @@
 	let likersHover = $state(false);
 	let likersHoverTimer: ReturnType<typeof setTimeout>;
 
-	// Small delay on both directions: on enter, avoids firing a fetch for
-	// every lynt the cursor merely passes over on its way somewhere else;
-	// on leave, gives the user room to move the cursor from the button down
-	// into the dropdown itself without it disappearing first.
 	function scheduleLikersHover(show: boolean) {
 		clearTimeout(likersHoverTimer);
 		likersHoverTimer = setTimeout(() => (likersHover = show), show ? 350 : 150);
 	}
 
-	// Guest gating — myId is only ever empty when this component is reused
-	// on the logged-out landing page teaser feed (see Landing.svelte); every
-	// authenticated context always supplies a real myId, so this is a no-op
-	// there. Centralizes the "log in to do X" nudge instead of each handler
-	// silently hitting a 401 or opening a dialog that has nowhere to post to.
 	function requireAuth(action: string): boolean {
 		if (myId) return false;
 		toast.info(`Log in to ${action}.`);
@@ -164,10 +151,6 @@
 	}
 
 	function handleRepost(e: CustomEvent<MouseEvent>) {
-		// Block opening the dialog if the user already reposted this lynt.
-		// Don't toggle openDialog manually here — Dialog.Trigger already
-		// does that via bind:open, and doing it twice causes the dialog
-		// to flash open then immediately close.
 		if (repostedByUser || requireAuth('repost')) {
 			e.detail.preventDefault();
 			e.detail.stopPropagation();
@@ -194,7 +177,6 @@
 				return toast.warning('Woah, slow down! You are being ratelimited.');
 			toast.error(`Something went wrong while liking. Error: ${response.status} | ${response.statusText}`);
 		}
-		// SSE will deliver the authoritative count to all viewers
 	}
 
 	async function openLynt(lyntid: string) {
@@ -352,7 +334,7 @@
 						<Dialog.Trigger asChild>
 							{#snippet children({ builder }: { builder: any })}
 														<OutlineButton
-									{...builder}
+									{builder}
 									on:click={handleRepost}
 									isActive={repostedByUser}
 									icon={Repeat2}
