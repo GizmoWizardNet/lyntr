@@ -17,10 +17,6 @@
 		onPosted?: (lynt: any) => void;
 	}
 
-	// mobilePrimary items get a slot in the cramped bottom tab bar; everything
-	// else lives one tap away behind "More" so the bar doesn't turn into
-	// nine shrunk-down icons nobody can reliably tap. Desktop is unaffected —
-	// the full-height sidebar shows every item regardless of this flag.
 	let { id, handle, onPosted, navItems = [
 		{ icon: House, label: 'Home', page: 'home', anim: 'house', mobilePrimary: true },
 		{ icon: Search, label: 'Search', page: 'search', anim: 'search', mobilePrimary: true },
@@ -48,8 +44,6 @@
 		return n === undefined ? undefined : String(n);
 	}
 
-	// True if any item hidden behind "More" needs attention, so the trigger
-	// itself can carry a dot even when the specific badge is out of sight.
 	let overflowHasBadge = $derived(overflowItems.some((i: any) => badgeFor(i) !== undefined));
 
 	function handleNavClick(page: string) {
@@ -60,9 +54,6 @@
 		if (page === 'updates') goto('/updates');
 		if (page === 'notifications') $unreadMessages = 0;
 		if (page === 'messages') unreadDMs = 0;
-		// The actual DB-side "mark as seen" happens when AchievementsPage
-		// mounts (PATCH /api/achievements/unseen) — this just optimistically
-		// clears the badge immediately on click, same as the two lines above.
 		if (page === 'achievements') $unseenAchievements = 0;
 	}
 
@@ -70,6 +61,31 @@
 	let unsubDmMessage: () => void;
 	let unsubDmAccepted: () => void;
 	let unsubAchievement: () => void;
+
+	let pollTimer: ReturnType<typeof setInterval> | undefined;
+
+	async function pollCounts() {
+		if (typeof document !== 'undefined' && document.hidden) return;
+		try {
+			const [notifRes, dmRes, achievementsRes] = await Promise.all([
+				fetch('/api/notifications/unread'),
+				fetch('/api/dm/unread'),
+				fetch('/api/achievements/unseen')
+			]);
+
+			if (notifRes.ok && $currentPage !== 'notifications') {
+				$unreadMessages = (await notifRes.json()).count;
+			}
+			if (dmRes.ok && $currentPage !== 'messages') {
+				unreadDMs = (await dmRes.json()).count;
+			}
+			if (achievementsRes.ok && $currentPage !== 'achievements') {
+				$unseenAchievements = (await achievementsRes.json()).count;
+			}
+		} catch {
+			// Network fucked — just try again on the next tick.
+		}
+	}
 
 	onMount(async () => {
 		const [notifRes, dmRes, achievementsRes] = await Promise.all([
@@ -89,6 +105,8 @@
 		unsubAchievement = wsClient.on('achievement_unlocked', () => {
 			if ($currentPage !== 'achievements') $unseenAchievements += 1;
 		});
+
+		pollTimer = setInterval(pollCounts, 1000);
 	});
 
 	onDestroy(() => {
@@ -96,13 +114,13 @@
 		unsubDmMessage?.();
 		unsubDmAccepted?.();
 		unsubAchievement?.();
+		if (pollTimer) clearInterval(pollTimer);
 	});
 </script>
 
 <div
 	class="nav-ribbon inline-flex w-full flex-row items-center gap-1 p-[8px] md:min-w-[250px] md:flex-col md:items-start md:gap-2 md:p-[12px]"
 >
-	<!-- Desktop: every item, full-height sidebar, unchanged -->
 	{#each navItems as item}
 		<OutlineButton
 			icon={item.icon}
@@ -115,7 +133,6 @@
 		/>
 	{/each}
 
-	<!-- Mobile: 5 primary tabs only, everything else behind "More" -->
 	{#each navItems as item}
 		{#if item.mobilePrimary}
 			<OutlineButton
@@ -165,7 +182,6 @@
 		{/if}
 	</div>
 
-	<!-- Compose — the one action that should never blend in -->
 	<div class="aspect-square shrink-0 md:hidden">
 		<PostButton userId={id} {onPosted} class="group flex !h-11 !w-11 items-center justify-center !rounded-full !p-0">
 			<span class="inline-flex transition-transform duration-300 group-hover:rotate-90">

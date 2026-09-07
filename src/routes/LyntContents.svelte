@@ -1,4 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: $$props is used together with named props in a way that cannot be automatically migrated. -->
 <script lang="ts">
 	import * as Tooltip from '@/components/ui/tooltip';
 	import { Label } from '@/components/ui/label';
@@ -223,9 +222,8 @@
 				<HoverCard.Root>
 					<HoverCard.Trigger
 						rel="noreferrer noopener"
-						class="truncate {smaller
-							? 'max-w-[30%]'
-							: 'max-w-[45%]'} rounded-sm text-xl font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
+						class="max-w-full truncate rounded-sm text-xl font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
+						style="max-width: min(100%, {smaller ? '140px' : '220px'});"
 						href="/@{handle}"
 					>
 						<UserName name={username} color={nameColor} {verified} />

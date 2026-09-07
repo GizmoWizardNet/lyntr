@@ -1,12 +1,8 @@
-<!-- @migration-task Error while migrating Svelte code: can't migrate `let state: CoinState = { status: 'loading' };` to `$state` because there's a variable named state.
-     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 
 	export let symbol: string;
-	// Handle of whoever posted the Lynt this $SYMBOL came from. Drives
-	// whether we use their own Rugplay key (Enhancements) or fall back
-	// to the disabled message.
+
 	export let authorHandle: string | undefined = undefined;
 
 	type CoinState =
@@ -28,22 +24,44 @@
 
 	let state: CoinState = { status: 'loading' };
 
-	onMount(() => {
+	const MAX_ATTEMPTS = 3;
+	const RETRY_DELAY_MS = 1000;
+
+	function sleep(ms: number) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	async function loadCoin() {
 		const qs = authorHandle ? `?authorHandle=${encodeURIComponent(authorHandle)}` : '';
-		fetch(`/api/rugplay/coin/${symbol}${qs}`)
-			.then((r) => r.json())
-			.then((data) => {
+		let lastMessage = 'Failed to load';
+
+		for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+			try {
+				const r = await fetch(`/api/rugplay/coin/${symbol}${qs}`);
+				const data = await r.json();
+
 				if (data.error) {
-					state = { status: 'error', message: data.error };
+					lastMessage = data.error;
+					if (r.status === 404 || r.status === 503) break;
 				} else if (data.status === 'disabled') {
 					state = { status: 'disabled', reason: data.reason };
+					return;
 				} else {
 					state = { status: 'ok', coin: data.coin };
+					return;
 				}
-			})
-			.catch(() => {
-				state = { status: 'error', message: 'Failed to load' };
-			});
+			} catch {
+				lastMessage = 'Failed to load';
+			}
+
+			if (attempt < MAX_ATTEMPTS) await sleep(RETRY_DELAY_MS * attempt);
+		}
+
+		state = { status: 'error', message: lastMessage };
+	}
+
+	onMount(() => {
+		loadCoin();
 	});
 
 	function fmt(n: number): string {

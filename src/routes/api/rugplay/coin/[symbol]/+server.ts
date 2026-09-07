@@ -4,6 +4,12 @@ import { resolveRugplayKeyForHandle } from '@/server/rugplayKeys';
 
 const cache = new Map<string, { data: any; expiresAt: number }>();
 const CACHE_TTL = 30_000;
+const STALE_TTL = 10 * 60_000; // how long a stale entry is still usable as a fallback
+const RETRY_DELAY_MS = 400; // brief pause before the one retry on a 5xx/network failure
+
+function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export const GET: RequestHandler = async ({ params, url }) => {
 	const symbol = params.symbol?.toUpperCase();
@@ -32,15 +38,32 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		return json(cached.data);
 	}
 
-	try {
+	async function attempt() {
 		const res = await fetch(`https://rugplay.com/api/v1/coin/${symbol}`, {
 			headers: { Authorization: `Bearer ${apiKey}` },
 			signal: AbortSignal.timeout(6_000)
 		});
+		return res;
+	}
+
+	try {
+		let res = await attempt();
 
 		if (res.status === 404) return json({ error: 'Coin not found' }, { status: 404 });
 		if (res.status === 429) return json({ error: 'Rate limited' }, { status: 429 });
-		if (!res.ok) return json({ error: 'Rugplay API error' }, { status: 502 });
+
+		if (!res.ok && [502, 503, 504].includes(res.status)) {
+			await sleep(RETRY_DELAY_MS);
+			res = await attempt();
+		}
+
+		if (!res.ok) {
+			const stale = cache.get(symbol);
+			if (stale && Date.now() - (stale.expiresAt - CACHE_TTL) < STALE_TTL) {
+				return json(stale.data);
+			}
+			return json({ error: 'Rugplay API error' }, { status: 502 });
+		}
 
 		const data = await res.json();
 		cache.set(symbol, { data: { status: 'ok', ...data }, expiresAt: Date.now() + CACHE_TTL });
@@ -48,7 +71,9 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	} catch (err) {
 		console.error('Rugplay proxy error:', err);
 		const stale = cache.get(symbol);
-		if (stale) return json(stale.data);
+		if (stale && Date.now() - (stale.expiresAt - CACHE_TTL) < STALE_TTL) {
+			return json(stale.data);
+		}
 		const timedOut = err instanceof Error && err.name === 'TimeoutError';
 		return json(
 			{ error: timedOut ? 'Rugplay took too long to respond' : 'Failed to fetch coin data' },

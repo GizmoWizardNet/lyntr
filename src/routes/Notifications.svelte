@@ -216,7 +216,8 @@
 													<HoverCard.Trigger
 														href="/@{notification.sourceUserHandle}"
 														rel="noreferrer noopener"
-														class="max-w-[50%] truncate rounded-sm font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
+														class="inline-block max-w-full truncate align-bottom rounded-sm font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-black"
+								style="max-width: min(100%, 180px);"
 													>
 														@<UserName name={notification.sourceUser} color={notification.sourceUserNameColor} verified={notification.sourceUserVerified} />
 													</HoverCard.Trigger>
