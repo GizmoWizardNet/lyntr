@@ -394,6 +394,7 @@
 			</div>
 
 			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2">
+				{#if loadingEmail}
 					<p class="text-xs text-muted-foreground">Loading...</p>
 				{:else if !userId}
 					<p class="text-sm text-muted-foreground">Email notifications aren't available right now.</p>
