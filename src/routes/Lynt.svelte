@@ -217,7 +217,7 @@
 		formData.append('reposted', id);
 		if (image) formData.append('image', image, image.name);
 
-		const response = await fetch('api/lynt', { method: 'POST', body: formData });
+		const response = await fetch('/api/lynt', { method: 'POST', body: formData });
 
 		if (response.status === 201) {
 			openDialog = false;
