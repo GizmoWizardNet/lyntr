@@ -211,7 +211,7 @@
 <div class={`${$$props.class} flex items-start gap-2`}>
 	{#if includeAvatar}
 		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px]">
-			<Avatar size={15} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
+			<Avatar size={10} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
 		</a>
 	{/if}
 
