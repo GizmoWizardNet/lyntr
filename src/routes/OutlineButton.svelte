@@ -21,7 +21,6 @@
 		animate?: boolean;
 		small?: boolean;
 		iconAnim?: string | null;
-		builder?: any;
 	}
 
 	let {
@@ -37,8 +36,7 @@
 		popover = null,
 		animate = false,
 		small = true,
-		iconAnim = null,
-		builder: externalBuilder = undefined
+		iconAnim = null
 	}: Props = $props();
 
 	let opened = $state(false);
@@ -54,11 +52,6 @@
 		}
 
 		dispatch('click', event);
-	}
-
-	function handleClickWithBuilder(event: MouseEvent) {
-		externalBuilder?.onclick?.(event);
-		handleClick(event);
 	}
 
 	const dispatch = createEventDispatcher<{ click: MouseEvent }>();
@@ -125,10 +118,9 @@
 	{:else}
 		{@const SvelteComponent_3 = icon}
 		<button
-			{...externalBuilder}
 			class:active={isActive}
 			class:animate
-			onclick={handleClickWithBuilder}
+			onclick={handleClick}
 			class="shit {outline
 				? 'p-1.5'
 				: ''} inline-flex items-center justify-center gap-1 rounded-xl font-bold text-primary {className}"

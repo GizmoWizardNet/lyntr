@@ -154,7 +154,9 @@
 		if (repostedByUser || requireAuth('repost')) {
 			e.detail.preventDefault();
 			e.detail.stopPropagation();
+			return;
 		}
+		openDialog = true;
 	}
 
 	async function handleLike() {
@@ -331,19 +333,14 @@
 					/>
 
 					<Dialog.Root bind:open={openDialog}>
-						<Dialog.Trigger asChild>
-							{#snippet children({ builder }: { builder: any })}
-														<OutlineButton
-									{builder}
-									on:click={handleRepost}
-									isActive={repostedByUser}
-									icon={Repeat2}
-									text={formatNumber(repostCount)}
-									outline={true}
-									small={false}
-								/>
-																				{/snippet}
-												</Dialog.Trigger>
+						<OutlineButton
+							on:click={handleRepost}
+							isActive={repostedByUser}
+							icon={Repeat2}
+							text={formatNumber(repostCount)}
+							outline={true}
+							small={false}
+						/>
 						<Dialog.Content class="min-w-[20%]">
 							<div class="flex max-h-[600px] items-start space-x-3 overflow-y-auto overflow-x-hidden">
 								<Avatar size={10} src={cdnUrl(myId, 'small')} alt="Your profile picture." userId={myId} />
