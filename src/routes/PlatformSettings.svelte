@@ -23,7 +23,6 @@
 
 	let { open = $bindable(false), userId = '' }: Props = $props();
 
-	// ── Default feed ──────────────────────────────────────────────────────
 	const FEED_OPTIONS = ['For you', 'New', 'Following', 'Bookmarked'];
 	let defaultFeed = $state('For you');
 	let loadingFeed = $state(true);
@@ -62,12 +61,6 @@
 		}
 	}
 
-	// ── Custom font ──────────────────────────────────────────────────────
-	// Overrides the `--font-retro` CSS variable that every rule in app.css
-	// reads from, so one change here re-fonts the whole app. Presets cover
-	// the common case with zero typing; the free-text field is what makes
-	// "whatever you want" literal — any name gets tried against Google
-	// Fonts if it isn't already a system font.
 	const FONT_PRESETS = [
 		{ label: 'Default (Tahoma)', value: null },
 		{ label: 'Nasalization', value: 'Nasalization' },
@@ -82,12 +75,7 @@
 		'Times New Roman', 'Courier New', 'Comic Sans MS', 'Impact',
 		'Trebuchet MS', 'sans-serif', 'serif', 'monospace'
 	]);
-	// Fonts that need a specific non-Google-Fonts provider stylesheet.
-	// Nasalization isn't on Google Fonts at all — it's served from
-	// cdnfonts.com (https://www.cdnfonts.com/nasalization.font) — so it
-	// needs its own entry here rather than going through the generic
-	// Google Fonts URL builder below. Keyed by the exact font-family name
-	// used in `value` above.
+
 	const FONT_PROVIDERS: Record<string, string> = {
 		Nasalization: 'https://fonts.cdnfonts.com/css/nasalization-2'
 	};
@@ -146,11 +134,6 @@
 		}
 	}
 
-	// ── Email notifications ───────────────────────────────────────────────
-	// Moved here from the profile-settings page — same server fields
-	// (email_notifications_enabled / notification_email on `users`), just a
-	// standalone save via PATCH /api/profile instead of being bundled into
-	// the big profile-edit form.
 	let emailNotifsEnabled = $state(false);
 	let emailIsSet = $state(false);
 	let emailInput = $state('');
@@ -225,7 +208,6 @@
 		}
 	}
 
-	// ── Push notifications ──────────────────────────────────────────────
 	let pushSupported = $state(false);
 	let pushEnabled = $state(false);
 	let pushPermission = $state<NotificationPermission | 'unsupported'>('unsupported');
@@ -237,11 +219,6 @@
 		const sub = await getCurrentSubscription();
 		pushEnabled = !!sub;
 
-		// Self-heal: if the browser has a live subscription, make sure the
-		// server actually has a matching row for it. Cheap and idempotent
-		// (upsert on user+endpoint) — this is what makes "not persisting"
-		// bugs recover on their own instead of requiring a manual
-		// unsubscribe/resubscribe.
 		if (sub) resyncSubscription(sub);
 	}
 
@@ -264,11 +241,6 @@
 				} else if (result === 'denied') {
 					pushPermission = 'denied';
 				} else {
-					// Was silently swallowed before — this is the actual
-					// "not persisting" case: the browser-level subscribe
-					// can succeed while the server save fails, and without
-					// this toast the person has no way to know it didn't
-					// actually take.
 					toast.error('Could not enable push notifications. Please try again.');
 				}
 			}
@@ -281,9 +253,6 @@
 		initPush();
 	});
 
-	// Re-check every time the dialog opens, not just on first mount — the
-	// person may have toggled OS/browser notification permissions in
-	// another tab or in system settings since this component last mounted.
 	$effect(() => {
 		if (open) {
 			loadDefaultFeed();
@@ -293,13 +262,12 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-md">
+	<Dialog.Content class="max-w-md md:max-w-3xl">
 		<Dialog.Header>
 			<Dialog.Title>Platform Settings</Dialog.Title>
 		</Dialog.Header>
 
-		<div class="flex flex-col gap-4 py-2">
-			<!-- ── Theme ──────────────────────────────────────────────────── -->
+		<div class="flex flex-col gap-4 py-2 md:grid md:grid-cols-2 md:items-start md:gap-x-4">
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Theme</span>
 				<p class="text-xs text-muted-foreground">
@@ -336,7 +304,6 @@
 				</div>
 			</div>
 
-			<!-- ── Default feed ──────────────────────────────────────────── -->
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Default feed</span>
 				<p class="text-xs text-muted-foreground">
@@ -358,7 +325,6 @@
 				{/if}
 			</div>
 
-			<!-- ── Custom font ────────────────────────────────────────────── -->
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Font</span>
 				<p class="text-xs text-muted-foreground">
@@ -394,7 +360,6 @@
 				</div>
 			</div>
 
-			<!-- ── Push notifications-->
 			<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
 				{#if !pushSupported}
 					<p class="text-sm text-muted-foreground">
@@ -428,9 +393,7 @@
 				{/if}
 			</div>
 
-			<!-- ── Email notifications ───────────────────────────────────── -->
-			<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
-				{#if loadingEmail}
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2">
 					<p class="text-xs text-muted-foreground">Loading...</p>
 				{:else if !userId}
 					<p class="text-sm text-muted-foreground">Email notifications aren't available right now.</p>
