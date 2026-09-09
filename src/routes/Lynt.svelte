@@ -242,7 +242,7 @@
 			{#if isClan && contributors.length > 0}
 				<ClanAvatarStack {contributors} size={10} />
 			{:else}
-				<Avatar size={10} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
+				<Avatar size={15} src={cdnUrl(userId, 'small')} alt="A profile picture." userId={userId} />
 			{/if}
 		</a>
 
