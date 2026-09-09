@@ -344,6 +344,10 @@ export const GET: RequestHandler = async ({ url }) => {
                 		u.lynt_coins,
                 		u.aura_score,
                 		u.pinned_achievement_key,
+                		u.status_text,
+                		u.status_expires_at,
+                		u.timezone_label,
+                		u.timezone_offset,
                 		u.rugplay_username,
                 		u.rugplay_enhancements_enabled,
                 		u.rugplay_key_valid,
@@ -407,6 +411,10 @@ export const GET: RequestHandler = async ({ url }) => {
                         lynt_coins: parseInt(String(user.lynt_coins ?? 0)),
                         aura_score: parseInt(String(user.aura_score ?? 0)),
                         pinned_achievement_key: user.pinned_achievement_key ?? null,
+                        status_text: (user.status_expires_at && new Date(String(user.status_expires_at)).getTime() <= Date.now()) ? null : (user.status_text ?? null),
+                        status_expires_at: (user.status_expires_at && new Date(String(user.status_expires_at)).getTime() <= Date.now()) ? null : (user.status_expires_at ?? null),
+                        timezone_label: user.timezone_label ?? null,
+                        timezone_offset: user.timezone_offset ?? null,
                         achievements: achievementRows.map((a: any) => ({ key: a.achievement_key, unlocked_at: a.unlocked_at })),
                         rugplay_username: user.rugplay_username ?? null,
                         rugplay_enhancements_enabled: user.rugplay_enhancements_enabled ?? false,
@@ -468,10 +476,7 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 	} catch {
 		return json({ error: 'Invalid token' }, { status: 401 });
 	}
-
-	// Needed to gate name_color — custom colors are a verified-only perk.
-	// Also grabs the existing profile song so we can clean up its S3
-	// object if it's being replaced or cleared.
+	
 	const [currentUser] = await db
 		.select({ verified: users.verified, profile_song_type: users.profile_song_type, profile_song_url: users.profile_song_url })
 		.from(users)
@@ -541,10 +546,6 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 				return json({ error: message }, { status: 400 });
 			}
 
-			// Resize to a sensible banner dimension (1500×500) and store as WebP.
-			// `{ animated: true }` on the sharp() constructor keeps every frame
-			// of an animated source instead of collapsing to the first — same
-			// fix as uploadAvatar() in api/util.ts.
 			const resized = await sharp(buffer, { animated: true })
 				.resize(1500, 500, { fit: 'cover', position: 'centre' })
 				.webp({ quality: 80 })
@@ -562,7 +563,6 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 			updateData.banner = bannerKey;
 		}
 
-		// ── Profile song ────────────────────────────────────────────────
 		const PROFILE_SONG_MAX_BYTES = 25 * 1024 * 1024; // 25MB
 		const SONG_EXT_CONTENT_TYPE: Record<string, string> = {
 			mp3: 'audio/mpeg',
