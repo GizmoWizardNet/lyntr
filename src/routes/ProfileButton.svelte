@@ -11,6 +11,9 @@
 	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
 	import { Input } from '@/components/ui/input';
 	import { MessageCircle, X } from 'lucide-svelte';
+
+	// Hugeicons data — imported from the free icon set.
+	// Run: bun add @hugeicons/core-free-icons
 	import {
 		Moon01Icon,
 		Sun01Icon,
@@ -27,6 +30,7 @@
 	let platformSettingsOpen = $state(false);
 	let deleteAccountOpen = $state(false);
 
+	// ── Quick status set (no need to open full Profile Settings) ──────
 	let statusOpened = $state(false);
 	let statusDraft = $state('');
 	let statusDuration = $state<'30m' | '1h' | '4h' | '24h' | '7d' | 'forever'>('forever');
@@ -53,7 +57,6 @@
 				statusDraft = currentStatusText ?? '';
 			}
 		} catch {
-
 		} finally {
 			statusLoaded = true;
 		}
@@ -173,10 +176,10 @@
 								statusOpened = !statusOpened;
 								if (statusOpened) loadStatus();
 							}}
-							class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
+							class="flex min-w-0 items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
 						>
-							<MessageCircle size={24} />
-							<span class="truncate">{currentStatusText ? `Status: ${currentStatusText}` : 'Set status'}</span>
+							<MessageCircle size={24} class="flex-shrink-0" />
+							<span class="min-w-0 flex-1 truncate text-left">{currentStatusText ? `Status: ${currentStatusText}` : 'Set status'}</span>
 						</button>
 					{/snippet}
 				</Popover.Trigger>

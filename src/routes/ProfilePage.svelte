@@ -374,7 +374,10 @@
 							{#if profile.status_text && (!profile.status_expires_at || new Date(profile.status_expires_at).getTime() > Date.now())}
 								<!-- Desktop: persistent frosted-glass bubble sitting in the
 								     empty space below the badges row. -->
-								<div class="status-bubble-static hidden w-fit max-w-xs items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-semibold md:flex">
+								<div
+								class="status-bubble-static hidden w-fit max-w-xs items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-semibold md:flex"
+								title={profile.status_text}
+							>
 									<MessageCircle size={14} class="flex-shrink-0" />
 									<span class="truncate">{profile.status_text}</span>
 								</div>
@@ -383,7 +386,10 @@
 							<p class="text-xl text-muted-foreground">@{profile.handle}</p>
 
 							{#if profile.status_text && (!profile.status_expires_at || new Date(profile.status_expires_at).getTime() > Date.now())}
-								<div class="status-pill flex w-fit max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold md:hidden">
+								<div
+								class="status-pill flex w-fit max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold md:hidden"
+								title={profile.status_text}
+							>
 									<MessageCircle size={14} class="flex-shrink-0" />
 									<span class="truncate">{profile.status_text}</span>
 								</div>
