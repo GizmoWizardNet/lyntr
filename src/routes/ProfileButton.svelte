@@ -11,7 +11,6 @@
 	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
 	import { Input } from '@/components/ui/input';
 	import { MessageCircle, X } from 'lucide-svelte';
-
 	import {
 		Moon01Icon,
 		Sun01Icon,
@@ -54,7 +53,7 @@
 				statusDraft = currentStatusText ?? '';
 			}
 		} catch {
-			// Non-critical — quick-set panel just opens with an empty draft.
+
 		} finally {
 			statusLoaded = true;
 		}
@@ -181,7 +180,7 @@
 						</button>
 					{/snippet}
 				</Popover.Trigger>
-				<Popover.Content class="w-72" side="right" align="start">
+				<Popover.Content class="w-72 max-w-[calc(100vw-2rem)]" side="bottom" align="start">
 					<div class="flex flex-col gap-3">
 						<div class="flex items-center justify-between">
 							<span class="text-sm font-bold text-primary">Set your status</span>

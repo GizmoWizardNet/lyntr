@@ -8,6 +8,7 @@
 		verified?: boolean;
 		class?: string;
 		statusText?: string | null;
+		// null = forever, otherwise an ISO timestamp string / Date.
 		statusExpiresAt?: string | Date | null;
 	}
 
@@ -28,8 +29,15 @@
 
 <span
 	class="relative inline-block"
-	onmouseenter={() => (hovering = true)}
+	onmouseenter={() => isLive && (hovering = true)}
 	onmouseleave={() => (hovering = false)}
+	onclick={(e) => {
+		if (!isLive) return;
+		e.stopPropagation();
+		hovering = !hovering;
+	}}
+	role={isLive ? 'button' : undefined}
+	tabindex={isLive ? 0 : undefined}
 >
 	<UserName {name} {color} {verified} class={className} />
 	{#if hovering && isLive}

@@ -7,7 +7,7 @@
 	import Avatar from './Avatar.svelte';
 	import { Button } from '@/components/ui/button';
 	import { Label } from '@/components/ui/label';
-	import { Brain, Calendar, Clock3 } from 'lucide-svelte';
+	import { Brain, Calendar, Clock3, MessageCircle } from 'lucide-svelte';
 	import { Separator } from '@/components/ui/separator';
 	import { Progress } from '@/components/ui/progress';
 	import FollowListPopup from './FollowListPopup.svelte';
@@ -371,7 +371,23 @@
 								{/if}
 							</div>
 
+							{#if profile.status_text && (!profile.status_expires_at || new Date(profile.status_expires_at).getTime() > Date.now())}
+								<!-- Desktop: persistent frosted-glass bubble sitting in the
+								     empty space below the badges row. -->
+								<div class="status-bubble-static hidden w-fit max-w-xs items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-semibold md:flex">
+									<MessageCircle size={14} class="flex-shrink-0" />
+									<span class="truncate">{profile.status_text}</span>
+								</div>
+							{/if}
+
 							<p class="text-xl text-muted-foreground">@{profile.handle}</p>
+
+							{#if profile.status_text && (!profile.status_expires_at || new Date(profile.status_expires_at).getTime() > Date.now())}
+								<div class="status-pill flex w-fit max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold md:hidden">
+									<MessageCircle size={14} class="flex-shrink-0" />
+									<span class="truncate">{profile.status_text}</span>
+								</div>
+							{/if}
 
 							{#if profile.profile_song_type}
 								<ProfileSongPlayer
@@ -416,7 +432,12 @@
 						</div>
 					</div>
 					<div class="md:hidden {!isSelf ? 'hidden' : ''}">
-						<ProfileButton />
+						<ProfileButton
+							src={avatar}
+							name={profile.username}
+							handle={`@${profile.handle}`}
+							userId={profile.id}
+						/>
 					</div>
 				</div>
 
@@ -451,7 +472,7 @@
 				<blockquote class="my-4 flex flex-col gap-2 border-s-4 border-muted-foreground bg-border p-4">
 					<Label class="text-lg font-bold text-primary">About me</Label>
 					<p>{profile.bio}</p>
-					<div class="flex items-center justify-between">
+					<div class="flex flex-wrap items-center gap-2">
 						<div class="flex select-none items-center gap-2 rounded-[4px] bg-gradient-gloss px-1.5 py-0.5 text-base font-semibold text-primary-foreground font-[family-name:var(--font-retro)] border-t-[1px] border-l-[1px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[1px] border-r-[1px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] shadow-[var(--hard-shadow-sm)] transition-[filter] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
 							<Brain />
 							<span>{profile.iq}</span>
@@ -508,7 +529,7 @@
 									({(profile.achievements ?? []).length}/{ACHIEVEMENT_CATALOG.length})
 								</span>
 							</Label>
-							<span class="text-muted-foreground text-xs">View all â†’</span>
+							<span class="text-muted-foreground text-xs">View all</span>
 						</button>
 						<Progress
 							value={(profile.achievements ?? []).length}
@@ -523,7 +544,7 @@
 									class="achievement-badge flex h-9 w-9 items-center justify-center rounded-full transition-opacity"
 									class:opacity-30={!unlocked}
 									style={`background: ${unlocked ? tierColor(achievement.tier) + '22' : 'transparent'};`}
-									title={hidden ? '??? â€” keep using Lyntr to find out.' : `${achievement.name} â€” ${achievement.description}${unlocked ? '' : ' (locked)'}`}
+									title={hidden ? '??? keep using Lyntr to find out.' : `${achievement.name} â€” ${achievement.description}${unlocked ? '' : ' (locked)'}`}
 								>
 									{#if hidden}
 										<span class="text-muted-foreground text-xs font-bold">?</span>
@@ -579,6 +600,40 @@
 </svelte:head>
 
 <style>
+	.status-bubble-static {
+		color: hsl(var(--foreground));
+		background: hsl(var(--popover) / 0.5);
+		-webkit-backdrop-filter: blur(16px) saturate(180%);
+		backdrop-filter: blur(16px) saturate(180%);
+		border: 1px solid hsl(var(--foreground) / 0.12);
+		box-shadow:
+			0 8px 20px -6px rgba(0, 0, 0, 0.3),
+			0 1px 4px rgba(0, 0, 0, 0.12),
+			inset 0 1px 0 rgba(255, 255, 255, 0.25),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+		position: relative;
+	}
+
+	.status-bubble-static::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 55%);
+		pointer-events: none;
+	}
+
+	.status-pill {
+		color: hsl(var(--foreground));
+		background: hsl(var(--popover) / 0.5);
+		-webkit-backdrop-filter: blur(16px) saturate(180%);
+		backdrop-filter: blur(16px) saturate(180%);
+		border: 1px solid hsl(var(--foreground) / 0.12);
+		box-shadow:
+			0 6px 16px -4px rgba(0, 0, 0, 0.25),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	}
+
 	.vibe-line {
 		animation: vibe-fade-in 0.25s ease-out;
 	}
