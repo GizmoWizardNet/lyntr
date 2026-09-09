@@ -11,7 +11,7 @@
 	let { tabs, currentTab, onTabChange }: Props = $props();
 </script>
 
-<div class="tab-row flex items-center gap-2 overflow-x-auto md:justify-center md:gap-3 md:overflow-visible">
+<div class="tab-row flex items-center gap-2 overflow-x-auto px-1 md:justify-center md:gap-3 md:overflow-visible md:px-0">
 	{#each tabs as tab}
 		<button
 			type="button"
@@ -62,9 +62,14 @@
 
 	.tab-row {
 		scrollbar-width: none;
+		scroll-padding-inline: 4px;
 	}
 	.tab-row::-webkit-scrollbar {
 		display: none;
+	}
+
+	.tab-pill {
+		margin: 1px;
 	}
 
 	.tab-pill:hover:not(.active) {
