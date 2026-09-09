@@ -20,7 +20,7 @@
 		statusExpiresAt = null
 	}: Props = $props();
 
-	let hovering = $state(false);.
+	let hovering = $state(false);
 	const isLive = $derived(
 		!!statusText && (!statusExpiresAt || new Date(statusExpiresAt).getTime() > Date.now())
 	);
