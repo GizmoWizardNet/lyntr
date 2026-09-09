@@ -7,7 +7,8 @@
 	import { Label } from '@/components/ui/label';
 	import { Input } from '@/components/ui/input';
 	import { cdnUrl } from './stores';
-	import { ImageUp, Music, X, Check, ArrowLeft } from 'lucide-svelte';
+	import { ImageUp, Music, X, Check, ArrowLeft, MessageCircle, Clock3 } from 'lucide-svelte';
+	import { Button } from '@/components/ui/button';
 	import { NAME_COLORS } from '@/nameColors';
 	import UserName from './UserName.svelte';
 	import { parseYoutubeId } from '@/youtube';
@@ -29,6 +30,10 @@
 		profileSongVolume?: number;
 		profileSongLoop?: boolean;
 		pushNotificationsEnabled?: boolean;
+		statusText?: string | null;
+		statusExpiresAt?: string | null;
+		timezoneLabel?: 'GMT' | 'UTC' | null;
+		timezoneOffset?: string | null;
 		onback: () => void;
 	}
 
@@ -49,8 +54,117 @@
 		profileSongVolume = $bindable(50),
 		profileSongLoop = $bindable(true),
 		pushNotificationsEnabled = false,
+		statusText: initialStatusText = null,
+		timezoneLabel: initialTimezoneLabel = null,
+		timezoneOffset: initialTimezoneOffset = null,
 		onback
 	}: Props = $props();
+
+	// ── Status ──────────────────────────────────────────────────────
+	let statusCurrentText: string | null = $state(initialStatusText);
+	let statusDraft = $state(initialStatusText ?? '');
+	let statusDuration = $state<'30m' | '1h' | '4h' | '24h' | '7d' | 'forever'>('forever');
+	let statusSubmitting = $state(false);
+
+	const STATUS_DURATIONS: { value: typeof statusDuration; label: string }[] = [
+		{ value: '30m', label: '30 min' },
+		{ value: '1h', label: '1 hour' },
+		{ value: '4h', label: '4 hours' },
+		{ value: '24h', label: '24 hours' },
+		{ value: '7d', label: '7 days' },
+		{ value: 'forever', label: 'Forever' }
+	];
+
+	async function saveProfileStatus() {
+		const text = statusDraft.trim();
+		if (!text) return;
+		statusSubmitting = true;
+		try {
+			const res = await fetch('/api/profile/status', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ status_text: text, duration: statusDuration })
+			});
+			const data = await res.json();
+			if (!res.ok) return toast.error(data.error ?? 'Failed to update status.');
+			statusCurrentText = data.status_text ?? null;
+			toast.success('Status updated.');
+		} catch {
+			toast.error('Failed to update status.');
+		} finally {
+			statusSubmitting = false;
+		}
+	}
+
+	async function clearProfileStatus() {
+		statusSubmitting = true;
+		try {
+			const res = await fetch('/api/profile/status', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ status_text: null })
+			});
+			if (!res.ok) return toast.error('Failed to clear status.');
+			statusCurrentText = null;
+			statusDraft = '';
+			toast.success('Status cleared.');
+		} catch {
+			toast.error('Failed to clear status.');
+		} finally {
+			statusSubmitting = false;
+		}
+	}
+
+	// ── Timezone ────────────────────────────────────────────────────
+	const TIMEZONE_OFFSETS = [
+		'-12:00', '-11:00', '-10:00', '-09:30', '-09:00', '-08:00', '-07:00', '-06:00', '-05:00',
+		'-04:00', '-03:30', '-03:00', '-02:00', '-01:00', '+00:00', '+01:00', '+02:00', '+03:00',
+		'+03:30', '+04:00', '+04:30', '+05:00', '+05:30', '+05:45', '+06:00', '+06:30', '+07:00',
+		'+08:00', '+08:45', '+09:00', '+09:30', '+10:00', '+10:30', '+11:00', '+12:00', '+12:45',
+		'+13:00', '+14:00'
+	];
+
+	let timezoneLabel = $state<'GMT' | 'UTC'>(initialTimezoneLabel ?? 'GMT');
+	let timezoneOffset: string | null = $state(initialTimezoneOffset);
+	let timezoneOffsetDraft = $state(initialTimezoneOffset ?? '+00:00');
+	let timezoneSubmitting = $state(false);
+
+	async function saveTimezone() {
+		timezoneSubmitting = true;
+		try {
+			const res = await fetch('/api/profile/timezone', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ timezone_label: timezoneLabel, timezone_offset: timezoneOffsetDraft })
+			});
+			const data = await res.json();
+			if (!res.ok) return toast.error(data.error ?? 'Failed to update timezone.');
+			timezoneOffset = data.timezone_offset ?? null;
+			toast.success('Timezone updated.');
+		} catch {
+			toast.error('Failed to update timezone.');
+		} finally {
+			timezoneSubmitting = false;
+		}
+	}
+
+	async function clearTimezone() {
+		timezoneSubmitting = true;
+		try {
+			const res = await fetch('/api/profile/timezone', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ timezone_label: null, timezone_offset: null })
+			});
+			if (!res.ok) return toast.error('Failed to clear timezone.');
+			timezoneOffset = null;
+			toast.success('Timezone cleared.');
+		} catch {
+			toast.error('Failed to clear timezone.');
+		} finally {
+			timezoneSubmitting = false;
+		}
+	}
 
 	// Local, editable copies. We never receive the actual key back from the
 	// server (it's encrypted at rest and never sent to any client) — only
@@ -372,6 +486,108 @@
 				<div class="flex w-full max-w-sm flex-col gap-1.5">
 					<Label for="bio">About me</Label>
 					<Input type="text" id="bio" placeholder="About me..." bind:value={bio} />
+				</div>
+
+				<div class="flex w-full max-w-sm flex-col gap-2 rounded-md border border-border p-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<MessageCircle size={15} />
+							<Label>Status</Label>
+						</div>
+						{#if statusCurrentText}
+							<button
+								type="button"
+								onclick={clearProfileStatus}
+								class="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-red-500"
+								disabled={statusSubmitting}
+							>
+								<X size={13} />
+								Clear
+							</button>
+						{/if}
+					</div>
+					<p class="text-xs text-muted-foreground">
+						Shows in a bubble when someone hovers your username. Set it here, or quickly from the profile
+						menu.
+					</p>
+					<Input
+						type="text"
+						placeholder="What's going on?"
+						maxlength={100}
+						bind:value={statusDraft}
+					/>
+					<div class="flex flex-wrap gap-1.5">
+						{#each STATUS_DURATIONS as opt (opt.value)}
+							<button
+								type="button"
+								onclick={() => (statusDuration = opt.value)}
+								class="rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors {statusDuration ===
+								opt.value
+									? 'border-primary bg-primary text-primary-foreground'
+									: 'border-border text-muted-foreground hover:text-primary'}"
+							>
+								{opt.label}
+							</button>
+						{/each}
+					</div>
+					<Button
+						size="sm"
+						variant="secondary"
+						class="w-fit"
+						onclick={saveProfileStatus}
+						disabled={statusSubmitting || !statusDraft.trim()}
+					>
+						{statusSubmitting ? 'Saving...' : 'Save status'}
+					</Button>
+				</div>
+
+				<div class="flex w-full max-w-sm flex-col gap-2 rounded-md border border-border p-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<Clock3 size={15} />
+							<Label>Timezone</Label>
+						</div>
+						{#if timezoneOffset}
+							<button
+								type="button"
+								onclick={clearTimezone}
+								class="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-red-500"
+								disabled={timezoneSubmitting}
+							>
+								<X size={13} />
+								Clear
+							</button>
+						{/if}
+					</div>
+					<p class="text-xs text-muted-foreground">
+						Shows as a pill on your profile, e.g. "GMT+05:30".
+					</p>
+					<div class="flex gap-2">
+						<select
+							bind:value={timezoneLabel}
+							class="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+						>
+							<option value="GMT">GMT</option>
+							<option value="UTC">UTC</option>
+						</select>
+						<select
+							bind:value={timezoneOffsetDraft}
+							class="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+						>
+							{#each TIMEZONE_OFFSETS as off (off)}
+								<option value={off}>{off}</option>
+							{/each}
+						</select>
+					</div>
+					<Button
+						size="sm"
+						variant="secondary"
+						class="w-fit"
+						onclick={saveTimezone}
+						disabled={timezoneSubmitting}
+					>
+						{timezoneSubmitting ? 'Saving...' : 'Save timezone'}
+					</Button>
 				</div>
 
 				<div class="flex w-full max-w-sm flex-col gap-2 rounded-md border border-border p-3">

@@ -7,7 +7,7 @@
 	import Avatar from './Avatar.svelte';
 	import { Button } from '@/components/ui/button';
 	import { Label } from '@/components/ui/label';
-	import { Brain, Calendar } from 'lucide-svelte';
+	import { Brain, Calendar, Clock3 } from 'lucide-svelte';
 	import { Separator } from '@/components/ui/separator';
 	import { Progress } from '@/components/ui/progress';
 	import FollowListPopup from './FollowListPopup.svelte';
@@ -17,6 +17,7 @@
 	import TopTab from './TopTab.svelte';
 	import UserBadges from './UserBadges.svelte';
 	import UserName from './UserName.svelte';
+	import UsernameStatus from './UsernameStatus.svelte';
 	import ProfileSongPlayer from './ProfileSongPlayer.svelte';
 	import NetWorthBadge from './NetWorthBadge.svelte';
 	import { ACHIEVEMENT_CATALOG, ACHIEVEMENT_BY_KEY, tierColor } from '$lib/achievements';
@@ -60,6 +61,10 @@
 		profile_song_loop?: boolean;
 		email_notifications_enabled?: boolean;
 		notification_email_set?: boolean;
+		status_text?: string | null;
+		status_expires_at?: string | null;
+		timezone_label?: string | null;
+		timezone_offset?: string | null;
 	} | undefined = $state();
 
 	let userLynts: any[] = $state([]);
@@ -305,6 +310,9 @@
 		profileSongTitle={profile.profile_song_title}
 		profileSongVolume={profile.profile_song_volume}
 		profileSongLoop={profile.profile_song_loop}
+		statusText={profile.status_text}
+		timezoneLabel={profile.timezone_label as 'GMT' | 'UTC' | null}
+		timezoneOffset={profile.timezone_offset}
 		onback={() => (showSettings = false)}
 	/>
 {:else if loading}
@@ -334,7 +342,15 @@
 						<div class="flex min-w-0 flex-col gap-2">
 							<!-- Name + badges row -->
 							<div class="flex flex-wrap items-center gap-2">
-								<Label class="text-2xl font-bold text-primary"><UserName name={profile.username} color={profile.name_color} verified={profile.verified} /></Label>
+								<Label class="text-2xl font-bold text-primary">
+								<UsernameStatus
+									name={profile.username}
+									color={profile.name_color}
+									verified={profile.verified}
+									statusText={profile.status_text}
+									statusExpiresAt={profile.status_expires_at}
+								/>
+							</Label>
 								<UserBadges
 									verified={profile.verified}
 									isAdmin={profile.is_admin}
@@ -444,6 +460,15 @@
 							<Calendar />
 							<p>Joined: {new Date(profile.created_at).toLocaleDateString()}</p>
 						</div>
+						{#if profile.timezone_label && profile.timezone_offset}
+							<div
+								class="inline-flex select-none items-center gap-2 rounded-[4px] bg-gradient-gloss px-1.5 py-0.5 text-base font-semibold text-primary-foreground font-[family-name:var(--font-retro)] border-t-[1px] border-l-[1px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[1px] border-r-[1px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] shadow-[var(--hard-shadow-sm)] transition-[filter] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+								title="Local timezone"
+							>
+								<Clock3 />
+								<span>{profile.timezone_label}{profile.timezone_offset}</span>
+							</div>
+						{/if}
 					</div>
 					{#if profile.rugplay_username}
 						<div class="mt-3">
