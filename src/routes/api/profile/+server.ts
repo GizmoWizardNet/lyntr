@@ -365,12 +365,6 @@ export const GET: RequestHandler = async ({ url }) => {
             			LIMIT 1
               	`;
 
-		// The achievements query is independent of the main user query's
-		// *result* — it just needs the same handle/id to resolve the user
-		// row, which it can do itself via a join, mirroring the main
-		// query's WHERE clause. So instead of awaiting the user query,
-		// then awaiting achievements afterward (two round trips back to
-		// back on every single profile visit), fire both at once.
 		const achievementsQuery = sql`
 			SELECT ua.achievement_key, ua.unlocked_at
 			FROM ${userAchievements} ua
@@ -476,7 +470,7 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 	} catch {
 		return json({ error: 'Invalid token' }, { status: 401 });
 	}
-	
+
 	const [currentUser] = await db
 		.select({ verified: users.verified, profile_song_type: users.profile_song_type, profile_song_url: users.profile_song_url })
 		.from(users)
