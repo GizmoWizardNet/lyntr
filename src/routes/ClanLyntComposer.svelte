@@ -23,9 +23,10 @@
 		myId: string;
 		onStarted?: (clan: { id: string }) => void;
 		onCancel?: (() => void) | null;
+		lyntskinKey?: string | null;
 	}
 
-	let { myId, onStarted, onCancel = null }: Props = $props();
+	let { myId, onStarted, onCancel = null, lyntskinKey = null }: Props = $props();
 
 	let content = $state('');
 	let friends = $state<Friend[]>([]);
@@ -45,9 +46,7 @@
 				(f.username.toLowerCase().includes(search.toLowerCase()) || f.handle.toLowerCase().includes(search.toLowerCase()))
 		)
 	);
-	// Preview mirrors what ClanAvatarStack will render on the real, published
-	// lynt — myself at position 0 plus the relay chain — so what's shown
-	// here is what actually ships, not a guess at it.
+
 	const previewContributors = $derived([
 		{ userId: myId, username: 'You', handle: '' },
 		...selected.map((s) => ({ userId: s.id, username: s.username, handle: s.handle }))
@@ -103,7 +102,8 @@
 					content: content.trim(),
 					memberIds: selected.map((s) => s.id),
 					gifUrl: pendingGif?.url ?? null,
-					gifPreviewUrl: pendingGif?.preview_url ?? null
+					gifPreviewUrl: pendingGif?.preview_url ?? null,
+					lyntskinKey: lyntskinKey ?? null
 				})
 			});
 			const data = await res.json();

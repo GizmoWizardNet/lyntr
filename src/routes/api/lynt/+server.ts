@@ -2,8 +2,8 @@ import { json } from '@sveltejs/kit';
 import type { Cookies, RequestHandler } from '@sveltejs/kit';
 import { verifyAuthJWT } from '@/server/jwt';
 import { db } from '@/server/db';
-import { lynts, users, polls, pollOptions, lyntImages } from '@/server/schema';
-import { eq, sql } from 'drizzle-orm';
+import { lynts, users, polls, pollOptions, lyntImages, userLyntskins } from '@/server/schema';
+import { eq, sql, and } from 'drizzle-orm';
 import { Snowflake } from 'nodejs-snowflake';
 import { minioClient } from '@/server/minio';
 import { deleteLynt, lyntObj, hydratePoll, processAndUploadLyntImages, MAX_LYNT_IMAGES } from '../util';
@@ -16,6 +16,7 @@ import { fetchReferencedLynts } from "../util"
 import { awardPostCreated, awardRepostReceived } from '@/server/lyntcoins';
 import { createNotification } from '@/server/notifications';
 import { notifyLyntEngagement } from '@/server/clanLynt';
+import { isValidLyntskinKey } from '$lib/lyntskins';
 
 export const POST: RequestHandler = async ({
 	request,
@@ -70,6 +71,7 @@ export const POST: RequestHandler = async ({
 	const gifPreviewUrl = formData.get('gif_preview_url') as string | null;
 	const reposted = formData.get('reposted') as string;
 	const pollJson = formData.get('poll') as string | null;
+	const lyntskinKey = formData.get('lyntskin_key') as string | null;
 
 	if (!content) content = '';
 
@@ -139,6 +141,21 @@ export const POST: RequestHandler = async ({
 		if (gifUrl && !lyntValues.reposted) {
 			lyntValues.gif_url = gifUrl;
 			lyntValues.gif_preview_url = gifPreviewUrl || gifUrl;
+		}
+
+		if (lyntskinKey && !lyntValues.reposted) {
+			if (!isValidLyntskinKey(lyntskinKey)) {
+				return json({ error: 'Unknown lyntskin.' }, { status: 400 });
+			}
+			const [owns] = await db
+				.select({ skin_key: userLyntskins.skin_key })
+				.from(userLyntskins)
+				.where(and(eq(userLyntskins.user_id, userId), eq(userLyntskins.skin_key, lyntskinKey)))
+				.limit(1);
+			if (!owns) {
+				return json({ error: "You don't own that lyntskin." }, { status: 403 });
+			}
+			lyntValues.lyntskin_key = lyntskinKey;
 		}
 
 		const [newLynt] = await db.insert(lynts).values(lyntValues).returning();

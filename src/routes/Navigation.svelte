@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '@/components/ui/button/index';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { House, Search, Bell, User, Plus, MessageSquare, Trophy, Mail, Webhook, Award, MoreHorizontal, Clapperboard, Megaphone } from 'lucide-svelte';
+	import { House, Search, Bell, User, Plus, MessageSquare, Trophy, Mail, Webhook, Award, MoreHorizontal, Clapperboard, Megaphone, ShoppingBag } from 'lucide-svelte';
 	import OutlineButton from './OutlineButton.svelte';
 	import { currentPage } from './stores';
 	import { goto } from '$app/navigation';
@@ -25,6 +25,7 @@
 		{ icon: User, label: 'Profile', page: 'profile' + handle, anim: 'user', mobilePrimary: true },
 		{ icon: MessageSquare, label: 'Forum', page: 'forum', anim: 'message' },
 		{ icon: Trophy, label: 'Leaderboard', page: 'leaderboard', anim: 'trophy' },
+		{ icon: ShoppingBag, label: 'Shop', page: 'shop', anim: 'shopping-bag' },
 		{ icon: Award, label: 'Achievements', page: 'achievements', anim: 'award' },
 		{ icon: Mail, label: 'Messages', page: 'messages', anim: 'mail' },
 		{ icon: Webhook, label: 'Developer', page: 'developer', anim: 'webhook' },
@@ -128,6 +129,7 @@
 			text={item.label}
 			secondary={badgeFor(item)}
 			secondaryClass={item.label === 'Achievements' ? 'gold-sheen' : undefined}
+			textClass={item.label === 'Shop' ? 'bg-gradient-gloss bg-clip-text text-transparent' : undefined}
 			className="hidden border-none md:flex md:w-auto !rounded-full"
 			on:click={() => handleNavClick(item.page)}
 		/>

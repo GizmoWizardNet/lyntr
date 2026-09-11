@@ -347,6 +347,8 @@ select {
   background: hsl(var(--lynt-focus)) !important;
   border-radius: 6px !important;
   transition: box-shadow 0.1s ease, background 0.1s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 /* On hover: pop OUT of the recess like a pressed-button release, not a soft float */
@@ -625,6 +627,8 @@ h1, h2, h3, h4, h5, h6 {
   border-right: 1px solid var(--bevel-light);
   border-radius: 6px;
   transition: box-shadow 0.1s ease, background 0.1s ease;
+  position: relative;
+  overflow: hidden;
 }
 .lynt-card:hover {
   background: hsl(var(--card));
@@ -740,10 +744,6 @@ h1, h2, h3, h4, h5, h6 {
   filter: brightness(1.1);
 }
 
-/* ════════════════════════════════════════════════
-   PARSED CONTENT — markdown element styles
-   (covers both feed and preview contexts)
-   ════════════════════════════════════════════════ */
 .parsed-content p          { margin: 0 0 0.25em; line-height: 1.55; }
 .parsed-content br         { display: block; content: ''; margin-top: 0.4em; }
 .parsed-content h1,

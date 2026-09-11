@@ -6,15 +6,13 @@
 	import { cdnUrl } from './stores';
 	import Composer from './Composer.svelte';
 	import ClanLyntComposer from './ClanLyntComposer.svelte';
+	import LyntskinPicker from './LyntskinPicker.svelte';
 	import { Users, PenLine } from 'lucide-svelte';
 
 	interface Props {
 		userId: string;
 		class?: string;
 		children?: import('svelte').Snippet;
-		// Called immediately with the newly-created lynt so the caller can
-		// prepend it to the feed without waiting on a WebSocket round-trip —
-		// this is what makes posting feel instant instead of "did it work?".
 		onPosted?: (lynt: any) => void;
 	}
 
@@ -22,11 +20,8 @@
 
 	let opened = $state(false);
 	let composer: Composer | undefined = $state();
-	// Every post starts with this choice — solo goes straight into the
-	// existing single-author flow, clan swaps in the friend-relay composer.
-	// Nothing publishes until either the solo post lands or the last clan
-	// member accepts, so onPosted only ever fires for a genuinely live lynt.
 	let mode: 'solo' | 'clan' = $state('solo');
+	let selectedSkin: string | null = $state(null);
 
 	function handlePosted(item: any) {
 		opened = false;
@@ -44,6 +39,7 @@
 	function reset() {
 		composer?.resetComposer?.();
 		mode = 'solo';
+		selectedSkin = null;
 	}
 </script>
 
@@ -76,9 +72,16 @@
 							autofocus={true}
 							onPosted={handlePosted}
 							onCancel={() => { opened = false; }}
+							extraFields={selectedSkin ? { lyntskin_key: selectedSkin } : {}}
 						/>
+						<div class="mt-2">
+							<LyntskinPicker bind:selected={selectedSkin} />
+						</div>
 					{:else}
-						<ClanLyntComposer myId={userId} onStarted={handleClanStarted} onCancel={() => { opened = false; }} />
+						<ClanLyntComposer myId={userId} lyntskinKey={selectedSkin} onStarted={handleClanStarted} onCancel={() => { opened = false; }} />
+						<div class="mt-2">
+							<LyntskinPicker bind:selected={selectedSkin} />
+						</div>
 					{/if}
 				</div>
 			</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { stopPropagation } from 'svelte/legacy';
+	import { LYNTSKIN_BY_KEY } from '$lib/lyntskins';
 
 	import { cdnUrl } from './stores';
 	import { Separator } from '@/components/ui/separator';
@@ -51,6 +52,7 @@
 		has_image: boolean;
 		images?: { key: string; position: number }[] | null;
 		gif_url?: string | null;
+		lyntskinKey?: string | null;
 		verified: boolean;
 		parentId: string | null;
 		parentContent: string | null;
@@ -106,6 +108,7 @@
 		has_image,
 		images = null,
 		gif_url = null,
+		lyntskinKey = null,
 		verified,
 		parentId,
 		parentContent,
@@ -238,7 +241,14 @@
 	class="mb-2 w-full text-left"
 >
 	<div class="lynt-card flex w-full gap-3 p-3">
-		<a href="/@{handle}" class="inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
+		{#if lyntskinKey && LYNTSKIN_BY_KEY[lyntskinKey]}
+			<div
+				class="lyntskin-bg"
+				style="background-image: url({LYNTSKIN_BY_KEY[lyntskinKey].file})"
+				aria-hidden="true"
+			></div>
+		{/if}
+		<a href="/@{handle}" class="relative z-[1] inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
 			{#if isClan && contributors.length > 0}
 				<ClanAvatarStack {contributors} size={10} />
 			{:else}
@@ -246,7 +256,7 @@
 			{/if}
 		</a>
 
-		<div class="flex w-full min-w-0 max-w-[530px] flex-col gap-2">
+		<div class="relative z-[1] flex w-full min-w-0 max-w-[530px] flex-col gap-2">
 			<!-- Main lynt -->
 			<LyntContents
 				{truncateContent}
@@ -435,3 +445,26 @@
 {:else}
 	<Separator />
 {/if}
+
+<style>
+	.lyntskin-bg {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		background-size: cover;
+		background-position: center;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.35s ease;
+	}
+
+	.lynt-card:hover .lyntskin-bg {
+		opacity: 0.16;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.lyntskin-bg {
+			transition: none;
+		}
+	}
+</style>

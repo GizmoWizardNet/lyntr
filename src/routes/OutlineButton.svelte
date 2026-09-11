@@ -21,6 +21,9 @@
 		animate?: boolean;
 		small?: boolean;
 		iconAnim?: string | null;
+		// Extra class(es) applied to the visible label span only — e.g. a
+		// gradient-text treatment for a single standout nav item.
+		textClass?: string | undefined;
 	}
 
 	let {
@@ -36,7 +39,8 @@
 		popover = null,
 		animate = false,
 		small = true,
-		iconAnim = null
+		iconAnim = null,
+		textClass = undefined
 	}: Props = $props();
 
 	let opened = $state(false);
@@ -102,7 +106,7 @@
 						{/if}
 					</span>
 						{#if text}
-							<span>{text}</span>
+							<span class={textClass}>{text}</span>
 						{/if}
 					</button>
 											{/snippet}
@@ -138,7 +142,7 @@
 			{#if icon === Heart}
 				<span>{text}</span>
 			{:else if text}
-				<span class="hidden md:block {!small || isActive ? '!block' : ''}">{text}</span>
+				<span class="hidden md:block {!small || isActive ? '!block' : ''} {textClass ?? ''}">{text}</span>
 			{/if}
 		</button>
 	{/if}
@@ -270,6 +274,17 @@
 	:global(.shit:hover) .nav-icon-clapperboard :global(svg) {
 		animation: navMessage 0.5s ease-in-out;
 	}
+	:global(.shit:hover) .nav-icon-shopping-bag :global(svg) {
+		animation: navShop 0.5s ease-in-out;
+	}
+
+	@keyframes navShop {
+		0%, 100% { transform: rotate(0deg); }
+		20% { transform: rotate(-10deg); }
+		40% { transform: rotate(8deg); }
+		60% { transform: rotate(-6deg); }
+		80% { transform: rotate(4deg); }
+	}
 
 	@keyframes drawIn {
 		0% { stroke-dashoffset: 1; opacity: 0; }
@@ -328,7 +343,13 @@
 	}
 
 	.gold-sheen {
-		position: relative;
+		/* No position declaration here on purpose — this class is applied
+		   alongside Tailwind's `absolute` on the notification badge, and a
+		   `position: relative` here would win the cascade (scoped selector
+		   beats a plain utility class) and silently knock the badge out of
+		   its absolutely-positioned overlap with the icon, back into
+		   normal document flow. overflow:hidden works fine regardless of
+		   which position value the element ends up with. */
 		overflow: hidden;
 		color: #3a2400;
 		background-image:

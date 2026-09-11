@@ -67,7 +67,8 @@ export async function createClanDraft(
 	content: string,
 	memberIds: string[],
 	gifUrl?: string | null,
-	gifPreviewUrl?: string | null
+	gifPreviewUrl?: string | null,
+	lyntskinKey?: string | null
 ) {
 	const uniqueMembers = [...new Set(memberIds)].filter((id) => id !== authorId);
 	if (uniqueMembers.length === 0) {
@@ -90,6 +91,7 @@ export async function createClanDraft(
 			content,
 			gif_url: gifUrl ?? null,
 			gif_preview_url: gifPreviewUrl ?? null,
+			lyntskin_key: lyntskinKey ?? null,
 			current_step: 1
 		})
 		.returning();
@@ -226,6 +228,7 @@ async function publishClanLynt(clanId: string) {
 		content: clan.content,
 		gif_url: clan.gif_url,
 		gif_preview_url: clan.gif_preview_url,
+		lyntskin_key: clan.lyntskin_key,
 		has_link: /https?:\/\//.test(clan.content),
 		is_clan: true,
 		clan_avg_iq: avgIq
@@ -267,18 +270,6 @@ export async function getContributors(lyntId: string) {
 		.orderBy(lyntContributors.position);
 }
 
-/**
- * Like/comment/repost notification fan-out. For a clan lynt this notifies
- * every accepted contributor instead of just `lynts.user_id`; for a normal
- * lynt it's a single-element loop, so callers can use this unconditionally.
- *
- * `contributorLookupId` and `notifLyntId` are deliberately separate: for a
- * like/repost they're the same lynt, but for a comment the contributors to
- * fan out to belong to the *parent* (the clan lynt being replied to), while
- * the notification itself should link to the new reply — matching this
- * repo's existing convention of storing the comment's own id so the
- * notification click-through lands on the specific reply, not the parent.
- */
 export async function notifyLyntEngagement(
 	contributorLookupId: string,
 	lyntUserId: string,

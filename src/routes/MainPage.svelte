@@ -34,6 +34,7 @@
 	import AchievementPop from './AchievementPop.svelte';
 	import AchievementsPage from './Achievements/AchievementsPage.svelte';
 	import LeaderboardPage from './Leaderboard/LeaderboardPage.svelte';
+	import ShopPage from './Shop/ShopPage.svelte';
 	import DMPage from './DMPage.svelte';
 	import TrendingSidebar from './TrendingSidebar.svelte';
 	import Composer from './Composer.svelte';
@@ -511,6 +512,8 @@
 						<ScrollablesPage myId={id} />
 					{:else if page === 'leaderboard'}
 						<LeaderboardPage />
+					{:else if page === 'shop'}
+						<ShopPage />
 					{:else if page === 'achievements'}
 						<AchievementsPage />
 					{:else if page === 'notifications'}

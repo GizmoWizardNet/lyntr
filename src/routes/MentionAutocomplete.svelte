@@ -1,26 +1,6 @@
 <script lang="ts">
 	import { preventDefault } from 'svelte/legacy';
 
-	/**
-	 * MentionAutocomplete.svelte
-	 *
-	 * Reusable @mention dropdown. Attach to any `contenteditable` element by
-	 * calling `handleInput(event)` on its `on:input` and `handleKeydown(event)`
-	 * on its `on:keydown` (for arrow-key navigation / Enter-to-select / Escape
-	 * to dismiss). The component tracks the caret position via the native
-	 * Selection API and renders itself as an absolutely-positioned popover
-	 * next to the caret.
-	 *
-	 * Usage:
-	 *   <div contenteditable on:input={mention.handleInput} on:keydown={mention.handleKeydown} />
-	 *   <MentionAutocomplete bind:this={mention} editableEl={myDiv} on:select={(e) => ...} />
-	 *
-	 * Because contenteditable text manipulation varies subtly across browsers,
-	 * this component does the insertion itself via document.execCommand
-	 * ('insertText'), the same primitive DivInput.svelte already relies on
-	 * elsewhere in this codebase — so behaviour stays consistent with the
-	 * existing formatting toolbar.
-	 */
 	import { createEventDispatcher, onDestroy } from 'svelte';
 	import UserName from './UserName.svelte';
 
@@ -40,9 +20,7 @@
 	let loading = $state(false);
 	let pos = $state({ top: 0, left: 0 });
 
-	// Tracks the open "@partial" being typed, so we know what to replace
-	// when a suggestion is picked.
-	let triggerStart = -1; // character offset of the "@" within the element's text
+	let triggerStart = -1;
 	let query = '';
 
 	let debounceTimer: ReturnType<typeof setTimeout>;
