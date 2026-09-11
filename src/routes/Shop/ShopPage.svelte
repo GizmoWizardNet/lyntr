@@ -5,6 +5,7 @@
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { Button } from '@/components/ui/button';
 	import type { LyntskinDef } from '$lib/lyntskins';
+	import { celebrateLyntskinPurchase } from '$lib/lyntskinCelebration';
 
 	interface ShopSkin extends LyntskinDef {
 		owned: boolean;
@@ -54,6 +55,7 @@
 			balance -= skin.price;
 			skins = skins.map((s) => (s.key === skin.key ? { ...s, owned: true } : s));
 			toast.success(`${skin.name} unlocked! Apply it next time you make a lynt.`);
+			celebrateLyntskinPurchase();
 		} catch {
 			toast.error('Purchase failed.');
 		} finally {
