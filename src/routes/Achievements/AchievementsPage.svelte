@@ -2,9 +2,9 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
-	import { Badge } from '@/components/ui/badge';
-	import { tierColor, type AchievementTier } from '$lib/achievements';
+	import { ACHIEVEMENT_CATALOG, type AchievementTier } from '$lib/achievements';
 	import { unseenAchievements } from '../stores';
+	import { celebrateAchievementClaim } from '$lib/achievementCelebration';
 
 	interface AchievementRow {
 		key: string;
@@ -13,10 +13,109 @@
 		tier: AchievementTier;
 		coinReward: number;
 		icon: string;
+		family?: string;
+		level?: number;
 		unlocked: boolean;
 		unlockedAt: string | null;
 		seenAt: string | null;
 		claimedAt: string | null;
+	}
+
+	// Groups every achievement (by family, or by key for standalone ones)
+	// into a handful of labeled categories, and fixes the order those
+	// categories render in. Anything not listed falls back to 'milestones'
+	// so a future achievement never silently disappears from the page.
+	const CATEGORY_ORDER = ['posting', 'social', 'community', 'mastery', 'secret', 'milestones'] as const;
+	type CategoryKey = (typeof CATEGORY_ORDER)[number];
+
+	const CATEGORY_LABELS: Record<CategoryKey, string> = {
+		posting: 'Posting',
+		social: 'Social',
+		community: 'Community',
+		mastery: 'Mastery',
+		secret: 'Secret',
+		milestones: 'Milestones'
+	};
+
+	const CATEGORY_BY_FAMILY_OR_KEY: Record<string, CategoryKey> = {
+		yapper: 'posting',
+		streak: 'posting',
+		first_lynt: 'posting',
+		followers: 'social',
+		first_dm: 'social',
+		first_repost: 'social',
+		first_poll: 'social',
+		rugplay_linked: 'social',
+		forum: 'community',
+		big_brain: 'mastery',
+		xp_hoarder: 'mastery',
+		hunter: 'mastery',
+		night_owl: 'secret',
+		quick_edit: 'secret'
+	};
+
+	function categoryOf(a: AchievementRow): CategoryKey {
+		return CATEGORY_BY_FAMILY_OR_KEY[a.family ?? a.key] ?? 'milestones';
+	}
+
+	// Ladder length per family (e.g. "yapper" has 3 rungs — I/II/III),
+	// derived once from the full static catalog so the pip row under a
+	// card can render "which rung, out of how many" instead of just a
+	// tier word.
+	const FAMILY_LADDER_LENGTH: Record<string, number> = (() => {
+		const lengths: Record<string, number> = {};
+		for (const def of ACHIEVEMENT_CATALOG) {
+			if (!def.family) continue;
+			lengths[def.family] = Math.max(lengths[def.family] ?? 0, def.level ?? 1);
+		}
+		return lengths;
+	})();
+
+	// Metallic multi-stop gradients standing in for the flat tier colour —
+	// this is the same "brushed medal" recipe as the nav's gold-sheen
+	// badge, just extended to silver/bronze too.
+	const TIER_METAL: Record<AchievementTier, string> = {
+		gold: 'linear-gradient(115deg, #a86a00 0%, #ffd76a 20%, #fff6d6 35%, #e8b400 50%, #ffe98a 65%, #a86a00 85%, #ffd76a 100%)',
+		silver:
+			'linear-gradient(115deg, #6b7280 0%, #e5e7eb 22%, #ffffff 38%, #9ca3af 55%, #e5e7eb 75%, #6b7280 100%)',
+		bronze:
+			'linear-gradient(115deg, #7a4a20 0%, #d9975a 22%, #f0c896 38%, #b8804f 55%, #d9975a 75%, #7a4a20 100%)'
+	};
+	const TIER_INK: Record<AchievementTier, string> = {
+		gold: '#3a2400',
+		silver: '#1f2430',
+		bronze: '#2e1a0a'
+	};
+
+	type SortMode = 'progress' | 'tier' | 'alpha';
+	const SORT_LABELS: Record<SortMode, string> = {
+		progress: 'Unlocked first',
+		tier: 'Tier',
+		alpha: 'A–Z'
+	};
+
+	function tierRank(tier: AchievementTier): number {
+		return tier === 'gold' ? 0 : tier === 'silver' ? 1 : 2;
+	}
+
+	let activeCategory = $state<CategoryKey | 'all'>('all');
+	let sortMode = $state<SortMode>('progress');
+
+	function sortByMode(items: AchievementRow[], mode: SortMode): AchievementRow[] {
+		const withIndex = items.map((a, i) => ({ a, i }));
+		withIndex.sort((x, y) => {
+			if (mode === 'alpha') return x.a.name.localeCompare(y.a.name);
+			if (mode === 'tier') {
+				const diff = tierRank(x.a.tier) - tierRank(y.a.tier);
+				return diff !== 0 ? diff : x.i - y.i;
+			}
+			// 'progress': unlocked/claimed before locked, otherwise leave
+			// catalog order (i.e. family ladders) intact.
+			const rank = (r: AchievementRow) => (r.unlocked ? 0 : 1);
+			const diff = rank(x.a) - rank(y.a);
+			return diff !== 0 ? diff : x.i - y.i;
+		});
+		return withIndex.map((w) => w.a);
 	}
 
 	let achievements: AchievementRow[] = $state([]);
@@ -57,6 +156,7 @@
 				achievements = achievements.map((a) =>
 					a.key === achievement.key ? { ...a, claimedAt: new Date().toISOString() } : a
 				);
+				celebrateAchievementClaim();
 			} else {
 				const err = await response.json().catch(() => ({ error: 'claim_failed' }));
 				if (err.error === 'already_claimed') {
@@ -91,19 +191,46 @@
 		return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
-	// Sort: unclaimed-unlocked first (needs action), then claimed
-	// (most recent unlock first), then locked.
-	let sorted = $derived(
-		[...achievements].sort((a, b) => {
-			const rank = (x: AchievementRow) => (x.unlocked && !x.claimedAt ? 0 : x.unlocked ? 1 : 2);
-			const rankDiff = rank(a) - rank(b);
-			if (rankDiff !== 0) return rankDiff;
-			if (a.unlocked && b.unlocked) {
-				return new Date(b.unlockedAt ?? 0).getTime() - new Date(a.unlockedAt ?? 0).getTime();
-			}
-			return 0;
-		})
+	// The whole point of this split: unlocked-but-unclaimed achievements
+	// get pulled out into their own unmissable section up top instead of
+	// being just another card sorted-first in a wall of identical ones.
+	let claimable = $derived(
+		sortByMode(
+			achievements.filter(
+				(a) => a.unlocked && !a.claimedAt && (activeCategory === 'all' || categoryOf(a) === activeCategory)
+			),
+			sortMode
+		)
 	);
+
+	// Every category that actually has achievements in it, in fixed
+	// display order — used both to render the grouped sections below and
+	// to populate the filter chips (so a chip never appears for an empty
+	// category).
+	let availableCategories = $derived.by(() => {
+		const present = new Set(achievements.map((a) => categoryOf(a)));
+		return CATEGORY_ORDER.filter((cat) => present.has(cat));
+	});
+
+	// Everything else (claimed + locked) grouped by category, keeping
+	// each family's catalog order intact so ladders (Yapper I/II/III)
+	// still read top-to-bottom as a progression — unless the person picks
+	// a different sort, in which case that takes over.
+	let categories = $derived.by(() => {
+		const rest = achievements.filter((a) => !(a.unlocked && !a.claimedAt));
+		const groups = new Map<CategoryKey, AchievementRow[]>();
+		for (const a of rest) {
+			const cat = categoryOf(a);
+			if (activeCategory !== 'all' && cat !== activeCategory) continue;
+			if (!groups.has(cat)) groups.set(cat, []);
+			groups.get(cat)!.push(a);
+		}
+		return CATEGORY_ORDER.filter((cat) => groups.has(cat)).map((cat) => ({
+			key: cat,
+			label: CATEGORY_LABELS[cat],
+			items: sortByMode(groups.get(cat)!, sortMode)
+		}));
+	});
 </script>
 
 <div class="flex h-full w-full flex-col overflow-y-auto px-1 pb-6">
@@ -129,61 +256,127 @@
 	{#if loading}
 		<LoadingSpinner />
 	{:else}
-		<div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-			{#each sorted as achievement (achievement.key)}
-				{@const claimable = achievement.unlocked && !achievement.claimedAt}
-				<div
-					class="flex items-center gap-3 rounded-[6px] border-t-[2px] border-l-[2px] border-t-[color:var(--bevel-light)] border-l-[color:var(--bevel-light)] border-b-[2px] border-r-[2px] border-b-[color:var(--bevel-dark)] border-r-[color:var(--bevel-dark)] shadow-[var(--hard-shadow-sm)] p-3 transition-opacity"
-					class:opacity-50={!achievement.unlocked}
-					style={`border-color: ${achievement.unlocked ? tierColor(achievement.tier) : 'hsl(var(--border))'}; background: ${achievement.unlocked ? tierColor(achievement.tier) + '14' : 'transparent'};`}
-				>
-					<div
-						class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
-						style={`background: ${achievement.unlocked ? tierColor(achievement.tier) + '22' : 'hsl(var(--muted))'};`}
-					>
-						<img
-							src={`/achievements/${achievement.icon}`}
-							alt={achievement.name}
-							class={`h-7 w-7 object-contain ${achievement.unlocked ? '' : 'grayscale'}`}
-						/>
-					</div>
-					<div class="min-w-0 flex-1">
-						<div class="flex flex-wrap items-center gap-1.5">
-							<span class="font-bold font-[family-name:var(--font-retro)]">{achievement.name}</span>
-							<Badge
-								variant="outline"
-								class="rounded-md text-[10px] capitalize"
-								style={`border-color: ${tierColor(achievement.tier)}; color: ${tierColor(achievement.tier)};`}
-							>
-								{achievement.tier}
-							</Badge>
-							{#if achievement.unlocked && !achievement.seenAt}
-								<Badge class="rounded-md bg-amber-500 text-[10px] text-black hover:bg-amber-500">NEW</Badge>
-							{/if}
-						</div>
-						<p class="text-muted-foreground text-sm">{achievement.description}</p>
-						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
-							{#if achievement.unlocked}
-								<span>· Unlocked {formatDate(achievement.unlockedAt)}</span>
-							{:else}
-								<span>+{achievement.coinReward.toLocaleString()} XP · Locked</span>
-							{/if}
-						</div>
-					</div>
-					{#if claimable}
+		<div class="mx-auto w-full max-w-[1100px]">
+			<div class="controls-bar">
+				<div class="filter-chips">
+					<button class="chip" class:active={activeCategory === 'all'} onclick={() => (activeCategory = 'all')}>
+						All
+					</button>
+					{#each availableCategories as cat (cat)}
 						<button
-							class="claim-btn flex-shrink-0"
-							onclick={() => claim(achievement)}
-							disabled={claiming.has(achievement.key)}
+							class="chip"
+							class:active={activeCategory === cat}
+							onclick={() => (activeCategory = cat)}
 						>
-							Claim +{achievement.coinReward.toLocaleString()}
+							{CATEGORY_LABELS[cat]}
 						</button>
-					{:else if achievement.unlocked}
-						<Badge variant="outline" class="flex-shrink-0 gap-1 text-xs">
-							Claimed
-						</Badge>
-					{/if}
+					{/each}
 				</div>
+				<label class="sort-select-wrap">
+					<span class="sort-label">Sort</span>
+					<select class="sort-select" bind:value={sortMode}>
+						{#each Object.entries(SORT_LABELS) as [value, label] (value)}
+							<option {value}>{label}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+
+			{#if claimable.length > 0}
+				<section class="mb-7">
+					<h2 class="section-heading claim-heading">
+						Ready to claim
+						<span class="section-count">{claimable.length}</span>
+					</h2>
+					<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+						{#each claimable as achievement (achievement.key)}
+							<div
+								class="plaque plaque-claim"
+								style={`--tier-metal: ${TIER_METAL[achievement.tier]}; --tier-ink: ${TIER_INK[achievement.tier]};`}
+							>
+								<div class="plaque-ribbon">{achievement.tier}</div>
+								<div class="plaque-body">
+									<img
+										src={`/achievements/${achievement.icon}`}
+										alt={achievement.name}
+										class="achievement-icon achievement-icon-lg"
+									/>
+									<div class="min-w-0 flex-1">
+										<div class="flex flex-wrap items-center gap-1.5">
+											<span class="plaque-name">{achievement.name}</span>
+											{#if !achievement.seenAt}
+												<span class="new-tag">NEW</span>
+											{/if}
+										</div>
+										<p class="plaque-desc">{achievement.description}</p>
+										<span class="plaque-meta">Unlocked {formatDate(achievement.unlockedAt)}</span>
+									</div>
+									<button
+										class="claim-btn flex-shrink-0"
+										onclick={() => claim(achievement)}
+										disabled={claiming.has(achievement.key)}
+									>
+										Claim +{achievement.coinReward.toLocaleString()}
+									</button>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</section>
+			{/if}
+
+			{#each categories as category (category.key)}
+				<section class="mb-7">
+					<h2 class="section-heading">{category.label}</h2>
+					<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+						{#each category.items as achievement (achievement.key)}
+							{@const ladderLength = achievement.family ? FAMILY_LADDER_LENGTH[achievement.family] : 0}
+							<div
+								class="plaque"
+								class:plaque-locked={!achievement.unlocked}
+								style={achievement.unlocked
+									? `--tier-metal: ${TIER_METAL[achievement.tier]}; --tier-ink: ${TIER_INK[achievement.tier]};`
+									: ''}
+							>
+								<div class="plaque-ribbon">{achievement.unlocked ? achievement.tier : 'locked'}</div>
+								<div class="plaque-body">
+									{#if achievement.icon}
+										<img
+											src={`/achievements/${achievement.icon}`}
+											alt={achievement.name}
+											class={`achievement-icon ${achievement.unlocked ? '' : 'grayscale'}`}
+										/>
+									{:else}
+										<div class="achievement-icon achievement-icon-placeholder">?</div>
+									{/if}
+									<div class="min-w-0 flex-1">
+										<span class="plaque-name">{achievement.name}</span>
+										<p class="plaque-desc">{achievement.description}</p>
+										<div class="mt-1 flex items-center gap-2">
+											<span class="plaque-meta">
+												{#if achievement.unlocked}
+													Unlocked {formatDate(achievement.unlockedAt)}
+												{:else}
+													+{achievement.coinReward.toLocaleString()} XP · Locked
+												{/if}
+											</span>
+											{#if ladderLength > 1}
+												<span class="ladder-pips" aria-hidden="true">
+													{#each Array(ladderLength) as _, i}
+														<span class="pip" class:filled={i < (achievement.level ?? 0)}></span>
+													{/each}
+												</span>
+											{/if}
+										</div>
+									</div>
+									{#if achievement.unlocked}
+										<span class="claimed-seal" title="Claimed">✓</span>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				</section>
 			{/each}
 		</div>
 	{/if}
@@ -239,7 +432,296 @@
 		font-family: var(--font-retro);
 		color: hsl(var(--muted-foreground));
 	}
-	
+
+	.controls-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		margin: 12px 4px 18px;
+	}
+	.filter-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.chip {
+		padding: 5px 12px;
+		border-radius: 999px;
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: hsl(var(--muted-foreground));
+		background: hsl(var(--muted));
+		border-top: 1px solid var(--bevel-light);
+		border-left: 1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right: 1px solid var(--bevel-dark);
+		cursor: pointer;
+		transition:
+			filter 0.12s,
+			color 0.12s,
+			background 0.12s;
+	}
+	.chip:hover {
+		filter: brightness(1.08);
+	}
+	.chip.active {
+		color: hsl(var(--primary-foreground));
+		background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+	}
+	.sort-select-wrap {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.sort-label {
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: hsl(var(--muted-foreground));
+	}
+	.sort-select {
+		padding: 5px 10px;
+		border-radius: 6px;
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		background: hsl(var(--input));
+		color: hsl(var(--foreground));
+		border-top: 1px solid var(--bevel-dark);
+		border-left: 1px solid var(--bevel-dark);
+		border-bottom: 1px solid var(--bevel-light);
+		border-right: 1px solid var(--bevel-light);
+		box-shadow: var(--inset-shadow);
+		cursor: pointer;
+	}
+
+	.section-heading {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0 0 10px 4px;
+		font-family: var(--font-retro);
+		font-size: 0.9rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: hsl(var(--muted-foreground));
+	}
+	.claim-heading {
+		color: #d9a017;
+	}
+	.section-count {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		border-radius: 999px;
+		background: #d9a017;
+		color: black;
+		font-size: 0.6875rem;
+		font-weight: 800;
+	}
+
+	/* ── Plaque card ─────────────────────────────────────────────────
+	   The generic version of this card was a flat rounded rect with a
+	   colored-tint background and a badge pill for the tier — reads as
+	   any other SaaS list row. This is a small medal/plaque instead: a
+	   diagonal ribbon banner carries the tier (or LOCKED) in the corner,
+	   a metallic gradient (reused from the nav's gold-sheen treatment,
+	   extended to silver/bronze) stands in for a flat tint, and claimed
+	   status is a wax-seal checkmark rather than another badge. */
+	.plaque {
+		position: relative;
+		overflow: hidden;
+		border-radius: 6px;
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		background: hsl(var(--muted) / 0.4);
+		box-shadow: var(--hard-shadow-sm);
+	}
+	.plaque::before {
+		/* Faint tier-metal wash across the whole card, independent of the
+		   ribbon — keeps unlocked cards from looking flat without going
+		   back to a solid color-mix tint. */
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--tier-metal, none);
+		opacity: 0.1;
+		pointer-events: none;
+	}
+	.plaque-locked {
+		opacity: 0.55;
+	}
+	.plaque-locked::before {
+		display: none;
+	}
+
+	.plaque-body {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px;
+	}
+
+	.plaque-ribbon {
+		position: absolute;
+		top: 10px;
+		right: -30px;
+		width: 130px;
+		padding: 2px 0;
+		transform: rotate(45deg);
+		text-align: center;
+		font-family: var(--font-retro);
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--tier-ink, hsl(var(--muted-foreground)));
+		background: var(--tier-metal, hsl(var(--muted)));
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+		z-index: 1;
+	}
+	.plaque-locked .plaque-ribbon {
+		color: hsl(var(--muted-foreground));
+		background: hsl(var(--muted));
+	}
+
+	.plaque-name {
+		font-weight: 700;
+		font-family: var(--font-retro);
+	}
+	.plaque-desc {
+		margin: 1px 0 0;
+		font-size: 0.8125rem;
+		color: hsl(var(--muted-foreground));
+	}
+	.plaque-meta {
+		font-size: 0.75rem;
+		color: hsl(var(--muted-foreground));
+	}
+
+	.new-tag {
+		display: inline-flex;
+		align-items: center;
+		padding: 1px 6px;
+		border-radius: 4px;
+		background: #f59e0b;
+		color: black;
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+	}
+
+	/* Ladder progress — I/II/III as filled/hollow pips instead of a
+	   redundant tier label repeated on every rung of the same family. */
+	.ladder-pips {
+		display: inline-flex;
+		gap: 3px;
+	}
+	.pip {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: hsl(var(--muted));
+		border: 1px solid var(--bevel-dark);
+	}
+	.pip.filled {
+		background: var(--tier-metal, hsl(var(--primary)));
+	}
+
+	.claimed-seal {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		background: hsl(var(--accent-green) / 0.25);
+		color: hsl(var(--accent-green));
+		font-size: 12px;
+		font-weight: 800;
+		border: 1px solid hsl(var(--accent-green) / 0.5);
+	}
+
+	/* Shared icon treatment: the art already has its own outline/border
+	   baked in, so no circular chip, background fill, or ring around it —
+	   just the image, sized consistently, with a light drop-shadow so it
+	   still separates from busy backgrounds. */
+	.achievement-icon {
+		flex-shrink: 0;
+		width: 40px;
+		height: 40px;
+		object-fit: contain;
+		filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.25));
+	}
+	.achievement-icon-lg {
+		width: 52px;
+		height: 52px;
+	}
+	.achievement-icon-placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--font-retro);
+		font-weight: 700;
+		font-size: 1.1rem;
+		color: hsl(var(--muted-foreground));
+	}
+
+	/* Hero "ready to claim" plaques: bigger, animated metallic sheen
+	   sweeping across the background, and a stronger corner glow — a few
+	   of these on screen at once is fine performance-wise, unlike
+	   animating every card in the full grid below. */
+	.plaque-claim {
+		border-width: 0;
+		box-shadow:
+			var(--hard-shadow),
+			0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+	}
+	.plaque-claim::before {
+		opacity: 0.22;
+		background-size: 220% 220%;
+		animation: plaqueSheenShift 3.6s linear infinite;
+	}
+	.plaque-claim .plaque-body {
+		padding: 14px;
+	}
+	.plaque-claim {
+		animation: plaqueGlow 2.2s ease-in-out infinite;
+	}
+
+	@keyframes plaqueSheenShift {
+		0% {
+			background-position: 0% 50%;
+		}
+		100% {
+			background-position: 200% 50%;
+		}
+	}
+	@keyframes plaqueGlow {
+		0%,
+		100% {
+			box-shadow:
+				var(--hard-shadow),
+				0 0 0 1px color-mix(in srgb, black 0%, transparent);
+		}
+		50% {
+			box-shadow:
+				var(--hard-shadow),
+				0 0 14px 2px color-mix(in srgb, white 20%, transparent);
+		}
+	}
+
 	.claim-btn {
 		display: inline-flex;
 		align-items: center;
@@ -259,6 +741,18 @@
 		cursor: pointer;
 		transition: filter 0.12s;
 	}
-	.claim-btn:hover:not(:disabled) { filter: brightness(1.08); }
-	.claim-btn:disabled { opacity: 0.6; cursor: default; }
+	.claim-btn:hover:not(:disabled) {
+		filter: brightness(1.08);
+	}
+	.claim-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.plaque-claim,
+		.plaque-claim::before {
+			animation: none;
+		}
+	}
 </style>
