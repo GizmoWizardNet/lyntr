@@ -20,7 +20,7 @@
 		seenAt: string | null;
 		claimedAt: string | null;
 	}
-	
+
 	const CATEGORY_ORDER = ['posting', 'social', 'community', 'mastery', 'secret', 'milestones'] as const;
 	type CategoryKey = (typeof CATEGORY_ORDER)[number];
 
@@ -52,6 +52,37 @@
 
 	function categoryOf(a: AchievementRow): CategoryKey {
 		return CATEGORY_BY_FAMILY_OR_KEY[a.family ?? a.key] ?? 'milestones';
+	}
+
+	type SortMode = 'progress' | 'tier' | 'alpha';
+	const SORT_LABELS: Record<SortMode, string> = {
+		progress: 'Unlocked first',
+		tier: 'Tier',
+		alpha: 'A–Z'
+	};
+
+	function tierRank(tier: AchievementTier): number {
+		return tier === 'gold' ? 0 : tier === 'silver' ? 1 : 2;
+	}
+
+	let activeCategory = $state<CategoryKey | 'all'>('all');
+	let sortMode = $state<SortMode>('progress');
+
+	function sortByMode(items: AchievementRow[], mode: SortMode): AchievementRow[] {
+		const withIndex = items.map((a, i) => ({ a, i }));
+		withIndex.sort((x, y) => {
+			if (mode === 'alpha') return x.a.name.localeCompare(y.a.name);
+			if (mode === 'tier') {
+				const diff = tierRank(x.a.tier) - tierRank(y.a.tier);
+				return diff !== 0 ? diff : x.i - y.i;
+			}
+			// 'progress': unlocked/claimed before locked, otherwise leave
+			// catalog order (i.e. family ladders) intact.
+			const rank = (r: AchievementRow) => (r.unlocked ? 0 : 1);
+			const diff = rank(x.a) - rank(y.a);
+			return diff !== 0 ? diff : x.i - y.i;
+		});
+		return withIndex.map((w) => w.a);
 	}
 
 	let achievements: AchievementRow[] = $state([]);
@@ -121,20 +152,33 @@
 		return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
-	let claimable = $derived(achievements.filter((a) => a.unlocked && !a.claimedAt));
+	let claimable = $derived(
+		sortByMode(
+			achievements.filter(
+				(a) => a.unlocked && !a.claimedAt && (activeCategory === 'all' || categoryOf(a) === activeCategory)
+			),
+			sortMode
+		)
+	);
+
+	let availableCategories = $derived.by(() => {
+		const present = new Set(achievements.map((a) => categoryOf(a)));
+		return CATEGORY_ORDER.filter((cat) => present.has(cat));
+	});
 
 	let categories = $derived.by(() => {
 		const rest = achievements.filter((a) => !(a.unlocked && !a.claimedAt));
 		const groups = new Map<CategoryKey, AchievementRow[]>();
 		for (const a of rest) {
 			const cat = categoryOf(a);
+			if (activeCategory !== 'all' && cat !== activeCategory) continue;
 			if (!groups.has(cat)) groups.set(cat, []);
 			groups.get(cat)!.push(a);
 		}
 		return CATEGORY_ORDER.filter((cat) => groups.has(cat)).map((cat) => ({
 			key: cat,
 			label: CATEGORY_LABELS[cat],
-			items: groups.get(cat)!
+			items: sortByMode(groups.get(cat)!, sortMode)
 		}));
 	});
 </script>
@@ -163,6 +207,31 @@
 		<LoadingSpinner />
 	{:else}
 		<div class="mx-auto w-full max-w-[1100px]">
+			<div class="controls-bar">
+				<div class="filter-chips">
+					<button class="chip" class:active={activeCategory === 'all'} onclick={() => (activeCategory = 'all')}>
+						All
+					</button>
+					{#each availableCategories as cat (cat)}
+						<button
+							class="chip"
+							class:active={activeCategory === cat}
+							onclick={() => (activeCategory = cat)}
+						>
+							{CATEGORY_LABELS[cat]}
+						</button>
+					{/each}
+				</div>
+				<label class="sort-select-wrap">
+					<span class="sort-label">Sort</span>
+					<select class="sort-select" bind:value={sortMode}>
+						{#each Object.entries(SORT_LABELS) as [value, label] (value)}
+							<option {value}>{label}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+
 			{#if claimable.length > 0}
 				<section class="mb-6">
 					<h2 class="section-heading claim-heading">
@@ -310,6 +379,71 @@
 		color: hsl(var(--muted-foreground));
 	}
 
+	.controls-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		margin: 12px 4px 18px;
+	}
+	.filter-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.chip {
+		padding: 5px 12px;
+		border-radius: 999px;
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: hsl(var(--muted-foreground));
+		background: hsl(var(--muted));
+		border-top: 1px solid var(--bevel-light);
+		border-left: 1px solid var(--bevel-light);
+		border-bottom: 1px solid var(--bevel-dark);
+		border-right: 1px solid var(--bevel-dark);
+		cursor: pointer;
+		transition:
+			filter 0.12s,
+			color 0.12s,
+			background 0.12s;
+	}
+	.chip:hover {
+		filter: brightness(1.08);
+	}
+	.chip.active {
+		color: hsl(var(--primary-foreground));
+		background: linear-gradient(to bottom, hsl(var(--primary-top)), hsl(var(--primary)));
+	}
+	.sort-select-wrap {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.sort-label {
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: hsl(var(--muted-foreground));
+	}
+	.sort-select {
+		padding: 5px 10px;
+		border-radius: 6px;
+		font-family: var(--font-retro);
+		font-size: 0.75rem;
+		font-weight: 600;
+		background: hsl(var(--input));
+		color: hsl(var(--foreground));
+		border-top: 1px solid var(--bevel-dark);
+		border-left: 1px solid var(--bevel-dark);
+		border-bottom: 1px solid var(--bevel-light);
+		border-right: 1px solid var(--bevel-light);
+		box-shadow: var(--inset-shadow);
+		cursor: pointer;
+	}
+
 	.section-heading {
 		display: flex;
 		align-items: center;
@@ -338,6 +472,7 @@
 		font-size: 0.6875rem;
 		font-weight: 800;
 	}
+
 	.achievement-icon {
 		flex-shrink: 0;
 		width: 40px;
