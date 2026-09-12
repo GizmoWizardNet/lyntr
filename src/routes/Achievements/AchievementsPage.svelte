@@ -20,11 +20,7 @@
 		seenAt: string | null;
 		claimedAt: string | null;
 	}
-
-	// Groups every achievement (by family, or by key for standalone ones)
-	// into a handful of labeled categories, and fixes the order those
-	// categories render in. Anything not listed falls back to 'milestones'
-	// so a future achievement never silently disappears from the page.
+	
 	const CATEGORY_ORDER = ['posting', 'social', 'community', 'mastery', 'secret', 'milestones'] as const;
 	type CategoryKey = (typeof CATEGORY_ORDER)[number];
 
@@ -58,10 +54,6 @@
 		return CATEGORY_BY_FAMILY_OR_KEY[a.family ?? a.key] ?? 'milestones';
 	}
 
-	// Ladder length per family (e.g. "yapper" has 3 rungs — I/II/III),
-	// derived once from the full static catalog so the pip row under a
-	// card can render "which rung, out of how many" instead of just a
-	// tier word.
 	const FAMILY_LADDER_LENGTH: Record<string, number> = (() => {
 		const lengths: Record<string, number> = {};
 		for (const def of ACHIEVEMENT_CATALOG) {
@@ -71,9 +63,6 @@
 		return lengths;
 	})();
 
-	// Metallic multi-stop gradients standing in for the flat tier colour —
-	// this is the same "brushed medal" recipe as the nav's gold-sheen
-	// badge, just extended to silver/bronze too.
 	const TIER_METAL: Record<AchievementTier, string> = {
 		gold: 'linear-gradient(115deg, #a86a00 0%, #ffd76a 20%, #fff6d6 35%, #e8b400 50%, #ffe98a 65%, #a86a00 85%, #ffd76a 100%)',
 		silver:
@@ -150,9 +139,6 @@
 			});
 
 			if (response.ok) {
-				// Optimistic-ish: just patch the one row rather than a full
-				// refetch — the Coin Pop toast (fired server-side over WS)
-				// handles showing the actual +XP pickup.
 				achievements = achievements.map((a) =>
 					a.key === achievement.key ? { ...a, claimedAt: new Date().toISOString() } : a
 				);
@@ -179,9 +165,6 @@
 
 	onMount(async () => {
 		await load();
-		// Clears the gold badge — mirrors Notifications.svelte's PATCH call
-		// on mount. Also zero out the shared store immediately so the nav
-		// badge disappears without waiting on a refetch.
 		fetch('/api/achievements/unseen', { method: 'PATCH' }).catch(() => {});
 		$unseenAchievements = 0;
 	});
@@ -191,9 +174,6 @@
 		return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
-	// The whole point of this split: unlocked-but-unclaimed achievements
-	// get pulled out into their own unmissable section up top instead of
-	// being just another card sorted-first in a wall of identical ones.
 	let claimable = $derived(
 		sortByMode(
 			achievements.filter(
@@ -203,19 +183,11 @@
 		)
 	);
 
-	// Every category that actually has achievements in it, in fixed
-	// display order — used both to render the grouped sections below and
-	// to populate the filter chips (so a chip never appears for an empty
-	// category).
 	let availableCategories = $derived.by(() => {
 		const present = new Set(achievements.map((a) => categoryOf(a)));
 		return CATEGORY_ORDER.filter((cat) => present.has(cat));
 	});
 
-	// Everything else (claimed + locked) grouped by category, keeping
-	// each family's catalog order intact so ladders (Yapper I/II/III)
-	// still read top-to-bottom as a progression — unless the person picks
-	// a different sort, in which case that takes over.
 	let categories = $derived.by(() => {
 		const rest = achievements.filter((a) => !(a.unlocked && !a.claimedAt));
 		const groups = new Map<CategoryKey, AchievementRow[]>();
@@ -350,7 +322,12 @@
 										<div class="achievement-icon achievement-icon-placeholder">?</div>
 									{/if}
 									<div class="min-w-0 flex-1">
-										<span class="plaque-name">{achievement.name}</span>
+										<div class="flex items-center gap-1.5">
+											<span class="plaque-name">{achievement.name}</span>
+											{#if achievement.unlocked}
+												<span class="claimed-seal" title="Claimed">✓</span>
+											{/if}
+										</div>
 										<p class="plaque-desc">{achievement.description}</p>
 										<div class="mt-1 flex items-center gap-2">
 											<span class="plaque-meta">
@@ -369,9 +346,6 @@
 											{/if}
 										</div>
 									</div>
-									{#if achievement.unlocked}
-										<span class="claimed-seal" title="Claimed">✓</span>
-									{/if}
 								</div>
 							</div>
 						{/each}
@@ -405,8 +379,6 @@
 		font-family: var(--font-retro);
 	}
 
-	/* Retro inset trough + gloss fill bar, matching the IQ badge / "new
-	   posts" pill treatment elsewhere, instead of shadcn's flat Progress. */
 	.retro-progress-track {
 		flex: 1;
 		height: 12px;
@@ -527,14 +499,6 @@
 		font-weight: 800;
 	}
 
-	/* ── Plaque card ─────────────────────────────────────────────────
-	   The generic version of this card was a flat rounded rect with a
-	   colored-tint background and a badge pill for the tier — reads as
-	   any other SaaS list row. This is a small medal/plaque instead: a
-	   diagonal ribbon banner carries the tier (or LOCKED) in the corner,
-	   a metallic gradient (reused from the nav's gold-sheen treatment,
-	   extended to silver/bronze) stands in for a flat tint, and claimed
-	   status is a wax-seal checkmark rather than another badge. */
 	.plaque {
 		position: relative;
 		overflow: hidden;
@@ -547,9 +511,6 @@
 		box-shadow: var(--hard-shadow-sm);
 	}
 	.plaque::before {
-		/* Faint tier-metal wash across the whole card, independent of the
-		   ribbon — keeps unlocked cards from looking flat without going
-		   back to a solid color-mix tint. */
 		content: '';
 		position: absolute;
 		inset: 0;
@@ -621,8 +582,6 @@
 		letter-spacing: 0.04em;
 	}
 
-	/* Ladder progress — I/II/III as filled/hollow pips instead of a
-	   redundant tier label repeated on every rung of the same family. */
 	.ladder-pips {
 		display: inline-flex;
 		gap: 3px;
@@ -640,23 +599,19 @@
 
 	.claimed-seal {
 		flex-shrink: 0;
-		display: flex;
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 22px;
-		height: 22px;
+		width: 16px;
+		height: 16px;
 		border-radius: 50%;
 		background: hsl(var(--accent-green) / 0.25);
 		color: hsl(var(--accent-green));
-		font-size: 12px;
+		font-size: 10px;
 		font-weight: 800;
 		border: 1px solid hsl(var(--accent-green) / 0.5);
 	}
 
-	/* Shared icon treatment: the art already has its own outline/border
-	   baked in, so no circular chip, background fill, or ring around it —
-	   just the image, sized consistently, with a light drop-shadow so it
-	   still separates from busy backgrounds. */
 	.achievement-icon {
 		flex-shrink: 0;
 		width: 40px;
@@ -677,11 +632,6 @@
 		font-size: 1.1rem;
 		color: hsl(var(--muted-foreground));
 	}
-
-	/* Hero "ready to claim" plaques: bigger, animated metallic sheen
-	   sweeping across the background, and a stronger corner glow — a few
-	   of these on screen at once is fine performance-wise, unlike
-	   animating every card in the full grid below. */
 	.plaque-claim {
 		border-width: 0;
 		box-shadow:
