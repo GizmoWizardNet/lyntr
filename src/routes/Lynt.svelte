@@ -142,6 +142,10 @@
 	let repostContent = $state('');
 	let likersHover = $state(false);
 
+	// Lyntskin: always visible but frozen on a still frame; the real GIF
+	// underneath only becomes visible (and so only appears to "play") on
+	// hover. See $lib/lyntskinFreezeFrame for why this needs a captured
+	// PNG rather than just a CSS opacity toggle.
 	let lyntskinFreezeFrameUrl: string | null = $state(null);
 	$effect(() => {
 		const skin = lyntskinKey ? LYNTSKIN_BY_KEY[lyntskinKey] : null;
@@ -475,6 +479,11 @@
 		overflow: hidden;
 		opacity: 0.16;
 		pointer-events: none;
+		transition: opacity 0.35s ease;
+	}
+
+	.lynt-card:hover .lyntskin-bg {
+		opacity: 0.45;
 	}
 
 	.lyntskin-gif,
