@@ -321,8 +321,8 @@
 	}
 
 	.panel-pin {
-		width: 16px;
-		height: 16px;
+		width: 22px;
+		height: 22px;
 		flex-shrink: 0;
 		object-fit: contain;
 		filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));

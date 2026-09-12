@@ -6,11 +6,13 @@ export interface LyntskinDef {
 }
 
 export const LYNTSKIN_CATALOG: LyntskinDef[] = [
+	{ key: 'blueprint', name: 'Blueprint', price: 150, file: '/lyntskins/blueprint.gif' },
 	{ key: 'game_loop', name: 'Game Loop', price: 300, file: '/lyntskins/game_loop.gif' },
 	{ key: 'normal_city', name: 'Normal City', price: 500, file: '/lyntskins/normal_city.gif' },
 	{ key: 'peaceful_japan', name: 'Peaceful Japan', price: 1000, file: '/lyntskins/peaceful_japan.gif' },
 	{ key: 'silent_night', name: 'Silent Night', price: 1300, file: '/lyntskins/silent_night.gif' },
 	{ key: 'mario', name: 'Mario', price: 2000, file: '/lyntskins/mario.gif' },
+	{ key: 'homebrew', name: 'Homebrew', price: 1500, file: '/lyntskins/homebrew.gif' },
 	{ key: 'elite_city', name: 'Elite City', price: 5000, file: '/lyntskins/elite_city.gif' }
 ];
 
