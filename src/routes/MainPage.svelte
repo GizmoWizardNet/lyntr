@@ -69,17 +69,11 @@
 	let referencedLynts: FeedItem[] = $state([]);
 	let loadingComments = $state(false);
 
-	// Falls back to 'For you' if the person hasn't set a platform default,
-	// or if the tab it's set to isn't one 'type' actually recognizes
-	// (defensive — e.g. a tab getting renamed/removed later).
 	const VALID_TABS = ['For you', 'New', 'Following', 'Bookmarked'];
 	let currentTab = $state(default_feed && VALID_TABS.includes(default_feed) ? default_feed : 'For you');
-	// IQ filter shared visually with the Scrollables page — 0 means "off".
 	let minIqFilter = $state(0);
 	const tabs = ['For you', 'Following', 'New', 'Bookmarked'];
 
-	// ── WebSocket ──────────────────────────────────────────────────
-	// Pill that appears when new lynts arrive on non-New tabs
 	let newLyntsAvailable = $state(false);
 	let newLyntCount = $state(0);
 	let wsUnsubscribers: Array<() => void> = [];
@@ -91,7 +85,6 @@
 			wsClient.on('_connected', () => { $wsConnected = true; }),
 			wsClient.on('_disconnected', () => { $wsConnected = false; }),
 
-			// ── Presence ─────────────────────────────────────────
 			wsClient.on('presence_init', (data) => {
 				onlineUsers.init(data.onlineUserIds);
 			}),
@@ -503,7 +496,7 @@
 
 			<!-- Main content — scrolls independently above the fixed bottom nav -->
 			<div class="flex h-full w-full flex-col items-center gap-1 overflow-hidden pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:flex-row md:items-start md:pb-0 {page === 'scrollables' ? 'max-md:!pb-0' : ''}">
-				<div class="flex h-full w-full max-w-[600px] flex-col overflow-hidden px-3 md:px-1 {lyntOpened && selectedLynt ? 'hidden md:flex' : ''} {page === 'forum' ? 'md:max-w-[900px]' : ''} {page === 'messages' ? 'md:max-w-[700px]' : ''} {page === 'scrollables' ? '!max-w-[480px] !px-0' : ''}">
+				<div class="flex h-full w-full max-w-[600px] flex-col overflow-hidden px-3 md:px-1 {lyntOpened && selectedLynt ? 'hidden md:flex' : ''} {page === 'forum' ? 'md:max-w-[900px]' : ''} {page === 'messages' ? 'md:max-w-[700px]' : ''} {page === 'scrollables' ? '!max-w-[480px] !px-0' : ''} {page === 'achievements' ? 'md:max-w-[1150px]' : ''}">
 					{#if page === 'search'}
 						<Search userId={id} {handleLyntClick} />
 					{:else if page === 'forum'}
