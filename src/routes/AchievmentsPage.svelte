@@ -2,8 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
-	import { Badge } from '@/components/ui/badge';
-	import { tierColor, type AchievementTier } from '$lib/achievements';
+	import { ACHIEVEMENT_CATALOG, type AchievementTier } from '$lib/achievements';
 	import { unseenAchievements } from '../stores';
 	import { celebrateAchievementClaim } from '$lib/achievementCelebration';
 
@@ -15,12 +14,14 @@
 		coinReward: number;
 		icon: string;
 		family?: string;
+		level?: number;
 		unlocked: boolean;
 		unlockedAt: string | null;
 		seenAt: string | null;
 		claimedAt: string | null;
 	}
 
+	
 	const CATEGORY_ORDER = ['posting', 'social', 'community', 'mastery', 'secret', 'milestones'] as const;
 	type CategoryKey = (typeof CATEGORY_ORDER)[number];
 
@@ -53,6 +54,28 @@
 	function categoryOf(a: AchievementRow): CategoryKey {
 		return CATEGORY_BY_FAMILY_OR_KEY[a.family ?? a.key] ?? 'milestones';
 	}
+
+	const FAMILY_LADDER_LENGTH: Record<string, number> = (() => {
+		const lengths: Record<string, number> = {};
+		for (const def of ACHIEVEMENT_CATALOG) {
+			if (!def.family) continue;
+			lengths[def.family] = Math.max(lengths[def.family] ?? 0, def.level ?? 1);
+		}
+		return lengths;
+	})();
+
+	const TIER_METAL: Record<AchievementTier, string> = {
+		gold: 'linear-gradient(115deg, #a86a00 0%, #ffd76a 20%, #fff6d6 35%, #e8b400 50%, #ffe98a 65%, #a86a00 85%, #ffd76a 100%)',
+		silver:
+			'linear-gradient(115deg, #6b7280 0%, #e5e7eb 22%, #ffffff 38%, #9ca3af 55%, #e5e7eb 75%, #6b7280 100%)',
+		bronze:
+			'linear-gradient(115deg, #7a4a20 0%, #d9975a 22%, #f0c896 38%, #b8804f 55%, #d9975a 75%, #7a4a20 100%)'
+	};
+	const TIER_INK: Record<AchievementTier, string> = {
+		gold: '#3a2400',
+		silver: '#1f2430',
+		bronze: '#2e1a0a'
+	};
 
 	type SortMode = 'progress' | 'tier' | 'alpha';
 	const SORT_LABELS: Record<SortMode, string> = {
@@ -143,6 +166,9 @@
 
 	onMount(async () => {
 		await load();
+		// Clears the gold badge — mirrors Notifications.svelte's PATCH call
+		// on mount. Also zero out the shared store immediately so the nav
+		// badge disappears without waiting on a refetch.
 		fetch('/api/achievements/unseen', { method: 'PATCH' }).catch(() => {});
 		$unseenAchievements = 0;
 	});
@@ -233,7 +259,7 @@
 			</div>
 
 			{#if claimable.length > 0}
-				<section class="mb-6">
+				<section class="mb-7">
 					<h2 class="section-heading claim-heading">
 						Ready to claim
 						<span class="section-count">{claimable.length}</span>
@@ -241,38 +267,34 @@
 					<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
 						{#each claimable as achievement (achievement.key)}
 							<div
-								class="claim-card"
-								style={`--tier-color: ${tierColor(achievement.tier)};`}
+								class="plaque plaque-claim"
+								style={`--tier-metal: ${TIER_METAL[achievement.tier]}; --tier-ink: ${TIER_INK[achievement.tier]};`}
 							>
-								<img
-									src={`/achievements/${achievement.icon}`}
-									alt={achievement.name}
-									class="achievement-icon achievement-icon-lg"
-								/>
-								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-1.5">
-										<span class="font-bold font-[family-name:var(--font-retro)]">{achievement.name}</span>
-										<Badge
-											variant="outline"
-											class="rounded-md text-[10px] capitalize"
-											style={`border-color: ${tierColor(achievement.tier)}; color: ${tierColor(achievement.tier)};`}
-										>
-											{achievement.tier}
-										</Badge>
-										{#if !achievement.seenAt}
-											<Badge class="rounded-md bg-amber-500 text-[10px] text-black hover:bg-amber-500">NEW</Badge>
-										{/if}
+								<div class="plaque-ribbon">{achievement.tier}</div>
+								<div class="plaque-body">
+									<img
+										src={`/achievements/${achievement.icon}`}
+										alt={achievement.name}
+										class="achievement-icon achievement-icon-lg"
+									/>
+									<div class="min-w-0 flex-1">
+										<div class="flex flex-wrap items-center gap-1.5">
+											<span class="plaque-name">{achievement.name}</span>
+											{#if !achievement.seenAt}
+												<span class="new-tag">NEW</span>
+											{/if}
+										</div>
+										<p class="plaque-desc">{achievement.description}</p>
+										<span class="plaque-meta">Unlocked {formatDate(achievement.unlockedAt)}</span>
 									</div>
-									<p class="text-muted-foreground text-sm">{achievement.description}</p>
-									<span class="text-muted-foreground text-xs">Unlocked {formatDate(achievement.unlockedAt)}</span>
+									<button
+										class="claim-btn flex-shrink-0"
+										onclick={() => claim(achievement)}
+										disabled={claiming.has(achievement.key)}
+									>
+										Claim +{achievement.coinReward.toLocaleString()}
+									</button>
 								</div>
-								<button
-									class="claim-btn flex-shrink-0"
-									onclick={() => claim(achievement)}
-									disabled={claiming.has(achievement.key)}
-								>
-									Claim +{achievement.coinReward.toLocaleString()}
-								</button>
 							</div>
 						{/each}
 					</div>
@@ -280,47 +302,53 @@
 			{/if}
 
 			{#each categories as category (category.key)}
-				<section class="mb-6">
+				<section class="mb-7">
 					<h2 class="section-heading">{category.label}</h2>
 					<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
 						{#each category.items as achievement (achievement.key)}
+							{@const ladderLength = achievement.family ? FAMILY_LADDER_LENGTH[achievement.family] : 0}
 							<div
-								class="achievement-card"
-								class:locked={!achievement.unlocked}
-								style={`--tier-color: ${achievement.unlocked ? tierColor(achievement.tier) : 'hsl(var(--border))'};`}
+								class="plaque"
+								class:plaque-locked={!achievement.unlocked}
+								style={achievement.unlocked
+									? `--tier-metal: ${TIER_METAL[achievement.tier]}; --tier-ink: ${TIER_INK[achievement.tier]};`
+									: ''}
 							>
-								{#if achievement.icon}
-									<img
-										src={`/achievements/${achievement.icon}`}
-										alt={achievement.name}
-										class={`achievement-icon ${achievement.unlocked ? '' : 'grayscale'}`}
-									/>
-								{:else}
-									<div class="achievement-icon achievement-icon-placeholder">?</div>
-								{/if}
-								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-1.5">
-										<span class="font-bold font-[family-name:var(--font-retro)]">{achievement.name}</span>
-										<Badge
-											variant="outline"
-											class="rounded-md text-[10px] capitalize"
-											style={`border-color: ${tierColor(achievement.tier)}; color: ${tierColor(achievement.tier)};`}
-										>
-											{achievement.tier}
-										</Badge>
+								<div class="plaque-ribbon">{achievement.unlocked ? achievement.tier : 'locked'}</div>
+								<div class="plaque-body">
+									{#if achievement.icon}
+										<img
+											src={`/achievements/${achievement.icon}`}
+											alt={achievement.name}
+											class={`achievement-icon ${achievement.unlocked ? '' : 'grayscale'}`}
+										/>
+									{:else}
+										<div class="achievement-icon achievement-icon-placeholder">?</div>
+									{/if}
+									<div class="min-w-0 flex-1">
+										<span class="plaque-name">{achievement.name}</span>
+										<p class="plaque-desc">{achievement.description}</p>
+										<div class="mt-1 flex items-center gap-2">
+											<span class="plaque-meta">
+												{#if achievement.unlocked}
+													Unlocked {formatDate(achievement.unlockedAt)}
+												{:else}
+													+{achievement.coinReward.toLocaleString()} XP · Locked
+												{/if}
+											</span>
+											{#if ladderLength > 1}
+												<span class="ladder-pips" aria-hidden="true">
+													{#each Array(ladderLength) as _, i}
+														<span class="pip" class:filled={i < (achievement.level ?? 0)}></span>
+													{/each}
+												</span>
+											{/if}
+										</div>
 									</div>
-									<p class="text-muted-foreground text-sm">{achievement.description}</p>
-									<div class="text-muted-foreground mt-1 text-xs">
-										{#if achievement.unlocked}
-											Unlocked {formatDate(achievement.unlockedAt)}
-										{:else}
-											+{achievement.coinReward.toLocaleString()} XP · Locked
-										{/if}
-									</div>
+									{#if achievement.unlocked}
+										<span class="claimed-seal" title="Claimed">✓</span>
+									{/if}
 								</div>
-								{#if achievement.unlocked}
-									<Badge variant="outline" class="flex-shrink-0 gap-1 text-xs">Claimed</Badge>
-								{/if}
 							</div>
 						{/each}
 					</div>
@@ -473,6 +501,119 @@
 		font-weight: 800;
 	}
 
+	.plaque {
+		position: relative;
+		overflow: hidden;
+		border-radius: 6px;
+		border-top: 2px solid var(--bevel-light);
+		border-left: 2px solid var(--bevel-light);
+		border-bottom: 2px solid var(--bevel-dark);
+		border-right: 2px solid var(--bevel-dark);
+		background: hsl(var(--muted) / 0.4);
+		box-shadow: var(--hard-shadow-sm);
+	}
+	.plaque::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--tier-metal, none);
+		opacity: 0.1;
+		pointer-events: none;
+	}
+	.plaque-locked {
+		opacity: 0.55;
+	}
+	.plaque-locked::before {
+		display: none;
+	}
+
+	.plaque-body {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px;
+	}
+
+	.plaque-ribbon {
+		position: absolute;
+		top: 10px;
+		right: -30px;
+		width: 130px;
+		padding: 2px 0;
+		transform: rotate(45deg);
+		text-align: center;
+		font-family: var(--font-retro);
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--tier-ink, hsl(var(--muted-foreground)));
+		background: var(--tier-metal, hsl(var(--muted)));
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+		z-index: 1;
+	}
+	.plaque-locked .plaque-ribbon {
+		color: hsl(var(--muted-foreground));
+		background: hsl(var(--muted));
+	}
+
+	.plaque-name {
+		font-weight: 700;
+		font-family: var(--font-retro);
+	}
+	.plaque-desc {
+		margin: 1px 0 0;
+		font-size: 0.8125rem;
+		color: hsl(var(--muted-foreground));
+	}
+	.plaque-meta {
+		font-size: 0.75rem;
+		color: hsl(var(--muted-foreground));
+	}
+
+	.new-tag {
+		display: inline-flex;
+		align-items: center;
+		padding: 1px 6px;
+		border-radius: 4px;
+		background: #f59e0b;
+		color: black;
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+	}
+
+	.ladder-pips {
+		display: inline-flex;
+		gap: 3px;
+	}
+	.pip {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: hsl(var(--muted));
+		border: 1px solid var(--bevel-dark);
+	}
+	.pip.filled {
+		background: var(--tier-metal, hsl(var(--primary)));
+	}
+
+	.claimed-seal {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		background: hsl(var(--accent-green) / 0.25);
+		color: hsl(var(--accent-green));
+		font-size: 12px;
+		font-weight: 800;
+		border: 1px solid hsl(var(--accent-green) / 0.5);
+	}
+
 	.achievement-icon {
 		flex-shrink: 0;
 		width: 40px;
@@ -494,50 +635,43 @@
 		color: hsl(var(--muted-foreground));
 	}
 
-	.achievement-card {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 12px;
-		border-radius: 6px;
-		border-top: 2px solid var(--bevel-light);
-		border-left: 2px solid var(--bevel-light);
-		border-bottom: 2px solid var(--bevel-dark);
-		border-right: 2px solid var(--bevel-dark);
-		border-color: var(--tier-color);
-		background: color-mix(in srgb, var(--tier-color) 8%, transparent);
-		box-shadow: var(--hard-shadow-sm);
-	}
-	.achievement-card.locked {
-		opacity: 0.5;
-		background: transparent;
-	}
-
-	.claim-card {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		padding: 14px;
-		border-radius: 8px;
-		border: 2px solid var(--tier-color);
-		background: color-mix(in srgb, var(--tier-color) 14%, transparent);
+	.plaque-claim {
+		border-width: 0;
 		box-shadow:
 			var(--hard-shadow),
-			0 0 0 1px color-mix(in srgb, var(--tier-color) 40%, transparent);
-		animation: claim-glow 2.2s ease-in-out infinite;
+			0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+	}
+	.plaque-claim::before {
+		opacity: 0.22;
+		background-size: 220% 220%;
+		animation: plaqueSheenShift 3.6s linear infinite;
+	}
+	.plaque-claim .plaque-body {
+		padding: 14px;
+	}
+	.plaque-claim {
+		animation: plaqueGlow 2.2s ease-in-out infinite;
 	}
 
-	@keyframes claim-glow {
+	@keyframes plaqueSheenShift {
+		0% {
+			background-position: 0% 50%;
+		}
+		100% {
+			background-position: 200% 50%;
+		}
+	}
+	@keyframes plaqueGlow {
 		0%,
 		100% {
 			box-shadow:
 				var(--hard-shadow),
-				0 0 0 1px color-mix(in srgb, var(--tier-color) 40%, transparent);
+				0 0 0 1px color-mix(in srgb, black 0%, transparent);
 		}
 		50% {
 			box-shadow:
 				var(--hard-shadow),
-				0 0 14px 2px color-mix(in srgb, var(--tier-color) 55%, transparent);
+				0 0 14px 2px color-mix(in srgb, white 20%, transparent);
 		}
 	}
 
@@ -569,7 +703,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.claim-card {
+		.plaque-claim,
+		.plaque-claim::before {
 			animation: none;
 		}
 	}
