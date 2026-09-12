@@ -1,11 +1,4 @@
 <script lang="ts">
-	// ── Achievement Pop ───────────────────────────────────────────
-	// evaluateAchievements() (src/lib/server/achievements.ts) broadcasts an
-	// `achievement_unlocked` WS event whenever it unlocks something new —
-	// this listens for those and shows a bigger, tier-colored celebration
-	// separate from the regular Coin Pop toast (which still fires too,
-	// since the achievement bonus goes through the same `lyntcoins_awarded`
-	// event as everything else). Mounted once in MainPage.svelte.
 	import { onDestroy, onMount } from 'svelte';
 	import { wsClient } from '$lib/ws-client';
 	import { playCoinChime } from '$lib/sound';
@@ -29,9 +22,6 @@
 	function handleUnlock(data: UnlockEvent) {
 		const entry: PopEntry = { ...data, id: nextId++ };
 		pops = [...pops, entry];
-		// Reuses the coin chime — an achievement unlock is, among other
-		// things, a Community XP pickup, so the same sound cue keeps the
-		// two feeling like one consistent reward system rather than two.
 		playCoinChime();
 
 		setTimeout(() => {

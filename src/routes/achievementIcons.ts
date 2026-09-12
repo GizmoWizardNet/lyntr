@@ -1,8 +1,3 @@
-// Maps the string icon names in the (isomorphic, server-safe) achievement
-// catalog (src/lib/achievements.ts) to actual hugeicons components. Kept
-// as an explicit lookup, not a dynamic/wildcard import, so bundlers can
-// tree-shake to just the icons actually used here instead of pulling in
-// the entire hugeicons set.
 import {
 	Rocket01Icon,
 	MessageMultiple01Icon,
