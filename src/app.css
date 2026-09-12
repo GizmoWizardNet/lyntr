@@ -46,24 +46,16 @@
     --bevel-top:           rgba(255, 240, 210, 0.65);
     --grid-color:          rgba(100, 70, 20, 0.055);
 
-    /* ── Old-Roblox chunky 3D bevel: hard light/dark edges, no blur ── */
     --bevel-light:         rgba(255, 248, 225, 0.9);
     --bevel-dark:          rgba(60, 30, 0, 0.55);
     --hard-shadow:         2px 2px 0 rgba(60, 30, 0, 0.35);
     --hard-shadow-sm:      1px 1px 0 rgba(60, 30, 0, 0.3);
     --crt-stripe:          rgba(60, 30, 0, 0.05);
 
-    /* Header gradient */
     --header-bg:           linear-gradient(180deg, hsl(48 30% 91%) 0%, hsl(44 24% 86%) 100%);
     --header-border-top:   rgba(255, 248, 230, 0.9);
     --float-glow:          0 8px 24px -6px rgba(60, 30, 0, 0.35);
 
-    /* Aged/desaturated accent palette for categorical color-coding (HTTP
-       method badges, feature icons, etc). Exists because those spots kept
-       reaching for raw Tailwind bg-sky-500/text-emerald-500/etc, which read
-       as a modern SaaS dashboard next to the sepia/bevel theme everywhere
-       else — same hues, pulled down in saturation/lightness to sit in the
-       same aged-paper family as --primary. */
     --accent-blue:         205 40% 38%;
     --accent-green:        140 28% 30%;
     --accent-amber:        36 55% 38%;
@@ -130,18 +122,9 @@
     --accent-rose:         5 50% 60%;
     --accent-yellow:       42 55% 58%;
 
-    /* Dark-mode aero — this is the look from the reference screenshots:
-       near-black translucent glass, a thin bright top edge, soft dark
-       drop shadow, faint cool-white gloss sheen top-to-mid. */
     --aero-surface:        rgba(255, 255, 255, 0.06);
     --aero-surface-hover:  rgba(255, 255, 255, 0.12);
     --aero-border-top:     rgba(255, 255, 255, 0.22);
-    /* Was rgba(0, 0, 0, 0.55) — a near-black bottom edge on a near-black
-       page background is invisible, so the pill's outline only ever
-       showed on the top/sides and looked cut off/unfinished along the
-       bottom arc. Dim white (still visibly darker than the top edge, so
-       the light-top/dark-bottom bevel hierarchy is preserved) instead of
-       black keeps it visible against the dark page regardless. */
     --aero-border-bottom:  rgba(255, 255, 255, 0.08);
     --aero-shine:          linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0) 55%);
     --aero-shadow:         0 2px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
@@ -153,7 +136,6 @@
 @layer base {
   * { @apply border-border; }
 
-  /* ── Old-Roblox tiled texture: diagonal hatch, bolder than a blueprint grid ── */
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-retro);
@@ -171,11 +153,6 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   NAV PANEL — Glossy structural ribbon
-   ════════════════════════════════════════════════ */
-
-/* The sidebar nav container */
 .inline-flex.w-full.flex-row.items-start.gap-2.rounded-\[12px\].bg-border {
   background: var(--header-bg) !important;
   border-top: 2px solid var(--bevel-light) !important;
@@ -186,11 +163,6 @@
   border-radius: 6px !important;
 }
 
-/* ════════════════════════════════════════════════
-   MOBILE BOTTOM NAV — same raised bevel ribbon as
-   the desktop sidebar, floating clear of the edge
-   so it reads as a physical object, not a flat bar
-   ════════════════════════════════════════════════ */
 .mobile-nav-ribbon {
   background: var(--header-bg);
   border-top: 2px solid var(--bevel-light);
@@ -207,9 +179,6 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   NAV BUTTONS — Recessed interactive pill
-   ════════════════════════════════════════════════ */
 .shit {
   transition:
     filter 0.1s ease-in-out,
@@ -226,10 +195,6 @@
 
 .shit:hover {
   filter: none !important;
-  /* Restored from the original repo (face-hh/lyntr) — this got flattened
-     to `transform: none` at some point during the aero/bevel redesign,
-     which also killed it a second time via a redundant override in
-     OutlineButton.svelte's own scoped styles (removed alongside this). */
   transform: rotate(3deg) !important;
   background: hsl(var(--primary) / 0.12) !important;
   box-shadow: var(--inset-shadow) !important;
@@ -246,9 +211,6 @@
   box-shadow: var(--hard-shadow-sm) !important;
 }
 
-/* ════════════════════════════════════════════════
-   PRIMARY BUTTON — High-Gloss Pill
-   ════════════════════════════════════════════════ */
 button.bg-primary,
 .btn-gloss,
 [data-button-root][class*="bg-primary"] {
@@ -279,7 +241,6 @@ button.bg-primary:active,
   transform: translate(1px, 1px) !important;
 }
 
-/* shadcn Button component default variant */
 [class*="buttonVariants"],
 .inline-flex.items-center.justify-center[class*="bg-primary"] {
   background: linear-gradient(
@@ -294,9 +255,6 @@ button.bg-primary:active,
   box-shadow: var(--hard-shadow) !important;
 }
 
-/* ════════════════════════════════════════════════
-   POST BUTTON (full-width in sidebar)
-   ════════════════════════════════════════════════ */
 .w-full.bg-primary,
 button[class*="w-full"][class*="bg-primary"] {
   background: linear-gradient(
@@ -316,13 +274,6 @@ button[class*="w-full"][class*="bg-primary"] {
   font-size: 0.8rem;
 }
 
-/* ════════════════════════════════════════════════
-   NATIVE <select> — recessed well, matches Input
-   exactly (same bevel direction/inset-shadow) so a
-   raw <select> dropped into a page (admin/devcycle
-   was the offender) doesn't read as an unstyled
-   browser default next to everything around it.
-   ════════════════════════════════════════════════ */
 select {
   border-radius: var(--radius-sm) !important;
   background: hsl(var(--input));
@@ -334,9 +285,6 @@ select {
   box-shadow: var(--inset-shadow) !important;
 }
 
-/* ════════════════════════════════════════════════
-   LYNT CARDS — Recessed content wells
-   ════════════════════════════════════════════════ */
 .bg-lynt-foreground,
 .lynt-card {
   box-shadow: var(--inset-shadow) !important;
@@ -351,7 +299,6 @@ select {
   overflow: hidden !important;
 }
 
-/* On hover: pop OUT of the recess like a pressed-button release, not a soft float */
 .bg-lynt-foreground:hover,
 .lynt-card:hover {
   background: hsl(var(--card)) !important;

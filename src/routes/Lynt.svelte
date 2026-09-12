@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { stopPropagation } from 'svelte/legacy';
 	import { LYNTSKIN_BY_KEY } from '$lib/lyntskins';
+	import { getLyntskinFreezeFrame } from '$lib/lyntskinFreezeFrame';
 
 	import { cdnUrl } from './stores';
 	import { Separator } from '@/components/ui/separator';
@@ -140,6 +141,22 @@
 	let openDialog = $state(false);
 	let repostContent = $state('');
 	let likersHover = $state(false);
+
+	let lyntskinFreezeFrameUrl: string | null = $state(null);
+	$effect(() => {
+		const skin = lyntskinKey ? LYNTSKIN_BY_KEY[lyntskinKey] : null;
+		if (!skin) {
+			lyntskinFreezeFrameUrl = null;
+			return;
+		}
+		let cancelled = false;
+		getLyntskinFreezeFrame(skin.file).then((url) => {
+			if (!cancelled) lyntskinFreezeFrameUrl = url;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
 	let likersHoverTimer: ReturnType<typeof setTimeout>;
 
 	function scheduleLikersHover(show: boolean) {
@@ -242,11 +259,15 @@
 >
 	<div class="lynt-card flex w-full gap-3 p-3">
 		{#if lyntskinKey && LYNTSKIN_BY_KEY[lyntskinKey]}
-			<div
-				class="lyntskin-bg"
-				style="background-image: url({LYNTSKIN_BY_KEY[lyntskinKey].file})"
-				aria-hidden="true"
-			></div>
+			<div class="lyntskin-bg" aria-hidden="true">
+				<div
+					class="lyntskin-gif"
+					style="background-image: url({LYNTSKIN_BY_KEY[lyntskinKey].file})"
+				></div>
+				{#if lyntskinFreezeFrameUrl}
+					<div class="lyntskin-freeze" style="background-image: url({lyntskinFreezeFrameUrl})"></div>
+				{/if}
+			</div>
 		{/if}
 		<a href="/@{handle}" class="relative z-[1] inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
 			{#if isClan && contributors.length > 0}
@@ -451,20 +472,33 @@
 		position: absolute;
 		inset: 0;
 		z-index: 0;
+		overflow: hidden;
+		opacity: 0.16;
+		pointer-events: none;
+	}
+
+	.lyntskin-gif,
+	.lyntskin-freeze {
+		position: absolute;
+		inset: 0;
 		background-size: cover;
 		background-position: center;
-		opacity: 0;
-		pointer-events: none;
+	}
+
+	.lyntskin-freeze {
+		opacity: 1;
 		transition: opacity 0.35s ease;
 	}
 
-	.lynt-card:hover .lyntskin-bg {
-		opacity: 0.16;
+	.lynt-card:hover .lyntskin-freeze {
+		opacity: 0;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.lyntskin-bg {
+		.lyntskin-freeze {
 			transition: none;
+			/* Respect reduced-motion by never revealing the animated GIF. */
+			opacity: 1 !important;
 		}
 	}
 </style>
