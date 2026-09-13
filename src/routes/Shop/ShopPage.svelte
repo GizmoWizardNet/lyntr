@@ -78,8 +78,7 @@
 		</span>
 	</div>
 	<p class="text-sm text-muted-foreground">
-		Lyntskins are animated backgrounds for your lynts — buy once, use forever, on as many lynts as you want. They
-		stay hidden until someone hovers a lynt, then faintly loop behind it.
+		Lyntskins are animated decor for your lynts — buy once, use forever! Happy shopping.
 	</p>
 
 	{#if loading}
