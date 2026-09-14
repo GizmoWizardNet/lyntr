@@ -10,12 +10,6 @@ import { awardStreakBonus } from '@/server/lyntcoins';
 import { verifyDesktopAuthToken } from '@/server/desktopAuth';
 
 export const GET: RequestHandler = async ({ request, cookies }) => {
-	const authCookie = cookies.get('_TOKEN__DO_NOT_SHARE');
-
-	if (!authCookie) {
-		return json({ error: 'Missing authentication' }, { status: 401 });
-	}
-
 	try {
 		let userId: string;
 
