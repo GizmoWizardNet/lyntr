@@ -6,6 +6,9 @@ import { users } from '@/server/schema';
 import { eq, sql } from 'drizzle-orm';
 import { awardStreakBonus } from '@/server/lyntcoins';
 
+//Desktop auth
+import { verifyDesktopAuthToken } from '@/server/desktopAuth';
+
 export const GET: RequestHandler = async ({ request, cookies }) => {
 	const authCookie = cookies.get('_TOKEN__DO_NOT_SHARE');
 
@@ -14,10 +17,42 @@ export const GET: RequestHandler = async ({ request, cookies }) => {
 	}
 
 	try {
-		const jwtPayload = await verifyAuthJWT(authCookie);
+		let userId: string;
 
-		if (!jwtPayload.userId) {
-			throw new Error('Invalid JWT token');
+		const authorization = request.headers.get('authorization');
+
+		if (authorization?.startsWith('Bearer ')) {
+			// Native desktop authentication
+			const desktopToken = authorization.slice('Bearer '.length).trim();
+
+			const desktopPayload = await verifyDesktopAuthToken(desktopToken);
+
+			if (!desktopPayload?.userId) {
+				return json(
+					{ error: 'Invalid desktop authentication token' },
+					{ status: 401 }
+				);
+			}
+
+			userId = desktopPayload.userId;
+		} else {
+			// Normal web authentication
+			const authCookie = cookies.get('_TOKEN__DO_NOT_SHARE');
+
+			if (!authCookie) {
+				return json(
+					{ error: 'Missing authentication' },
+					{ status: 401 }
+				);
+			}
+
+			const jwtPayload = await verifyAuthJWT(authCookie);
+
+			if (!jwtPayload.userId) {
+				throw new Error('Invalid JWT token');
+			}
+
+			userId = jwtPayload.userId;
 		}
 
 		const [user] = await db
@@ -35,7 +70,7 @@ export const GET: RequestHandler = async ({ request, cookies }) => {
 				custom_font: users.custom_font
 			})
 			.from(users)
-			.where(eq(users.id, jwtPayload.userId))
+			.where(eq(users.id, userId))
 			.limit(1);
 
 		if (!user) {

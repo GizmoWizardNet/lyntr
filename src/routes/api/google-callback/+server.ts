@@ -5,9 +5,29 @@ import { users } from '@/server/schema';
 import { eq } from 'drizzle-orm';
 import { createAuthJWT } from '@/server/jwt';
 
+//Desktop Auth
+import {
+	completeDesktopAuthTransaction,
+	getDesktopTransaction
+} from '@/server/desktopAuth';
+
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	try {
 		const code = url.searchParams.get('code');
+		const oauthState = url.searchParams.get('state');
+
+		let desktopTransactionId: string | null = null;
+		let desktopState: string | null = null;
+
+		if (oauthState) {
+			const separator = oauthState.indexOf('.');
+
+			if (separator > 0) {
+				desktopTransactionId = oauthState.slice(0, separator);
+				desktopState = oauthState.slice(separator + 1);
+			}
+		}
+
 		if (!code) return json({ error: 'No code parameter' }, { status: 400 });
 
 		// Build redirect URI — must exactly match what's registered in Google Cloud Console
@@ -23,10 +43,10 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: new URLSearchParams({
 				code,
-				client_id:     process.env.PUBLIC_GOOGLE_CLIENT_ID!,
+				client_id: process.env.PUBLIC_GOOGLE_CLIENT_ID!,
 				client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-				redirect_uri:  redirectUriStr,
-				grant_type:    'authorization_code'
+				redirect_uri: redirectUriStr,
+				grant_type: 'authorization_code'
 			})
 		});
 
@@ -62,11 +82,43 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			.limit(1);
 
 		if (existingUser.length > 0) {
-			// Returning user — log them in directly
+			const user = existingUser[0];
+
+			if (desktopTransactionId && desktopState) {
+				const transaction = await getDesktopTransaction(
+					desktopTransactionId,
+					desktopState
+				);
+
+				if (!transaction) {
+					return json(
+						{
+							error:
+								'Invalid or expired desktop authentication transaction'
+						},
+						{ status: 400 }
+					);
+				}
+
+				const desktopCode = await completeDesktopAuthTransaction(
+					transaction.id,
+					user.id
+				);
+
+				return new Response(null, {
+					status: 302,
+					headers: {
+						Location:
+							`lyntr://auth/callback?code=${encodeURIComponent(desktopCode)}&state=${encodeURIComponent(desktopState)}`
+					}
+				});
+			}
+
 			const jwt = await createAuthJWT({
-				userId: existingUser[0].id,
+				userId: user.id,
 				timestamp: Date.now()
 			});
+
 			cookies.set('_TOKEN__DO_NOT_SHARE', jwt, {
 				path: '/',
 				httpOnly: true,
@@ -76,8 +128,15 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			});
 		}
 
-		// Store Google access token as a temp cookie so the AccountCreator
-		// can use it during registration (same pattern as Discord)
+		if (desktopTransactionId) {
+			return json(
+				{
+					error: 'No Lyntr account exists for this Google account.'
+				},
+				{ status: 404 }
+			);
+		}
+		
 		cookies.set('temp-google-token', accessToken, {
 			path: '/',
 			httpOnly: false,
@@ -89,10 +148,10 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		// Store Google user info so profile/+server.ts can read it
 		// (Google userinfo isn't re-fetchable without re-auth, so we cache it)
 		cookies.set('temp-google-user', JSON.stringify({
-			email:   googleUser.email,
-			name:    googleUser.name,
+			email: googleUser.email,
+			name: googleUser.name,
 			picture: googleUser.picture,
-			id:      googleUser.id
+			id: googleUser.id
 		}), {
 			path: '/',
 			httpOnly: false,
