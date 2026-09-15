@@ -3,6 +3,7 @@
 
 import type { Handle } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import { verifyDesktopAuthToken } from '@/server/desktopAuth';
 
 const DEFAULT_APP_ORIGINS = [
 	'http://tauri.localhost',
@@ -24,9 +25,34 @@ function applyCors(headers: Headers, origin: string | null) {
 	headers.set('Vary', 'Origin');
 }
 
+async function hydrateDesktopSession(event: Parameters<Handle>[0]['event']) {
+	if (event.cookies.get('_TOKEN__DO_NOT_SHARE')) return;
+
+	const authorization = event.request.headers.get('authorization');
+	if (!authorization?.startsWith('Bearer ')) return;
+
+	const desktopToken = authorization.slice('Bearer '.length).trim();
+	if (!desktopToken) return;
+
+	const payload = await verifyDesktopAuthToken(desktopToken);
+	if (!payload?.userId) return;
+
+	event.cookies.set('_TOKEN__DO_NOT_SHARE', desktopToken, {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict',
+		maxAge: 60
+	});
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const origin = event.request.headers.get('origin');
 	const isApiRoute = event.url.pathname.startsWith('/api/');
+
+	if (isApiRoute) {
+		await hydrateDesktopSession(event);
+	}
 	if (isApiRoute && event.request.method === 'OPTIONS') {
 		const headers = new Headers();
 		applyCors(headers, origin);
