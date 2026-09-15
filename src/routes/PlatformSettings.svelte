@@ -5,8 +5,9 @@
 	import { Input } from '@/components/ui/input';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
-	import { Monitor, Sun, Moon } from 'lucide-svelte';
+	import { Monitor, Sun, Moon, Download } from 'lucide-svelte';
 	import { setMode, resetMode, userPrefersMode } from 'mode-watcher';
+	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
 	import {
 		isPushSupported,
 		subscribeToPush,
@@ -19,9 +20,45 @@
 	interface Props {
 		open: boolean;
 		userId?: string;
+		username?: string;
+		onAccountDeleted?: () => void;
 	}
 
-	let { open = $bindable(false), userId = '' }: Props = $props();
+	let { open = $bindable(false), userId = '', username = '', onAccountDeleted = () => {} }: Props = $props();
+
+	let deleteAccountOpen = $state(false);
+	let exportingData = $state(false);
+
+	async function exportMyData() {
+		if (exportingData) return;
+		exportingData = true;
+		try {
+			const res = await fetch('/api/profile/export');
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				toast.error(data.error ?? 'Could not export your data.');
+				return;
+			}
+			const blob = await res.blob();
+			const disposition = res.headers.get('Content-Disposition') ?? '';
+			const match = disposition.match(/filename="?([^"]+)"?/);
+			const filename = match?.[1] ?? 'lyntr-data-export.json';
+
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			URL.revokeObjectURL(url);
+			toast.success('Your data export has started downloading.');
+		} catch {
+			toast.error('Could not export your data.');
+		} finally {
+			exportingData = false;
+		}
+	}
 
 	const FEED_OPTIONS = ['For you', 'New', 'Following', 'Bookmarked'];
 	let defaultFeed = $state('For you');
@@ -458,6 +495,39 @@
 					{/if}
 				{/if}
 			</div>
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2">
+				<span class="text-sm font-semibold">Your data</span>
+				<p class="text-xs text-muted-foreground">
+					Download a copy of everything attached to your account — lynts, likes, follows,
+					bookmarks, DMs you've sent, and more — as a single JSON file.
+				</p>
+				<Button
+					variant="outline"
+					size="sm"
+					class="w-fit"
+					disabled={exportingData}
+					onclick={exportMyData}
+				>
+					<Download class="mr-2 h-4 w-4" />
+					{exportingData ? 'Preparing export…' : 'Export my data'}
+				</Button>
+			</div>
+
+			<div class="flex flex-col gap-3 rounded-lg border border-red-500/40 p-3 md:col-span-2">
+				<span class="text-sm font-semibold text-red-500">Danger zone</span>
+				<p class="text-xs text-muted-foreground">
+					Permanently delete your account, lynts, DMs, and everything else attached to it.
+					This cannot be undone.
+				</p>
+				<Button
+					variant="destructive"
+					size="sm"
+					class="w-fit"
+					onclick={() => { open = false; deleteAccountOpen = true; }}
+				>
+					Delete account
+				</Button>
+			</div>
 		</div>
 
 		<div class="flex justify-end">
@@ -465,6 +535,8 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<DeleteAccountDialog bind:open={deleteAccountOpen} {username} onDeleted={onAccountDeleted} />
 
 <style>
 	.theme-grid {

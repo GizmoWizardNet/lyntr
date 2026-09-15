@@ -8,7 +8,6 @@
 	import { toggleMode, mode } from 'mode-watcher';
 	import HugeIcon from './HugeIcon.svelte';
 	import PlatformSettings from './PlatformSettings.svelte';
-	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
 	import { Input } from '@/components/ui/input';
 	import { MessageCircle, X } from 'lucide-svelte';
 
@@ -20,7 +19,6 @@
 		ShieldCheck,
 		Document,
 		InformationCircleIcon,
-		UserBlock01Icon,
 		Logout01Icon,
 		Settings01Icon,
 		Download01Icon
@@ -28,7 +26,6 @@
 
 	let opened = $state(false);
 	let platformSettingsOpen = $state(false);
-	let deleteAccountOpen = $state(false);
 
 	// ── Quick status set (no need to open full Profile Settings) ──────
 	let statusOpened = $state(false);
@@ -266,7 +263,7 @@
 				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
 			>
 				<HugeIcon icon={Settings01Icon} size={24} />
-				<span>Platform Settings</span>
+				<span>Settings</span>
 			</button>
 
 			<!-- Terms of Service -->
@@ -289,15 +286,6 @@
 
 			<div class="h-px bg-border"></div>
 
-			<!-- Delete account -->
-			<button
-				onclick={() => { opened = false; deleteAccountOpen = true; }}
-				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-red-500 transition-all hover:drop-shadow-[0_0px_12px_rgba(239,68,68,0.6)]"
-			>
-				<HugeIcon icon={UserBlock01Icon} size={24} color="rgb(239 68 68)" />
-				<span>Delete account</span>
-			</button>
-
 			<!-- Log out -->
 			<button
 				onclick={logout}
@@ -311,5 +299,4 @@
 	</Popover.Content>
 </Popover.Root>
 
-<PlatformSettings bind:open={platformSettingsOpen} {userId} />
-<DeleteAccountDialog bind:open={deleteAccountOpen} username={name} onDeleted={onAccountDeleted} />
+<PlatformSettings bind:open={platformSettingsOpen} {userId} username={name} onAccountDeleted={onAccountDeleted} />
