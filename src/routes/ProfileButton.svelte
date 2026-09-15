@@ -145,7 +145,6 @@
 						</span>
 					</div>
 				</div>
-				<!-- Mobile: show settings icon -->
 				<HugeIcon icon={Settings01Icon} size={24} className="md:hidden" />
 			</button>
 					{/snippet}
@@ -154,7 +153,8 @@
 	<Popover.Content class="w-60">
 		<div class="grid gap-4">
 
-			<!-- Dark / Light mode toggle -->
+			<span class="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Personalize</span>
+
 			<button
 				onclick={toggleMode}
 				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
@@ -233,6 +233,8 @@
 
 			<div class="h-px bg-border"></div>
 
+			<span class="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Account</span>
+
 			<button
 				onclick={() => (window.location.href = 'https://discord.gg/y5PA8uS5Tj')}
 				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
@@ -252,16 +254,18 @@
 
 			<div class="h-px bg-border"></div>
 
+			<span class="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Resources</span>
+
 			<button
 				onclick={() => goto('/downloads')}
 				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
 			>
 				<HugeIcon icon={Download01Icon} size={24} />
-				<span>Download Lyntr Desktop</span>
+				<span>Download Lyntr</span>
 			</button>
 
 			<div class="h-px bg-border"></div>
-
+			
 			<!-- Terms of Service -->
 			<button
 				onclick={() => goto('/tos')}
