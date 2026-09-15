@@ -299,12 +299,12 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="max-w-md md:max-w-3xl">
+	<Dialog.Content class="max-w-md md:max-w-3xl lg:max-w-5xl max-h-[85vh] overflow-y-auto">
 		<Dialog.Header>
 			<Dialog.Title>Platform Settings</Dialog.Title>
 		</Dialog.Header>
 
-		<div class="flex flex-col gap-4 py-2 md:grid md:grid-cols-2 md:items-start md:gap-x-4">
+		<div class="flex flex-col gap-4 py-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:items-start md:gap-x-4 md:gap-y-4">
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
 				<span class="text-sm font-semibold">Theme</span>
 				<p class="text-xs text-muted-foreground">
@@ -362,7 +362,7 @@
 				{/if}
 			</div>
 
-			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+			<div class="flex flex-col gap-2 rounded-lg border border-border p-3 md:col-span-2 lg:col-span-1">
 				<span class="text-sm font-semibold">Font</span>
 				<p class="text-xs text-muted-foreground">
 					Change Lyntr's font. Pick a preset, or type any font name — non-system fonts are pulled from Google Fonts automatically.
@@ -397,7 +397,7 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 lg:col-span-1">
 				{#if !pushSupported}
 					<p class="text-sm text-muted-foreground">
 						Push notifications are not supported in this browser. >:)
@@ -430,7 +430,7 @@
 				{/if}
 			</div>
 
-			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2">
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2 lg:col-span-2">
 				{#if loadingEmail}
 					<p class="text-xs text-muted-foreground">Loading...</p>
 				{:else if !userId}
@@ -495,7 +495,7 @@
 					{/if}
 				{/if}
 			</div>
-			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2">
+			<div class="flex flex-col gap-3 rounded-lg border border-border p-3 md:col-span-2 lg:col-span-1">
 				<span class="text-sm font-semibold">Your data</span>
 				<p class="text-xs text-muted-foreground">
 					Download a copy of everything attached to your account — lynts, likes, follows,
@@ -513,7 +513,7 @@
 				</Button>
 			</div>
 
-			<div class="flex flex-col gap-3 rounded-lg border border-red-500/40 p-3 md:col-span-2">
+			<div class="flex flex-col gap-3 rounded-lg border border-red-500/40 p-3 md:col-span-2 lg:col-span-2">
 				<span class="text-sm font-semibold text-red-500">Danger zone</span>
 				<p class="text-xs text-muted-foreground">
 					Permanently delete your account, lynts, DMs, and everything else attached to it.

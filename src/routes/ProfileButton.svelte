@@ -241,22 +241,6 @@
 				<span>Verify my account</span>
 			</button>
 
-			<button
-				onclick={() => goto('/downloads')}
-				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
-			>
-				<HugeIcon icon={Download01Icon} size={24} />
-				<span>Downloads</span>
-			</button>
-
-			<button
-				onclick={() => goto('/about')}
-				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
-			>
-				<HugeIcon icon={InformationCircleIcon} size={24} />
-				<span>About</span>
-			</button>
-
 			<!-- Platform Settings -->
 			<button
 				onclick={() => { opened = false; platformSettingsOpen = true; }}
@@ -265,6 +249,18 @@
 				<HugeIcon icon={Settings01Icon} size={24} />
 				<span>Settings</span>
 			</button>
+
+			<div class="h-px bg-border"></div>
+
+			<button
+				onclick={() => goto('/downloads')}
+				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
+			>
+				<HugeIcon icon={Download01Icon} size={24} />
+				<span>Download Lyntr Desktop</span>
+			</button>
+
+			<div class="h-px bg-border"></div>
 
 			<!-- Terms of Service -->
 			<button
@@ -282,6 +278,14 @@
 			>
 				<HugeIcon icon={ShieldCheck} size={24} />
 				<span>Privacy Policy</span>
+			</button>
+
+			<button
+				onclick={() => goto('/about')}
+				class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-bold text-primary transition-all hover:drop-shadow-[0_0px_12px_hsl(var(--primary)/0.6)]"
+			>
+				<HugeIcon icon={InformationCircleIcon} size={24} />
+				<span>About</span>
 			</button>
 
 			<div class="h-px bg-border"></div>
