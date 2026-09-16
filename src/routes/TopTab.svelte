@@ -11,27 +11,52 @@
 	let { tabs, currentTab, onTabChange }: Props = $props();
 </script>
 
-<div class="tab-row flex items-center gap-2 overflow-x-auto px-1 md:justify-center md:gap-3 md:overflow-visible md:px-0">
-	{#each tabs as tab}
-		<button
-			type="button"
-			class="tab-pill"
-			class:active={currentTab === tab}
-			onmousedown={() => onTabChange(tab)}
-		>
-			<span class="tab-label">{tab}</span>
-			{#if currentTab === tab}
-				<div
-					class="tab-fill"
-					in:fly={{ y: 6, duration: 200, easing: quintOut }}
-					out:fly={{ y: 6, duration: 150, easing: quintOut }}
-				></div>
-			{/if}
-		</button>
-	{/each}
+<div class="tab-track">
+	<div class="tab-row flex items-center gap-2 overflow-x-auto md:justify-center md:gap-3 md:overflow-visible">
+		{#each tabs as tab}
+			<button
+				type="button"
+				class="tab-pill"
+				class:active={currentTab === tab}
+				onmousedown={() => onTabChange(tab)}
+			>
+				<span class="tab-label">{tab}</span>
+				{#if currentTab === tab}
+					<div
+						class="tab-fill"
+						in:fly={{ y: 6, duration: 200, easing: quintOut }}
+						out:fly={{ y: 6, duration: 150, easing: quintOut }}
+					></div>
+				{/if}
+			</button>
+		{/each}
+	</div>
 </div>
 
 <style>
+	.tab-track {
+		position: relative;
+		border-radius: 999px;
+		padding: 5px;
+		background: hsl(var(--popover) / 0.5);
+		-webkit-backdrop-filter: blur(16px) saturate(180%);
+		backdrop-filter: blur(16px) saturate(180%);
+		border: 1px solid hsl(var(--foreground) / 0.1);
+		box-shadow:
+			0 10px 24px -8px rgba(0, 0, 0, 0.3),
+			0 1px 4px rgba(0, 0, 0, 0.12),
+			inset 0 1px 0 rgba(255, 255, 255, 0.2),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+	}
+	.tab-track::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%);
+		pointer-events: none;
+	}
+
 	.tab-pill {
 		position: relative;
 		overflow: hidden;
@@ -62,7 +87,9 @@
 
 	.tab-row {
 		scrollbar-width: none;
-		scroll-padding-inline: 4px;
+		padding: 3px 4px;
+		margin: -3px -4px;
+		scroll-padding-inline: 8px;
 	}
 	.tab-row::-webkit-scrollbar {
 		display: none;
@@ -80,6 +107,9 @@
 	.tab-pill.active {
 		color: hsl(var(--primary-foreground));
 		border-color: hsl(var(--foreground) / 0.12);
+		box-shadow:
+			0 6px 14px -4px hsl(var(--primary) / 0.55),
+			0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
 	.tab-label {
@@ -91,6 +121,9 @@
 		inset: 0;
 		border-radius: inherit;
 		background: hsl(var(--primary) / 0.85);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.3),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.08);
 		z-index: 0;
 	}
 </style>

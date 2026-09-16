@@ -11,8 +11,6 @@
 	import { Input } from '@/components/ui/input';
 	import { MessageCircle, X } from 'lucide-svelte';
 
-	// Hugeicons data — imported from the free icon set.
-	// Run: bun add @hugeicons/core-free-icons
 	import {
 		Moon01Icon,
 		Sun01Icon,
