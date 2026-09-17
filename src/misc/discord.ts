@@ -28,26 +28,20 @@ import fetch from 'node-fetch';
 
 config({ path: '.env' });
 
-// ─────────────────────────────────────────────────────────────
-// Config
-// ─────────────────────────────────────────────────────────────
 const DISCORD_TOKEN      = process.env.DISCORD_BOT_TOKEN!;
 const DISCORD_CLIENT_ID  = process.env.PUBLIC_DISCORD_CLIENT_ID!;
 const CHANNEL_ID         = process.env.DISCORD_CHANNEL_ID!;
 const LOG_CHANNEL_ID     = process.env.DISCORD_LOG_CHANNEL_ID || CHANNEL_ID;
 const STATS_CHANNEL_ID   = process.env.DISCORD_STATS_CHANNEL_ID || '';
+// View-only channel that "/bang dihcord" forum posts get cross-posted to.
+const BANG_FORUM_CHANNEL_ID = process.env.BANG_FORUM_CHANNEL_ID || '';
 const ADMIN_KEY          = process.env.ADMIN_KEY!;
 const API_BASE_URL       = process.env.API_BASE_URL || 'http://lyntr:3000';
 const MINIO_ENDPOINT     = process.env.MINIO_ENDPOINT || 'minio';
 const S3_BUCKET          = process.env.S3_BUCKET_NAME!;
 const SITE_URL           = process.env.PUBLIC_ORIGIN || 'https://lyntr.gizmowizard.tech';
 
-// ─────────────────────────────────────────────────────────────
-// In-memory persistent storage (survives bot restarts only via
-// the Map — for true persistence wire these to your Postgres DB)
-// ─────────────────────────────────────────────────────────────
-
-// report message id → { lyntId, userId, reporterId, reportCount, category }
+// report message id >>> { lyntId, userId, reporterId, reportCount, category }
 const reportData = new Map<string, {
 	lyntId: string;
 	userId: string;
@@ -433,9 +427,38 @@ function modActionEmbed(action: string, user: any, reason: string, moderator: st
 		.setTimestamp();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Report action row
-// ─────────────────────────────────────────────────────────────
+// The app already runs content through stripMarkdownForOg before sending it
+// here, but the bot is a separate deploy that can lag behind the main app,
+// so this is a cheap second pass in case older markdown slips through —
+// mirrors (a simplified version of) src/lib/ogText.ts.
+function stripMarkdownLite(text: string): string {
+	return (text || '')
+		.replace(/```[\s\S]*?```/g, (m) => m.replace(/```[a-zA-Z0-9]*\n?|```/g, ''))
+		.replace(/`([^`\n]+)`/g, '$1')
+		.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+		.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+		.replace(/\*{1,3}(.+?)\*{1,3}/g, '$1')
+		.replace(/~~(.+?)~~/g, '$1')
+		.replace(/^#{1,4}\s+/gm, '')
+		.replace(/^>\s?/gm, '')
+		.trim();
+}
+
+function forumPostEmbed(title: string, content: string, author: { username: string; handle: string; verified: boolean }) {
+	const clean = stripMarkdownLite(content).slice(0, 3800);
+	return new EmbedBuilder()
+		.setColor(0xE8791A) // same bright orange as the /bang token in-app
+		.setTitle(title.slice(0, 256))
+		.setURL(`${SITE_URL}`)
+		.setDescription(clean || '*(no text content)*')
+		.setAuthor({
+			name: `${author.username} (@${author.handle})${author.verified ? ' ✅' : ''}`,
+			url: `${SITE_URL}/@${author.handle}`
+		})
+		.setFooter({ text: 'Posted via /bang dihcord · view-only mirror of the Lyntr forum' })
+		.setTimestamp();
+}
+
 function reportActionRow(escalated = false) {
 	const row1 = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
 		new ButtonBuilder().setCustomId('report_delete_lynt').setLabel('🗑️ Delete Lynt').setStyle(ButtonStyle.Danger),
@@ -447,11 +470,6 @@ function reportActionRow(escalated = false) {
 	return [row1];
 }
 
-// ─────────────────────────────────────────────────────────────
-// Slash command handler
-// ─────────────────────────────────────────────────────────────
-// Commands that must never run without real mod/admin permission in a guild,
-// regardless of what Discord's client-side integration settings allow.
 const RESTRICTED_COMMANDS: Record<string, bigint> = {
 	verify: PermissionFlagsBits.ModerateMembers,
 	unverify: PermissionFlagsBits.ModerateMembers,
@@ -475,9 +493,6 @@ const RESTRICTED_COMMANDS: Record<string, bigint> = {
 async function handleSlash(interaction: ChatInputCommandInteraction) {
 	const { commandName } = interaction;
 
-	// Hard server-side gate — never trust setDefaultMemberPermissions/
-	// setDMPermission alone, since guild admins can override integration
-	// permissions and DMs have no member/permission context at all.
 	const requiredPerm = RESTRICTED_COMMANDS[commandName];
 	if (requiredPerm !== undefined) {
 		if (!interaction.inGuild() || !interaction.memberPermissions?.has(requiredPerm)) {
@@ -486,8 +501,6 @@ async function handleSlash(interaction: ChatInputCommandInteraction) {
 		}
 	}
 
-	// Mod/admin actions stay ephemeral (only the invoker sees them);
-	// public fun commands post a normal visible message in the channel.
 	await interaction.deferReply({ ephemeral: requiredPerm !== undefined });
 
 	try {
@@ -913,9 +926,6 @@ async function handleSlash(interaction: ChatInputCommandInteraction) {
 	}
 }
 
-// ─────────────────────────────────────────────────────────────
-// Button interaction handler
-// ─────────────────────────────────────────────────────────────
 async function handleButton(interaction: ButtonInteraction) {
 	const report = reportData.get(interaction.message.id);
 	if (!report) {
@@ -990,12 +1000,9 @@ async function handleButton(interaction: ButtonInteraction) {
 	}
 }
 
-// ─────────────────────────────────────────────────────────────
-// Bot startup
-// ─────────────────────────────────────────────────────────────
 function startBot() {
 	client.once('ready', () => {
-		console.log(`✅ Logged in as ${client.user?.tag}`);
+		console.log(`Logged in successfully as ${client.user?.tag} to the Matrix`);
 		registerCommands();
 		scheduleDailyStats();
 	});
@@ -1012,9 +1019,6 @@ function startBot() {
 	client.login(DISCORD_TOKEN);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Daily stats post
-// ─────────────────────────────────────────────────────────────
 function scheduleDailyStats() {
 	if (!STATS_CHANNEL_ID) return;
 
@@ -1054,11 +1058,6 @@ function scheduleDailyStats() {
 	}, msUntilMidnight);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Express endpoints (called by Lyntr app)
-// ─────────────────────────────────────────────────────────────
-
-// Inbound report from /api/report
 app.post('/report', async (req, res) => {
 	try {
 		const { text, userId, lyntId, reporterId, category = 'General' } = req.body;
@@ -1109,7 +1108,29 @@ app.post('/report', async (req, res) => {
 	}
 });
 
-// DM notification endpoint — called from Lyntr's notification system
+app.post('/forumpost', async (req, res) => {
+	try {
+		const { threadId, postId, title, content, author } = req.body;
+		if (!threadId || !postId || !title || !author?.handle) {
+			return res.status(400).json({ error: 'Missing required fields' });
+		}
+		if (!BANG_FORUM_CHANNEL_ID) {
+			return res.status(503).json({ error: 'BANG_FORUM_CHANNEL_ID is not configured' });
+		}
+
+		const channel = await client.channels.fetch(BANG_FORUM_CHANNEL_ID);
+		if (!(channel instanceof TextChannel)) throw new Error('Invalid BANG_FORUM_CHANNEL_ID');
+
+		const embed = forumPostEmbed(title, content || '', author);
+		await channel.send({ embeds: [embed] });
+
+		res.json({ success: true });
+	} catch (err: any) {
+		console.error('Forum bang-post error:', err);
+		res.status(500).json({ error: err.message });
+	}
+});
+
 app.post('/notify', async (req, res) => {
 	try {
 		const { type, targetDiscordId, data } = req.body;
@@ -1189,7 +1210,6 @@ app.post('/notify', async (req, res) => {
 	}
 });
 
-// Mute check endpoint — Lyntr calls this before allowing a post
 app.get('/muted/:userId', (req, res) => {
 	const { userId } = req.params;
 	const expiry = mutedUsers.get(userId);
@@ -1201,9 +1221,6 @@ app.get('/muted/:userId', (req, res) => {
 	res.json({ muted: true, expiresAt: expiry || null });
 });
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
 function formatUptime(ms: number): string {
 	const s = Math.floor(ms / 1000);
 	const m = Math.floor(s / 60);
@@ -1214,8 +1231,5 @@ function formatUptime(ms: number): string {
 	return `${m}m ${s % 60}s`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Start
-// ─────────────────────────────────────────────────────────────
 startBot();
 app.listen(5444, () => console.log('Bot HTTP server on :5444'));

@@ -6,6 +6,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { Snowflake } from 'nodejs-snowflake';
 import { requireAuth, MAX_TITLE_LENGTH, MAX_POST_LENGTH } from '@/server/forum';
 import { sensitiveRatelimit } from '@/server/ratelimit';
+import { validateBangCommands, executeBangCommands } from '@/server/bang';
 
 const EPOCH = new Date('2024-07-13T11:29:44.526Z').getTime();
 
@@ -89,6 +90,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!content || typeof content !== 'string' || content.trim().length === 0 || content.length > MAX_POST_LENGTH)
 		return json({ error: `Content must be between 1 and ${MAX_POST_LENGTH} characters` }, { status: 400 });
 
+	const bangError = validateBangCommands(content);
+	if (bangError) return json({ error: bangError }, { status: 400 });
+
 	const [category] = await db
 		.select({ id: forumCategories.id })
 		.from(forumCategories)
@@ -136,5 +140,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		.where(eq(forumThreads.id, threadId))
 		.limit(1);
 
-	return json({ ...thread, firstPostId: postId }, { status: 201 });
+	return json({ ...thread, firstPostId: postId, bang: await executeBangCommands({
+		content,
+		threadId,
+		threadTitle: thread?.title ?? title.trim(),
+		postId,
+		authorId: auth.userId
+	}) }, { status: 201 });
 };

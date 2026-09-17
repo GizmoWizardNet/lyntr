@@ -12,14 +12,8 @@
 	interface Props {
 		content: string;
 		className?: string;
-		// Set to false in the composer preview to avoid OG fetches while typing
 		showLinkPreview?: boolean;
-		// Handle of whoever wrote this content — drives whose Rugplay API
-		// key (if any) is used for $SYMBOL embeds.
 		authorHandle?: string;
-		// False on the logged-out landing feed: @mentions and #hashtags
-		// render with the same styling but don't navigate anywhere, since
-		// there's no authenticated app/search page to send a visitor to.
 		interactive?: boolean;
 	}
 
@@ -29,39 +23,17 @@
 		| { type: 'html'; value: string }
 		| { type: 'symbol'; value: string }
 		| { type: 'mention'; value: string }
-		| { type: 'hashtag'; value: string };
+		| { type: 'hashtag'; value: string }
+		| { type: 'bang'; value: string };
 
-	// Same handle shape used by the autocomplete endpoint and server-side
-	// extraction in src/lib/server/mentions.ts: letters, digits, underscore,
-	// 1-32 chars. Must not be glued to a preceding word character (so it
-	// doesn't match the "domain" in "email@domain.com").
-	// Trade-off: underscore is included in the blocking set, which means
-	// "_@bob_" (markdown italics wrapping a mention) won't be detected as
-	// a mention — a deliberately conservative choice since the alternative
-	// (treating leading "_" as an emphasis delimiter rather than a literal
-	// character) risks false positives on real usernames/emails containing
-	// underscores. Plain, parenthesized, and bold-wrapped mentions all work.
 	const MENTION_RE = /(?<![A-Za-z0-9_@])@([A-Za-z0-9_]{1,32})(?![A-Za-z0-9_])/g;
 	const SYMBOL_RE = /\$([A-Z][A-Z0-9]{1,9})(?=[^A-Za-z0-9]|$)/g;
-	// Kept in sync with src/lib/server/hashtags.ts's HASHTAG_REGEX.
-	const HASHTAG_RE = /(?<![A-Za-z0-9_#])#([A-Za-z][A-Za-z0-9_]{0,49})(?![A-Za-z0-9_])/g;
 
-	// Placeholders are injected into the RAW text BEFORE markdown rendering,
-	// then split back out of the rendered HTML afterwards. Extracting tokens
-	// pre-render (rather than regexing the rendered HTML directly) means a
-	// mention or symbol that happens to land inside a markdown-generated
-	// <a href="..."> can never be misparsed as a second, nested clickable
-	// token — the placeholder is opaque to both the markdown renderer and
-	// its auto-linker.
+	const HASHTAG_RE = /(?<![A-Za-z0-9_#])#([A-Za-z][A-Za-z0-9_]{0,49})(?![A-Za-z0-9_])/g;
+	const BANG_RE = /^[ \t]{0,3}\/bang[ \t]+\S.*$/gm;
 	const PLACEHOLDER_PREFIX = '\u0000TOK';
 	const PLACEHOLDER_SUFFIX = '\u0000';
 
-	// URLs are masked FIRST, separately, so an "@" or "$" living inside a
-	// query string or link target (e.g. "https://x.com?user=@bob") is never
-	// extracted as a token in the first place — not just visually avoided,
-	// but never even matched. Without this, the token's placeholder would
-	// get woven into the URL text, and the auto-linker would carry it into
-	// the middle of an href attribute, producing broken/nested markup.
 	const URL_GUARD_PREFIX = '\u0000URLGUARD';
 	const URL_GUARD_SUFFIX = '\u0000';
 	const URL_RE = /(\[[^\]]+\]\()?(https?:\/\/[^\s<>")\]]+)(\))?/g;
@@ -69,7 +41,7 @@
 	function parse(rawText: string): Segment[] {
 		const text = rawText ?? '';
 
-		type Token = { type: 'symbol' | 'mention' | 'hashtag'; value: string };
+		type Token = { type: 'symbol' | 'mention' | 'hashtag' | 'bang'; value: string };
 		const tokens: Token[] = [];
 		const urlGuards: string[] = [];
 
@@ -79,8 +51,11 @@
 			return `${URL_GUARD_PREFIX}${urlGuards.length - 1}${URL_GUARD_SUFFIX}`;
 		});
 
-		// Step 2: extract real mention/symbol/hashtag tokens from what's left.
 		const withPlaceholders = masked
+			.replace(BANG_RE, (line) => {
+				tokens.push({ type: 'bang', value: line.trim() });
+				return `${PLACEHOLDER_PREFIX}${tokens.length - 1}${PLACEHOLDER_SUFFIX}`;
+			})
 			.replace(SYMBOL_RE, (_match, sym) => {
 				tokens.push({ type: 'symbol', value: sym });
 				return `${PLACEHOLDER_PREFIX}${tokens.length - 1}${PLACEHOLDER_SUFFIX}`;
@@ -94,14 +69,11 @@
 				return `${PLACEHOLDER_PREFIX}${tokens.length - 1}${PLACEHOLDER_SUFFIX}`;
 			});
 
-		// Step 3: restore URLs (untouched, original @ / $ chars intact) so
-		// renderMarkdown's auto-linker still sees and wraps real URLs.
 		const urlGuardRe = new RegExp(`${URL_GUARD_PREFIX}(\\d+)${URL_GUARD_SUFFIX}`, 'g');
 		const restored = withPlaceholders.replace(urlGuardRe, (_m, idx) => urlGuards[Number(idx)]);
 
 		const html = renderMarkdown(restored);
 
-		// Step 4: split the rendered HTML back apart on mention/symbol placeholders.
 		const placeholderRe = new RegExp(`${PLACEHOLDER_PREFIX}(\\d+)${PLACEHOLDER_SUFFIX}`, 'g');
 		const segments: Segment[] = [];
 		let last = 0;
@@ -115,7 +87,6 @@
 		return segments;
 	}
 
-	// Extract first bare URL from raw content (skip markdown [text](url) links)
 	function extractFirstUrl(text: string): string | null {
 		const stripped = (text ?? '').replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '[$1](...)');
 		const m = stripped.match(/https?:\/\/[^\s<>"')]+/);
@@ -164,7 +135,7 @@
 			{:else}
 				<span class="mention-token" style="cursor: default; text-decoration: none;">@{seg.value}</span>
 			{/if}
-		{:else}
+		{:else if seg.type === 'hashtag'}
 			{#if interactive}
 				<button
 					type="button"
@@ -176,6 +147,8 @@
 			{:else}
 				<span class="hashtag-token" style="cursor: default; text-decoration: none;">#{seg.value}</span>
 			{/if}
+		{:else}
+			<span class="bang-token" title="Forum-only /bang command">{seg.value}</span>
 		{/if}
 	{/each}
 
@@ -219,8 +192,6 @@
 	.parsed-content :global(em)     { font-style: italic; }
 	.parsed-content :global(s)      { opacity: 0.6; }
 
-	/* -# subtext/subscript lines — smaller, muted, sits slightly below the
-	   baseline of a normal line to read as a subscript-style aside. */
 	.parsed-content :global(p.lynt-subtext) {
 		font-size: 0.78em;
 		line-height: 1.4;
@@ -411,5 +382,18 @@
 	}
 	.hashtag-token:hover {
 		background: #6FD6A818;
+	}
+
+	.bang-token {
+		display: inline-block;
+		margin: 2px 0;
+		padding: 2px 8px;
+		font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+		font-weight: 700;
+		font-size: 0.92em;
+		color: #FFF6EC;
+		background: #E8791A;
+		border-radius: 4px;
+		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) inset;
 	}
 </style>

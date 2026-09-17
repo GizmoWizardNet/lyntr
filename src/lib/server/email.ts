@@ -1,22 +1,9 @@
-/**
- * Email notification service — powered by Resend.
- *
- * Setup:
- *   1. Add RESEND_API_KEY to your .env
- *   2. Add EMAIL_FROM to your .env  (e.g. "Lyntr <notifs@mail.lyntr.com>")
- *      The domain must be verified in your Resend dashboard.
- *
- * All sends are fire-and-forget wrapped in try/catch so a Resend hiccup
- * never breaks the underlying action that triggered the notification.
- */
-
 import { db } from '@/server/db';
 import { users } from '@/server/schema';
 import { eq } from 'drizzle-orm';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
-// ── Colour tokens kept in sync with app.css light-mode variables ──────────
 const C = {
 	bg:         '#F0E8D8',
 	card:       '#FAF5EC',
@@ -29,7 +16,6 @@ const C = {
 	white:      '#FFFDF6',
 };
 
-// ── Base layout ────────────────────────────────────────────────────────────
 function wrap(body: string, previewText: string): string {
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -91,7 +77,6 @@ function wrap(body: string, previewText: string): string {
 </html>`;
 }
 
-// ── Reusable blocks ────────────────────────────────────────────────────────
 function actorLine(actor: string, handle: string): string {
 	return `<p style="margin:0 0 16px;font-size:14px;color:${C.textLight};">
 		<strong style="color:${C.text};">${esc(actor)}</strong>
@@ -125,7 +110,6 @@ function esc(s: string): string {
 		.replace(/"/g, '&quot;');
 }
 
-// ── Per-type template builders ──────────────────────────────────────────────
 type EmailPayload = { subject: string; html: string };
 
 function buildEmail(
@@ -224,6 +208,20 @@ function buildEmail(
 				)
 			};
 
+		case 'forum_cc':
+			return {
+				subject: `${actor} cc'd you on a forum post${forumThreadTitle ? `: ${forumThreadTitle}` : ''}`,
+				html: wrap(
+					bigAction("You were cc'd on a post.") +
+					actorLine(actor, actorHandle) +
+					`<p style="margin:0 0 4px;font-size:14px;color:${C.textLight};">used <code style="background:${C.bg};padding:1px 5px;border-radius:3px;color:${C.accent};">/bang cc</code> to send you their forum post directly.</p>` +
+					(forumThreadTitle ? `<p style="margin:12px 0 0;font-size:14px;color:${C.textLight};">Thread: <strong style="color:${C.text};">${esc(forumThreadTitle)}</strong></p>` : '') +
+					(lyntContent ? contentQuote(lyntContent) : '') +
+					(forumUrl ? ctaButton('View thread', forumUrl) : ''),
+					`${actor} cc'd you on a forum post`
+				)
+			};
+
 		case 'clan_invite':
 			return {
 				subject: `${actor} added you to a clan lynt`,
@@ -289,8 +287,6 @@ function buildEmail(
 			return null;
 	}
 }
-
-// ── Public send function ───────────────────────────────────────────────────
 export interface NotifEmailOptions {
 	recipientId: string;
 	type: string;

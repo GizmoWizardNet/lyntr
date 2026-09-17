@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Bell, CalendarDays, Heart, MessageSquare, UserPlus, AtSign, Repeat2, ArrowBigUp, ArrowBigDown, Reply, Users } from 'lucide-svelte';
+	import { Bell, CalendarDays, Heart, MessageSquare, UserPlus, AtSign, Repeat2, ArrowBigUp, ArrowBigDown, Reply, Users, Mail } from 'lucide-svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as HoverCard from '@/components/ui/hover-card/index.js';
@@ -14,7 +14,7 @@
 	interface Notification {
 		sourceUserBio: string;
 		id: string;
-		type: 'like' | 'comment' | 'follow' | 'mention' | 'repost' | 'forum_upvote' | 'forum_downvote' | 'forum_reply' | 'dm_request' | 'dm_accepted' | 'clan_invite' | 'clan_declined' | 'clan_live';
+		type: 'like' | 'comment' | 'follow' | 'mention' | 'repost' | 'forum_upvote' | 'forum_downvote' | 'forum_reply' | 'forum_cc' | 'dm_request' | 'dm_accepted' | 'clan_invite' | 'clan_declined' | 'clan_live';
 		sourceUserId: string;
 		sourceUser: string;
 		sourceUserHandle: string;
@@ -97,6 +97,8 @@
 				return ArrowBigDown;
 			case 'forum_reply':
 				return Reply;
+			case 'forum_cc':
+				return Mail;
 			case 'clan_invite':
 			case 'clan_declined':
 			case 'clan_live':
@@ -128,6 +130,10 @@
 				return notification.forumThreadTitle
 					? `replied in your thread "${notification.forumThreadTitle}"`
 					: 'replied in your thread';
+			case 'forum_cc':
+				return notification.forumThreadTitle
+					? `cc'd you on a forum post "${notification.forumThreadTitle}"`
+					: "cc'd you on a forum post via /bang cc";
 			case 'dm_request':
 				return 'wants to send you a message';
 			case 'dm_accepted':

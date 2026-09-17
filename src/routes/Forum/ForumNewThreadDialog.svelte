@@ -37,12 +37,32 @@
 			}
 			const thread = await response.json();
 			toast.success('Thread created!');
+			reportBangResults(thread.bang);
 			title = '';
 			content = '';
 			open = false;
 			onCreated(thread);
 		} finally {
 			submitting = false;
+		}
+	}
+
+	function reportBangResults(bang: any) {
+		if (!bang) return;
+		if (bang.discord) {
+			if (bang.discord.posted) toast.success('Also posted to the Lyntr Discord.');
+			else toast.warning(`/bang dihcord failed: ${bang.discord.error ?? 'unknown error'}`);
+		}
+		if (bang.bsky) {
+			if (bang.bsky.posted) toast.success('Also posted to Bluesky.');
+			else toast.warning(`/bang bsky: ${bang.bsky.reason ?? 'could not post'}`);
+		}
+		if (bang.cc) {
+			if (bang.cc.reason) toast.warning(`/bang cc: ${bang.cc.reason}`);
+			else if (bang.cc.sent.length || bang.cc.skipped.length)
+				toast.success(
+					`/bang cc: emailed ${bang.cc.sent.length}${bang.cc.skipped.length ? `, notified ${bang.cc.skipped.length} without email` : ''}.`
+				);
 		}
 	}
 </script>

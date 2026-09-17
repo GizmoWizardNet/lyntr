@@ -82,8 +82,28 @@
 			posts = [...posts, newPost];
 			reply = '';
 			toast.success('Reply posted!');
+			reportBangResults(newPost.bang);
 		} finally {
 			posting = false;
+		}
+	}
+
+	function reportBangResults(bang: any) {
+		if (!bang) return;
+		if (bang.discord) {
+			if (bang.discord.posted) toast.success('Also posted to the Lyntr Discord.');
+			else toast.warning(`/bang dihcord failed: ${bang.discord.error ?? 'unknown error'}`);
+		}
+		if (bang.bsky) {
+			if (bang.bsky.posted) toast.success('Also posted to Bluesky.');
+			else toast.warning(`/bang bsky: ${bang.bsky.reason ?? 'could not post'}`);
+		}
+		if (bang.cc) {
+			if (bang.cc.reason) toast.warning(`/bang cc: ${bang.cc.reason}`);
+			else if (bang.cc.sent.length || bang.cc.skipped.length)
+				toast.success(
+					`/bang cc: emailed ${bang.cc.sent.length}${bang.cc.skipped.length ? `, notified ${bang.cc.skipped.length} without email` : ''}.`
+				);
 		}
 	}
 
@@ -152,7 +172,7 @@
 
 		{#if thread.closed && !viewerIsAdmin}
 			<p class="rounded-md bg-muted p-3 text-center text-sm text-muted-foreground">
-				🔒 This thread is closed. No new replies can be posted.
+				This thread is closed. No new replies can be posted.
 			</p>
 		{:else}
 			<div class="flex flex-col gap-2">

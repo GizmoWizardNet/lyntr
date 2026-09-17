@@ -6,6 +6,7 @@
 	import ForumThreadList from './ForumThreadList.svelte';
 	import ForumThreadView from './ForumThreadView.svelte';
 	import ForumStatsPanel from './ForumStatsPanel.svelte';
+	import BangCommandsPanel from './BangCommandsPanel.svelte';
 	import ForumSearchPanel from './ForumSearchPanel.svelte';
 	import ForumMyActivity from './ForumMyActivity.svelte';
 	import { pendingForumThreadId } from '../stores';
@@ -122,5 +123,6 @@
 
 	<div class="hidden w-[280px] flex-col gap-3 lg:flex">
 		<ForumStatsPanel />
+		<BangCommandsPanel />
 	</div>
 </div>

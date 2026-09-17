@@ -7,12 +7,10 @@ import { Snowflake } from 'nodejs-snowflake';
 import { requireAuth, MAX_POST_LENGTH, postScore, postUpvotes, postDownvotes } from '@/server/forum';
 import { sensitiveRatelimit } from '@/server/ratelimit';
 import { createNotification } from '@/server/notifications';
+import { validateBangCommands, executeBangCommands } from '@/server/bang';
 
 const EPOCH = new Date('2024-07-13T11:29:44.526Z').getTime();
 
-// ---------------------------------------------------------------------------
-// POST /api/forum/posts  { threadId, content }
-// ---------------------------------------------------------------------------
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	const auth = await requireAuth(cookies);
 	if (auth instanceof Response) return auth;
@@ -30,7 +28,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({ error: `Content must be between 1 and ${MAX_POST_LENGTH} characters` }, { status: 400 });
 
 	const [thread] = await db
-		.select({ id: forumThreads.id, closed: forumThreads.closed, userId: forumThreads.user_id })
+		.select({ id: forumThreads.id, closed: forumThreads.closed, userId: forumThreads.user_id, title: forumThreads.title })
 		.from(forumThreads)
 		.where(eq(forumThreads.id, threadId))
 		.limit(1);
@@ -38,6 +36,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!thread) return json({ error: 'Thread not found' }, { status: 404 });
 	if (thread.closed && !auth.isAdmin)
 		return json({ error: 'This thread is closed.' }, { status: 403 });
+
+	const bangError = validateBangCommands(content);
+	if (bangError) return json({ error: bangError }, { status: 400 });
 
 	const postId = String(new Snowflake({ custom_epoch: EPOCH }).getUniqueID());
 
@@ -81,7 +82,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		.where(eq(forumPosts.id, postId))
 		.limit(1);
 
-	// Notify the thread owner about this reply — skip self-replies.
 	if (thread.userId && thread.userId !== auth.userId) {
 		await createNotification(
 			thread.userId,
@@ -93,5 +93,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		);
 	}
 
-	return json({ ...newPost, viewerVote: 0 }, { status: 201 });
+	return json({ ...newPost, viewerVote: 0, bang: await executeBangCommands({
+		content,
+		threadId,
+		threadTitle: thread.title,
+		postId,
+		authorId: auth.userId
+	}) }, { status: 201 });
 };
