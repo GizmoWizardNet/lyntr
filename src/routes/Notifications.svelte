@@ -165,8 +165,74 @@
 			return;
 		}
 
-		reactiveNotifications = reactiveNotifications.map((notif) => ({ ...notif, read: true }));
+		notifications = notifications.map((notif) => ({ ...notif, read: true }));
 		$unreadMessages = 0;
+	}
+
+	// Notifications get marked read the moment they actually scroll into
+	// view — no more needing to hit "Mark All as Read" just to clear the
+	// unread dot. Guarded with a pending-set so a notification straddling
+	// the viewport edge doesn't fire the PATCH twice.
+	const pendingReads = new Set<string>();
+
+	async function markOneRead(id: string) {
+		if (pendingReads.has(id)) return;
+		const notif = notifications.find((n) => n.id === id);
+		if (!notif || notif.read) return;
+
+		pendingReads.add(id);
+		// Optimistic — flip it locally (and drop the unread count) right away,
+		// revert only if the request actually fails.
+		notifications = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+		$unreadMessages = Math.max(0, $unreadMessages - 1);
+
+		try {
+			const response = await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+			if (!response.ok) throw new Error(`${response.status}`);
+		} catch {
+			notifications = notifications.map((n) => (n.id === id ? { ...n, read: false } : n));
+			$unreadMessages += 1;
+		} finally {
+			pendingReads.delete(id);
+		}
+	}
+
+	// Svelte action: observes its element, and once it's meaningfully
+	// visible (60% on screen) marks the notification it's bound to as read,
+	// then stops watching. Re-set up whenever the bound notification changes
+	// (e.g. after the list re-renders) so a still-unread item keeps working.
+	function markVisibleWhenSeen(node: HTMLElement, notification: Notification) {
+		let current = notification;
+		let observer: IntersectionObserver | null = null;
+
+		function setup() {
+			observer?.disconnect();
+			if (current.read) return;
+			observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (entry.isIntersecting) {
+							markOneRead(current.id);
+							observer?.disconnect();
+						}
+					}
+				},
+				{ threshold: 0.6 }
+			);
+			observer.observe(node);
+		}
+
+		setup();
+
+		return {
+			update(newNotification: Notification) {
+				current = newNotification;
+				setup();
+			},
+			destroy() {
+				observer?.disconnect();
+			}
+		};
 	}
 
 	function handleNotificationClick(notification: Notification) {
@@ -206,7 +272,7 @@
 					<ul class="flex w-full flex-col items-center gap-4">
 					  {#each reactiveNotifications as notification (notification.id)}
 						{@const SvelteComponent = getNotificationIcon(notification.type)}
-						<li class="w-full">
+						<li class="w-full" use:markVisibleWhenSeen={notification}>
 									<button
 										onclick={() => handleNotificationClick(notification)}
 										class="flex w-full items-start space-x-4 rounded-lg bg-lynt-foreground p-4 text-left transition-colors"
