@@ -21,32 +21,31 @@
 	{#if open}
 		<CardContent class="flex flex-col gap-3 pt-0 text-sm">
 			<p class="text-xs text-muted-foreground">
-				Drop one of these on its own line in a forum post or reply. They only work inside the
-				forum — anywhere else on Lyntr they're just highlighted text.
+                Special use Forum post commands. 
+                These are commanads which allow you to CC other people in your post, crosspost it through the official Blueky channel, 
+                as well as post it in the dedicated Discord channel!
 			</p>
 
 			<div class="flex flex-col gap-1">
 				<code class="bang-badge w-fit">/bang dihcord</code>
 				<p class="text-xs text-muted-foreground">
-					Cross-posts your post to the view-only Lyntr Discord forum channel. Yes, it's spelled
-					"dihcord" on purpose — that's the actual command.
+					cross post your forum post to the discord channel; #forum in the server, everyone can view.
 				</p>
 			</div>
 
 			<div class="flex flex-col gap-1">
 				<code class="bang-badge w-fit">/bang bsky</code>
 				<p class="text-xs text-muted-foreground">
-					Cross-posts to Bluesky through the Lyntr account. Requires a <strong>verified</strong> badge
-					and an account <strong>older than 10 hours</strong>. Limited to once every 30 minutes.
+					Cross-posts your post to the official Lyntr Bluesky! Requires a <strong>verified</strong> badge
+					and an account <strong>older than 10 hours</strong>. rate limited to once every 30 minutes.
+                    Please keep posts civil.
 				</p>
 			</div>
 
 			<div class="flex flex-col gap-1">
 				<code class="bang-badge w-fit">/bang cc @user1, @user2</code>
 				<p class="text-xs text-muted-foreground">
-					Sends the complete post to up to <strong>5</strong> tagged users as a Lyntr notification —
-					plus an email, for anyone tagged who has email notifications turned on. Fails to post at
-					all if you tag more than 5. Limited to once every 5 minutes.
+					Sends the complete post to tagged users as a Lyntr notification and email. <strong>Max five people</strong>. rate limited to once every 5 minutes.
 				</p>
 			</div>
 		</CardContent>
