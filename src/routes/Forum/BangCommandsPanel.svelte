@@ -22,7 +22,7 @@
 		<CardContent class="flex flex-col gap-3 pt-0 text-sm">
 			<p class="text-xs text-muted-foreground">
                 Special use Forum post commands. 
-                These are commanads which allow you to CC other people in your post, crosspost it through the official Blueky channel, 
+                These are commanads which allow you to CC other people in your post, crosspost it through the official Bluesky channel, 
                 as well as post it in the dedicated Discord channel!
 			</p>
 
