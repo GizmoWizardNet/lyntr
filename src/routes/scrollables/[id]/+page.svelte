@@ -68,7 +68,7 @@
 		<meta content="#3d1f00" name="theme-color" />
 
 		<!-- YouTube-style rich video card. og:video (+ secure_url) is what
-		     lets Discord and similar unfurlers render an inline player
+		     lets Discord and similar render an inline player
 		     directly in the card; og:image is the poster shown before
 		     playback starts / on platforms that don't support inline video. -->
 		<meta property="og:type" content="video.other" />

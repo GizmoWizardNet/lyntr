@@ -176,7 +176,7 @@
 		} else if (response.status === 403) {
 			toast.error(`Missing access - frontend may be desynchronised.`);
 		} else {
-			toast.error(`Unknown error occured while deleting: ${response.status} | ${response.statusText}`);
+			toast.error(`Unknown error occurred while deleting: ${response.status} | ${response.statusText}`);
 		}
 	}
 

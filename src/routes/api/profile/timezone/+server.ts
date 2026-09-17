@@ -5,7 +5,7 @@ import { db } from '@/server/db';
 import { users } from '@/server/schema';
 import { eq } from 'drizzle-orm';
 
-const VALID_LABELS = ['GMT', 'UTC']; //valid timesets
+const VALID_LABELS = ['GMT', 'UTC'];
 const OFFSET_PATTERN = /^[+-](0[0-9]|1[0-4]):(00|15|30|45)$/;
 
 export const POST: RequestHandler = async ({ request, cookies }) => {

@@ -1,1 +1,1 @@
-//place files here that load thorugh `$lib` alias
+//place files here that load through `$lib` alias

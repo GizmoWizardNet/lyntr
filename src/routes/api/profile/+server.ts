@@ -49,7 +49,7 @@ let questions: Question[] = [
 	{
 		id: 'AGI',
 		condition: (input: any) => {
-			return santize(input) === 'artificialgeneralintelligence' ? -3 : 4;
+			return sanitise(input) === 'artificialgeneralintelligence' ? -3 : 4;
 		}
 	},
 	{
@@ -67,13 +67,13 @@ let questions: Question[] = [
 	{
 		id: 'Chemistry',
 		condition: (input: any) => {
-			return santize(input as string) === 'francium' ? 10 : -5;
+			return sanitise(input as string) === 'francium' ? 10 : -5;
 		}
 	},
 	{
 		id: 'GPT',
 		condition: (input: any) => {
-			return santize(input) === 'generativepretrainedtransformer' ? 5 : -3;
+			return sanitise(input) === 'generativepretrainedtransformer' ? 5 : -3;
 		}
 	},
 	{
@@ -787,7 +787,7 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 	}
 };
 
-function santize(input: string) {
+function sanitise(input: string) {
 	return input.toLowerCase().replace(/\s/g, '');
 }
 

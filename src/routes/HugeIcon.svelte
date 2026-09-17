@@ -30,7 +30,7 @@
 	}: Props = $props();
 
 	// SVG attributes require strings; the underlying icon data can carry
-	// numeric values (e.g. opacity: 1), so normalize everything to string here
+	// numeric values (e.g. opacity: 1), so normalise everything to string here
 	// rather than at every call site.
 	function str(value: string | number | undefined): string | undefined {
 		return value === undefined ? undefined : String(value);

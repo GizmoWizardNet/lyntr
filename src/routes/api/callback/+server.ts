@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ request, url, cookies }) => {
 		console.log("Discord status:", codeRes.status);
 		console.log("Discord status text:", codeRes.statusText);
 
-		if (codeRes.status != 200) return json({ errror: 'Invalid state' }, { status: 400 });
+		if (codeRes.status != 200) return json({ error: 'Invalid state' }, { status: 400 });
 		const data = await codeRes.json();
 
 		const accessToken = data['access_token'];
@@ -65,7 +65,7 @@ export const GET: RequestHandler = async ({ request, url, cookies }) => {
 			}
 		});
 
-		if (meRes.status != 200) return json({ errror: 'Invalid user' }, { status: 400 });
+		if (meRes.status != 200) return json({ error: 'Invalid user' }, { status: 400 });
 		const meBody = await meRes.json();
 
 		const existingUser = await db

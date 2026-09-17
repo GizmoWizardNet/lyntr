@@ -1,5 +1,5 @@
 // src/lib/server/profile.ts
-// profile lookup thing used by the dekstop app for accurate data communication
+// profile lookup thing used by the desktop app for accurate data communication
 
 import { db } from '@/server/db';
 import { followers, users, userAchievements } from '@/server/schema';
