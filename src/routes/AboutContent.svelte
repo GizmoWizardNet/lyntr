@@ -16,10 +16,6 @@
 		AppWindow
 	} from 'lucide-svelte';
 
-	// Aged/desaturated accent palette (see app.css --accent-*) instead of
-	// raw Tailwind text-amber-500/text-emerald-500/etc — those read as
-	// modern SaaS icon colors next to the sepia/bevel theme everywhere
-	// else on the site.
 	const features: Array<{ icon: any; color: string; label: string }> = [
 		{ icon: PenLine, color: 'text-[hsl(var(--accent-amber))]', label: 'Lynt away; text, images, GIFs and much more!' },
 		{ icon: Users, color: 'text-[hsl(var(--accent-green))]', label: 'Follow people and DM them in semi-real time' },
@@ -31,7 +27,13 @@
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [
 		{ href: 'https://github.com/GizmoWizardNet/lyntr', icon: Code, label: 'Our Github!', external: true },
-		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true },
+		{
+	href: 'https://bsky.app/profile/lyntr.bsky.social',
+	icon: null,
+	label: 'Lyntr on Bluesky',
+	external: true
+},
+		{ href: 'https://discord.gg/y5PA8uS5Tj', icon: MessageCircle, label: 'Discord!', external: true },
 		{
 			href: 'https://github.com/NotHMRC/pylyntr',
 			icon: Code,
@@ -44,9 +46,11 @@
 			label: 'Lyntr Desktop — open source desktop app shell by Stormzady',
 			external: true
 		},
-		{ href: 'https://discord.gg/y5PA8uS5Tj', icon: MessageCircle, label: 'Discord!', external: true },
-		{ href: 'mailto:dev@gizmowizard.tech', icon: Mail, label: 'Contact me ig', external: false }
+		{ href: 'mailto:dev@gizmowizard.tech', icon: Mail, label: 'Contact me', external: false },
+		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true }
 	];
+
+	
 </script>
 
 <div class="about-wrap">
@@ -106,6 +110,29 @@
 						<span>{l.label}</span>
 					</a>
 				{/each}
+
+				{#each links as l}
+	<a
+		href={l.href}
+		target={l.external ? '_blank' : undefined}
+		rel={l.external ? 'noopener noreferrer' : undefined}
+	>
+		{#if l.label === 'Lyntr on Bluesky'}
+			<svg
+				class="h-3.5 w-3.5 shrink-0"
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				aria-hidden="true"
+			>
+				<path d="M12 10.8C10.9 8.7 7.9 4.8 5.1 2.9 2.4 1.1 1.4 1.4.8 1.7.1 2-.2 3.1.1 4.4c.5 2.1 2.2 5.2 3.9 7.1 1.7 1.9 3.6 2.9 5.5 2.9-1.8.3-4.4 1.2-5.3 2.7-.9 1.5-.6 3.1.6 3.7 1.2.6 3.4-.2 5.2-1.5 1.8-1.3 3.2-3 4-4.6.8 1.6 2.2 3.3 4 4.6 1.8 1.3 4 2.1 5.2 1.5 1.2-.6 1.5-2.2.6-3.7-.9-1.5-3.5-2.4-5.3-2.7 1.9 0 3.8-1 5.5-2.9 1.7-1.9 3.4-5 3.9-7.1.3-1.3 0-2.4-.7-2.7-.6-.3-1.6-.6-4.3 1.2-2.8 1.9-5.8 5.8-6.9 7.9z" />
+			</svg>
+		{:else}
+			<l.icon class="h-3.5 w-3.5 shrink-0" />
+		{/if}
+
+		<span>{l.label}</span>
+	</a>
+{/each}
 			</div>
 			<div class="legal-links">
 				<a href="/tos">Terms of Service</a>
