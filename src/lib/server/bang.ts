@@ -1,21 +1,3 @@
-/**
- * "/bang" commands — forum-only power-user syntax.
- *
- *   /bang dihcord          → cross-posts the forum post to the Lyntr Discord
- *                             (view-only #forum channel, via the existing bot)
- *   /bang bsky              → cross-posts to Bluesky via the Lyntr account
- *                             (verified accounts older than 10h only, 1 per 30m)
- *   /bang cc @a, @b, ...    → emails + notifies up to 5 mentioned users the
- *                             complete forum post (email only if the
- *                             recipient has email notifications enabled)
- *
- * Deliberately spelled "dihcord" in the command itself — see BangCommandsPanel
- * for the in-app explainer shown under the forum stats panel.
- *
- * Only ever called from the forum thread/post endpoints — nothing else
- * (lynts, comments, DMs) parses or executes these.
- */
-
 import { db } from '@/server/db';
 import { users } from '@/server/schema';
 import { eq, inArray } from 'drizzle-orm';
@@ -53,7 +35,7 @@ export function validateBangCommands(content: string): string | null {
 				return '/bang cc needs at least one @handle.';
 			}
 		}
-		if (cmd.target !== 'cc' && cmd.target !== 'bsky' && cmd.target !== 'dihcord') {
+		if (cmd.target !== 'cc' && cmd.target !== 'bsky' && cmd.target !== 'dihcord' && cmd.target !== 'discord') {
 			return `Unknown /bang target "${cmd.target}". Try dihcord, bsky, or cc.`;
 		}
 	}
@@ -99,7 +81,7 @@ export async function executeBangCommands(ctx: BangContext): Promise<BangResultS
 	if (!author) return null;
 
 	for (const cmd of commands) {
-		if (cmd.target === 'dihcord') {
+		if (cmd.target === 'dihcord' || cmd.target === 'discord') {
 			summary.discord = await postToDiscord(ctx, author);
 		} else if (cmd.target === 'bsky') {
 			summary.bsky = await postToBsky(ctx, author);
@@ -136,13 +118,12 @@ async function postToDiscord(
 	}
 }
 
-// ── /bang bsky ───────────────────────────────────────────────────────────
 const TEN_HOURS_MS = 10 * 60 * 60 * 1000;
-const BSKY_POST_MAX = 300; // Bluesky's own grapheme cap; we conservatively count chars
+const BSKY_POST_MAX = 300;
 
 async function postToBsky(
 	ctx: BangContext,
-	author: { username: string; verified: boolean | null; created_at: Date | null }
+	author: { username: string; handle: string; verified: boolean | null; created_at: Date | null }
 ): Promise<{ posted: boolean; reason?: string }> {
 	if (!author.verified) return { posted: false, reason: 'Only verified accounts can use /bang bsky.' };
 
@@ -169,10 +150,10 @@ async function postToBsky(
 		const session = await sessionRes.json();
 
 		const plain = stripMarkdownForOg(ctx.content);
-		const text =
-			plain.length > BSKY_POST_MAX
-				? `${plain.slice(0, BSKY_POST_MAX - 1)}…`
-				: plain || ctx.threadTitle;
+		const attribution = `\n\n— @${author.handle} on Lyntr`;
+		const budget = BSKY_POST_MAX - attribution.length;
+		const body = plain || ctx.threadTitle;
+		const text = (body.length > budget ? `${body.slice(0, budget - 1)}…` : body) + attribution;
 
 		const recordRes = await fetch(`${service}/xrpc/com.atproto.repo.createRecord`, {
 			method: 'POST',
@@ -197,6 +178,7 @@ async function postToBsky(
 		return { posted: false, reason: err instanceof Error ? err.message : 'Bluesky request failed.' };
 	}
 }
+
 
 async function ccByEmail(
 	ctx: BangContext,
