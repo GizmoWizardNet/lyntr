@@ -30,14 +30,28 @@ export const NSFW_ERROR = json(
 	{ status: 400 }
 );
 
-// Set CPU backend explicitly — no native bindings needed
-await tf.setBackend('cpu');
-await tf.ready();
-tf.enableProdMode();
+// Lazily loaded on first use instead of at module import time. This file
+// is imported (transitively) by most of the /api routes, and the old
+// top-level `await`s meant the whole server delayed accepting *any*
+// request — not just image uploads — until the NSFW model finished
+// loading. Deferring it to the first actual moderation call means the
+// server can start serving unrelated requests immediately; only the
+// first upload pays the model-load cost, and it's cached after that.
+let modelPromise: ReturnType<typeof nsfw.load> | null = null;
 
-// Load NSFWJS model once at startup
-const model = await nsfw.load();
-console.log('NSFWJS model loaded (CPU backend, architecture-agnostic)');
+async function getModel() {
+	if (!modelPromise) {
+		modelPromise = (async () => {
+			await tf.setBackend('cpu');
+			await tf.ready();
+			tf.enableProdMode();
+			const loaded = await nsfw.load();
+			console.log('NSFWJS model loaded (CPU backend, architecture-agnostic)');
+			return loaded;
+		})();
+	}
+	return modelPromise;
+}
 
 export async function isImageNsfw(image: Buffer): Promise<boolean> {
 	try {
@@ -57,6 +71,7 @@ export async function isImageNsfw(image: Buffer): Promise<boolean> {
 			'int32'
 		);
 
+		const model = await getModel();
 		const predictions = await model.classify(tensor as tf.Tensor3D);
 		tensor.dispose(); // free GPU/CPU memory
 
