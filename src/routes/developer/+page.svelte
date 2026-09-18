@@ -25,10 +25,6 @@
 	import { endpoints, type Endpoint } from './endpoints';
 	import { PUBLIC_GIT_COMMIT } from '$env/static/public';
 
-	// Aged/desaturated accent palette (see app.css --accent-*) instead of
-	// raw Tailwind bg-sky-500/text-emerald-500/etc — those read as a modern
-	// SaaS dashboard next to the sepia/bevel theme everywhere else on the
-	// site; same hue mapping, just pulled into the same aged-paper family.
 	const methodColors: Record<Endpoint['method'], string> = {
 		GET: 'bg-[hsl(var(--accent-blue)/0.14)] text-[hsl(var(--accent-blue))] border-[hsl(var(--accent-blue)/0.35)]',
 		POST: 'bg-[hsl(var(--accent-green)/0.14)] text-[hsl(var(--accent-green))] border-[hsl(var(--accent-green)/0.35)]',
@@ -37,10 +33,6 @@
 		DELETE: 'bg-[hsl(var(--accent-rose)/0.14)] text-[hsl(var(--accent-rose))] border-[hsl(var(--accent-rose)/0.35)]'
 	};
 
-	// Just the text-color portion of methodColors, for inline use in the
-	// API structure tree below — the full badge classes (bg + border) are
-	// meant for actual <Badge> chips, and look like clunky boxes inline
-	// inside a <pre> block instead of just reading as colored text.
 	const methodTextColors: Record<Endpoint['method'], string> = {
 		GET: 'text-[hsl(var(--accent-blue))]',
 		POST: 'text-[hsl(var(--accent-green))]',
@@ -49,9 +41,6 @@
 		DELETE: 'text-[hsl(var(--accent-rose))]'
 	};
 
-	// Solid (non-transparent) dot color per method, for the legend key —
-	// separate from methodColors' translucent badge backgrounds since a
-	// 14%-opacity dot at 10px would be nearly invisible.
 	const methodDotColors: Record<Endpoint['method'], string> = {
 		GET: 'bg-[hsl(var(--accent-blue))]',
 		POST: 'bg-[hsl(var(--accent-green))]',
@@ -71,13 +60,6 @@
 		secret_version: number;
 	};
 
-	// ── Endpoint deck ─────────────────────────────────────────────
-	// Docs are dealt out like a deck of cards: each endpoint gets a real
-	// 3D-flippable card (front = face-down, back = compact summary).
-	// Flipping a card reveals a "View details" toggle that expands the
-	// full request/response docs beneath the grid in normal document
-	// flow, so the flip itself stays snappy and fixed-size regardless
-	// of how long any one endpoint's docs are.
 	const methodIcon: Record<Endpoint['method'], typeof Search01Icon> = {
 		GET: Search01Icon,
 		POST: ZapIcon,
@@ -100,12 +82,6 @@
 	let flipped = $state<Set<number>>(new Set());
 	let expanded = $state<Set<number>>(new Set());
 
-	// ── Sound ─────────────────────────────────────────────────────
-	// Short synthesized cues (no audio files to ship) for flipping,
-	// drawing, and reshuffling. Muted by default is *not* the goal —
-	// sound is on by default but a toggle is one click away, and the
-	// AudioContext is only ever created after a real user gesture so
-	// browsers don't complain about autoplay.
 	let soundOn = $state(true);
 	let audioCtx: AudioContext | null = null;
 
@@ -120,8 +96,6 @@
 		return audioCtx;
 	}
 
-	// A quick pitch-swept blip. `up` sweeps low->high (flip open, draw),
-	// `!up` sweeps high->low (flip closed).
 	function playBlip({ up = true, duration = 0.09, startFreq = 320, endFreq = 720 } = {}) {
 		const ctx = getAudioCtx();
 		if (!ctx) return;
@@ -140,8 +114,6 @@
 	}
 
 	function playDrawSound() {
-		// Two quick blips in succession — a little more eventful than a
-		// single flip, since drawing is the "headline" action.
 		playBlip({ up: true, startFreq: 260, endFreq: 560, duration: 0.07 });
 		setTimeout(() => playBlip({ up: true, startFreq: 420, endFreq: 880, duration: 0.08 }), 60);
 	}
@@ -368,8 +340,6 @@
                                +++                                                          
 `;
 
-	// Pull the live theme's actual accent (--primary) instead of a hardcoded
-	// color, so this matches whatever the site's light/dark theme is doing.
 	function themeColor(varName: string, fallback: string) {
 		if (typeof document === 'undefined') return fallback;
 		const hsl = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -423,7 +393,7 @@
 	<div class="dev-header">
 		<h1>Developer API</h1>
 		<p>
-			Build on top of Lyntr with a REST API authenticated by a client ID and secret. Full docs
+			Build on top of Lyntr with a REST API authenticated by a client ID and secret. Docs
 			are below.
 		</p>
 	</div>
@@ -577,8 +547,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 			</p>
 			<p class="text-muted-foreground flex items-start gap-1.5">
 				Endpoints marked <Badge variant="outline" class="mx-0.5 border-[hsl(var(--accent-rose)/0.4)] bg-[hsl(var(--accent-rose)/0.1)] text-[hsl(var(--accent-rose))]">sensitive</Badge>
-				perform a write on your account (posting, editing, following) and require a credential
-				that hasn't been scoped down to read-only.
+				perform a write on your account (posting, editing, following) and require a credential.
 			</p>
 		</CardContent>
 	</Card>
@@ -587,7 +556,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 		<CardHeader>
 			<CardTitle>Python client</CardTitle>
 			<CardDescription>
-				<code>pylyntr</code> wraps v2 auth and pagination so you're not hand-rolling
+				<code>pylyntr</code> (developed by NotHMRC) wraps v2 auth and pagination so you're not hand-writing
 				<code>curl</code> calls.
 			</CardDescription>
 		</CardHeader>
@@ -614,8 +583,7 @@ for comment in client.all_comments()[:20]: # limit to 20
     print(comment.user.username, comment.content)`}
 			/>
 			<p class="text-muted-foreground">
-				Talks to the same <code>/api/v2</code> base URL and credentials as above — nothing
-				extra to set up on the Lyntr side.
+				Talks to the same <code>/api/v2</code> base URL and credentials as given above.
 			</p>
 		</CardContent>
 	</Card>
@@ -624,8 +592,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 		<CardHeader>
 			<CardTitle>API structure</CardTitle>
 			<CardDescription>
-				Every v2 route, laid out by path. Colors match each method's badge everywhere else on
-				this page.
+				a comprehensive pathing list of all v2 endpoints(legacy v1 endpoints still work)
 			</CardDescription>
 		</CardHeader>
 		<CardContent>
