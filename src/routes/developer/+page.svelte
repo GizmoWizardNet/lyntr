@@ -536,8 +536,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 					<li>
 						New endpoint: <code>GET /lynts/all/comments</code> — the most recent comments
 						across every lynt, not scoped to one parent. Requested by
-						<span class="font-medium">@libhmrc</span> (<code>@nothmrc</code> on Lyntr) — thanks
-						for the idea.
+						<span class="font-medium">@libhmrc6</span>.
 					</li>
 				</ul>
 			</div>
@@ -547,7 +546,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 			</p>
 			<p class="text-muted-foreground flex items-start gap-1.5">
 				Endpoints marked <Badge variant="outline" class="mx-0.5 border-[hsl(var(--accent-rose)/0.4)] bg-[hsl(var(--accent-rose)/0.1)] text-[hsl(var(--accent-rose))]">sensitive</Badge>
-				perform a write on your account (posting, editing, following) and require a credential.
+				perform a write on your account (posting, editing, following).
 			</p>
 		</CardContent>
 	</Card>
@@ -556,7 +555,7 @@ curl https://lyntr.gizmowizard.tech/api/v2/me \\
 		<CardHeader>
 			<CardTitle>Python client</CardTitle>
 			<CardDescription>
-				<code>pylyntr</code> (developed by NotHMRC) wraps v2 auth and pagination so you're not hand-writing
+				<code>pylyntr</code> (developed by NotHMRC) wraps the API so you're not hand-writing
 				<code>curl</code> calls.
 			</CardDescription>
 		</CardHeader>
@@ -592,7 +591,7 @@ for comment in client.all_comments()[:20]: # limit to 20
 		<CardHeader>
 			<CardTitle>API structure</CardTitle>
 			<CardDescription>
-				a comprehensive pathing list of all v2 endpoints(legacy v1 endpoints still work)
+				A comprehensive pathing list of all v2 endpoints (legacy v1 endpoints still work).
 			</CardDescription>
 		</CardHeader>
 		<CardContent>
