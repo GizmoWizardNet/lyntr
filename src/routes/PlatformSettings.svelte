@@ -8,6 +8,7 @@
 	import { Monitor, Sun, Moon, Download } from 'lucide-svelte';
 	import { setMode, resetMode, userPrefersMode } from 'mode-watcher';
 	import DeleteAccountDialog from './DeleteAccountDialog.svelte';
+	import { useOldLoadingAnimations } from './stores';
 	import {
 		isPushSupported,
 		subscribeToPush,
@@ -74,9 +75,35 @@
 				defaultFeed = data.default_feed ?? 'For you';
 				customFont = data.custom_font ?? null;
 				customFontInput = customFont ?? '';
+				useOldLoadingAnimations.set(!!data.use_old_loading_animations);
 			}
 		} finally {
 			loadingFeed = false;
+		}
+	}
+
+	let savingOldLoading = $state(false);
+
+	async function toggleOldLoadingAnimations() {
+		if (savingOldLoading) return;
+		const next = !$useOldLoadingAnimations;
+		savingOldLoading = true;
+		try {
+			const res = await fetch('/api/platform-settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ use_old_loading_animations: next }),
+			});
+			if (res.ok) {
+				useOldLoadingAnimations.set(next);
+				toast.success(next ? 'Using old loading animations.' : 'Using current loading animations.');
+			} else {
+				toast.error('Could not save that setting.');
+			}
+		} catch {
+			toast.error('Could not save that setting.');
+		} finally {
+			savingOldLoading = false;
 		}
 	}
 
@@ -339,6 +366,23 @@
 						<span class="theme-tile-label">Dark</span>
 					</button>
 				</div>
+			</div>
+
+			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+				<span class="text-sm font-semibold">Loading animations</span>
+				<p class="text-xs text-muted-foreground">
+					Switch back to the original loading animation on full-page loads.
+				</p>
+				<label class="flex cursor-pointer items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						checked={$useOldLoadingAnimations}
+						disabled={savingOldLoading}
+						onchange={toggleOldLoadingAnimations}
+						class="h-4 w-4"
+					/>
+					<span class="font-semibold">Use old loading animations</span>
+				</label>
 			</div>
 
 			<div class="flex flex-col gap-2 rounded-lg border border-border p-3">

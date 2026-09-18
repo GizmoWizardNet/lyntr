@@ -13,7 +13,8 @@
 		Code,
 		MessageCircle,
 		Mail,
-		AppWindow
+		AppWindow,
+		Rss
 	} from 'lucide-svelte';
 
 	const features: Array<{ icon: any; color: string; label: string }> = [
@@ -79,6 +80,22 @@
 					characters.
 				</p>
 				<p>Build bots, dashboards or WHATEVER you want — the REST API is open to everyone!</p>
+			</div>
+		</section>
+
+				<section class="about-card">
+			<h2><Rss class="h-4 w-4" /> Using the RSS/Atom 2.0 feed</h2>
+			<div class="about-card-body">
+				<p>
+					Thanks to big-time contributor NotHMRC(follow him @libhmrc6) we finally have a true RSS and Atom 2.0 feed generator; and its the simplest to use!
+				</p>
+				<p>
+					Head over to https://nothmrc.codeberg.page/lyntr-atom/, select the type of feed you want(RSS or Atom 2.0), and then click generate! The resultant link
+					will be your feed.
+
+					Feeds can be generated of a specific user, or just the newest first feed, or can be filtered(still newest first) by tag used. 
+				</p>
+				<p>use it wherever you want.</p>
 			</div>
 		</section>
 

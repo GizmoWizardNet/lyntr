@@ -19,11 +19,19 @@ export const GET: RequestHandler = async ({ cookies }) => {
 	if (!userId) return json({ error: 'Missing authentication' }, { status: 401 });
 
 	const [row] = await db
-		.select({ default_feed: users.default_feed, custom_font: users.custom_font })
+		.select({
+			default_feed: users.default_feed,
+			custom_font: users.custom_font,
+			use_old_loading_animations: users.use_old_loading_animations
+		})
 		.from(users)
 		.where(eq(users.id, userId))
 		.limit(1);
-	return json({ default_feed: row?.default_feed ?? 'For you', custom_font: row?.custom_font ?? null });
+	return json({
+		default_feed: row?.default_feed ?? 'For you',
+		custom_font: row?.custom_font ?? null,
+		use_old_loading_animations: row?.use_old_loading_animations ?? false
+	});
 };
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -52,6 +60,13 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			}
 			updateData.custom_font = fontName;
 		}
+	}
+
+	if (body.use_old_loading_animations !== undefined) {
+		if (typeof body.use_old_loading_animations !== 'boolean') {
+			return json({ error: 'Invalid use_old_loading_animations value' }, { status: 400 });
+		}
+		updateData.use_old_loading_animations = body.use_old_loading_animations;
 	}
 
 	if (Object.keys(updateData).length === 0) {

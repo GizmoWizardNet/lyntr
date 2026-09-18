@@ -17,6 +17,13 @@ export const scrollableCdnRawUrl = (key: string) =>
 export const unreadMessages = writable(0);
 export const unseenAchievements = writable(0);
 
+// Cosmetic preference (Platform Settings > "Use old loading animations").
+// Read by LoadingSpinner for its full-page (occupy_screen) variant only.
+// Kept as a global store rather than a prop, since the full-page spinner
+// is rendered from a dozen different places across the app shell and the
+// user object it derives from isn't always in scope there.
+export const useOldLoadingAnimations = writable(false);
+
 export const bookmarkToggled = writable<{ lyntId: string; bookmarked: boolean } | null>(null);
 
 export interface FeedItem {

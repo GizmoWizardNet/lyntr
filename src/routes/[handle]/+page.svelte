@@ -11,6 +11,7 @@
 	import MainPage from '../MainPage.svelte';
 	import Cookies from 'js-cookie';
 	import type { PageData } from './$types';
+	import { useOldLoadingAnimations } from '../stores';
 
 	let { data }: { data: PageData } = $props();
 
@@ -43,6 +44,14 @@
 	});
 
 	let handle = $derived(($page.params.handle ?? '').replace(/^@/, ''));
+
+	// Keeps the full-page LoadingSpinner (rendered from many places in
+	// the app shell) in sync with the user's Platform Settings
+	// preference — this page has no background refresh of its own, so a
+	// one-time sync from the SSR'd user is enough.
+	$effect(() => {
+		useOldLoadingAnimations.set(!!data.user?.use_old_loading_animations);
+	});
 </script>
 
 <ModeWatcher defaultMode={'light'} />

@@ -1,15 +1,3 @@
-// Uses @tensorflow/tfjs (pure JS) instead of @tensorflow/tfjs-node.
-// This removes the native x86 C++ binding requirement and works on ARM,
-// any Node version, and any architecture.
-//
-// Migration:
-//   bun remove @tensorflow/tfjs-node
-//   bun add @tensorflow/tfjs @tensorflow/tfjs-backend-cpu
-//   (optionally: bun add @tensorflow/tfjs-backend-webgl  — not usable in Node)
-//
-// The pure JS backend is slower than the native one for large batches,
-// but for single-image NSFW classification on a server it's perfectly fine.
-
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-cpu';
 import * as nsfw from 'nsfwjs';
@@ -25,18 +13,11 @@ const PREDICTION_THRESHOLD = 0.7;
 export const NSFW_ERROR = json(
 	{
 		error:
-			'It seems like you just uploaded an NSFW image. We do not allow this type of content. If you believe this is a mistake, please contact us.'
+			'It seems like you just uploaded an NSFW image. We do not allow this type of content. If you believe this is a mistake, please contact us. Most probably we wont help you.'
 	},
 	{ status: 400 }
 );
 
-// Lazily loaded on first use instead of at module import time. This file
-// is imported (transitively) by most of the /api routes, and the old
-// top-level `await`s meant the whole server delayed accepting *any*
-// request — not just image uploads — until the NSFW model finished
-// loading. Deferring it to the first actual moderation call means the
-// server can start serving unrelated requests immediately; only the
-// first upload pays the model-load cost, and it's cached after that.
 let modelPromise: ReturnType<typeof nsfw.load> | null = null;
 
 async function getModel() {
@@ -55,11 +36,8 @@ async function getModel() {
 
 export async function isImageNsfw(image: Buffer): Promise<boolean> {
 	try {
-		// tfjs-node had tf.node.decodeImage — the pure JS backend doesn't.
-		// We use Sharp to decode the image to raw RGB pixels instead,
-		// then create a tensor manually.
 		const { data, info } = await sharp(image)
-			.resize(224, 224, { fit: 'cover' })  // NSFWJS expects 224×224
+			.resize(224, 224, { fit: 'cover' })
 			.removeAlpha()
 			.raw()
 			.toBuffer({ resolveWithObject: true });
@@ -122,18 +100,8 @@ Examples:
 "you're an idiot" -> ALLOW
 "I disagree, this idea is shit" -> ALLOW`;
 
-// NOTE: nvidia/nemotron-3.5-content-safety is a fixed-format safety
-// classifier, not an instruction-following chat model — it ignores custom
-// system prompts entirely and replies with its own format (e.g. "User
-// Safety: safe"), which both breaks JSON parsing and means it can't honor
-// the nuanced ALLOW/BLOCK rules below. Use a general instruct model instead
-// so the prompt is actually followed.
 const MODERATION_MODEL = 'google/gemma-4-26b-a4b-it:free';
 
-// Checks post content against Lyntr's content policy via OpenRouter, BEFORE
-// the post is written to the DB. Fails open (allows the post) if the
-// moderation call itself errors out — we never want an outage in a third
-// party API to silently block every post on the platform.
 export async function moderateContent(content: string): Promise<ModerationVerdict> {
 	if (process.env.MODERATION === 'false') return { allowed: true };
 	if (!content || !content.trim()) return { allowed: true };
@@ -170,8 +138,6 @@ export async function moderateContent(content: string): Promise<ModerationVerdic
 		const data = await res.json();
 		const raw: string = data?.choices?.[0]?.message?.content ?? '';
 
-		// Strip code fences, then grab the first {...} block in case the model
-		// added any preamble/trailing text around the JSON despite instructions.
 		const cleaned = raw.replace(/```json|```/g, '').trim();
 		const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
 
@@ -192,7 +158,6 @@ export async function moderateContent(content: string): Promise<ModerationVerdic
 		return { allowed: true };
 	} catch (err) {
 		console.error('Moderation check error:', err);
-		// Fail open — don't block posting if the moderation service/JSON parse breaks.
 		return { allowed: true };
 	}
 }

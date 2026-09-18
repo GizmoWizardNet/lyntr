@@ -17,8 +17,23 @@ export type CurrentUser = {
 	lynt_coins: number;
 	default_feed: string | null;
 	custom_font: string | null;
+	use_old_loading_animations: boolean;
 };
 
+/**
+ * Resolves the current authenticated user from either the web session
+ * cookie or a desktop bearer token, running the same streak/lyntcoins
+ * bookkeeping the old /api/me handler did.
+ *
+ * Called directly (in-process, no fetch) from both /api/me and any
+ * server `load` function that needs the current user — that's the
+ * point: one shared implementation instead of every route hitting
+ * /api/me over HTTP and duplicating this logic.
+ *
+ * Returns null for any unauthenticated/invalid case rather than
+ * throwing, since most callers just want to know "is anyone logged
+ * in" without special-casing every failure mode.
+ */
 export async function getCurrentUser(
 	request: Request,
 	cookies: Cookies
@@ -54,7 +69,8 @@ export async function getCurrentUser(
 				is_admin: users.is_admin,
 				lynt_coins: users.lynt_coins,
 				default_feed: users.default_feed,
-				custom_font: users.custom_font
+				custom_font: users.custom_font,
+				use_old_loading_animations: users.use_old_loading_animations
 			})
 			.from(users)
 			.where(eq(users.id, userId))
@@ -99,7 +115,8 @@ export async function getCurrentUser(
 			is_admin: user.is_admin,
 			lynt_coins: lyntCoins,
 			default_feed: user.default_feed,
-			custom_font: user.custom_font
+			custom_font: user.custom_font,
+			use_old_loading_animations: user.use_old_loading_animations
 		};
 	} catch (error) {
 		console.error('Authentication error:', error);

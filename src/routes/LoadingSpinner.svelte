@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useOldLoadingAnimations } from './stores';
+
 	interface Props {
 		size?: number; // gif width in px, full-screen mode only
 		occupy_screen?: boolean;
@@ -18,7 +20,12 @@
 
 {#if occupy_screen}
 	<div class="loader-wrap full-screen">
-		<img src="/loading.gif" alt="Loading" class="loading-gif" style="width: {size * 2.5}px;" />
+		<img
+			src={$useOldLoadingAnimations ? '/old_loading.gif' : '/loading.gif'}
+			alt="Loading"
+			class="loading-gif"
+			style="width: {size * 2.5}px;"
+		/>
 		<audio bind:this={audioEl} src="/loading.mp3" loop preload="auto"></audio>
 	</div>
 {:else}

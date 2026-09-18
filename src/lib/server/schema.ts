@@ -50,6 +50,10 @@ export const users = pgTable('users', {
     email_notifications_enabled: boolean('email_notifications_enabled').default(false).notNull(),
     default_feed: text('default_feed').default('For you').notNull(),
     custom_font: text('custom_font'),
+    // Opt-in cosmetic preference: use the original loading.gif/animation
+    // from before the loading-screen redesign, instead of the current
+    // one. Only affects full-page (occupy_screen) loading states.
+    use_old_loading_animations: boolean('use_old_loading_animations').default(false).notNull(),
     notification_email: text('notification_email'),
 
     lynt_coins: integer('lynt_coins').default(0).notNull(),

@@ -16,6 +16,9 @@
 	import { cdnUrl } from '../stores';
 	import type { PageData } from './$types';
 
+	// `data.user` comes from the root +layout.server.ts — resolved
+	// server-side from the session cookie, so there's no loading state
+	// and no client-side /api/me round trip needed here at all.
 	let { data }: { data: PageData } = $props();
 	let authenticated = $derived(!!data.user);
 	let userData = $derived(

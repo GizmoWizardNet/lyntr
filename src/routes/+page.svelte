@@ -10,7 +10,7 @@
 	import MainPage from './MainPage.svelte';
 	import WorkingOverlay from './WorkingOverlay.svelte';
 	import Cookies from 'js-cookie';
-	import { unreadMessages } from './stores';
+	import { unreadMessages, useOldLoadingAnimations } from './stores';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -36,6 +36,7 @@
 		id: string;
 		default_feed?: string;
 		custom_font?: string | null;
+		use_old_loading_animations?: boolean;
 	}>(
 		data.user
 			? {
@@ -45,7 +46,8 @@
 					iq: data.user.iq,
 					id: data.user.id,
 					default_feed: data.user.default_feed ?? undefined,
-					custom_font: data.user.custom_font
+					custom_font: data.user.custom_font,
+					use_old_loading_animations: data.user.use_old_loading_animations
 				}
 			: {
 					username: '',
@@ -131,7 +133,8 @@
 					iq:         res.iq,
 					id:         res.id,
 					default_feed: res.default_feed,
-					custom_font: res.custom_font
+					custom_font: res.custom_font,
+					use_old_loading_animations: res.use_old_loading_animations
 				};
 				localStorage.setItem('user-data', JSON.stringify(userData));
 				noAccount = false;
@@ -160,6 +163,15 @@
 
 	$effect(() => {
 		applyCustomFont(userData.custom_font);
+	});
+
+	// Keeps the full-page LoadingSpinner (rendered from many places across
+	// the app shell, outside this component's scope) in sync with the
+	// user's Platform Settings preference — set on first paint from SSR
+	// data, and again whenever checkAuthAndProfileStatus() refreshes
+	// userData in the background.
+	$effect(() => {
+		useOldLoadingAnimations.set(!!userData.use_old_loading_animations);
 	});
 
 </script>
