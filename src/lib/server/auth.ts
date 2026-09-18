@@ -19,20 +19,6 @@ export type CurrentUser = {
 	custom_font: string | null;
 };
 
-/**
- * Resolves the current authenticated user from either the web session
- * cookie or a desktop bearer token, running the same streak/lyntcoins
- * bookkeeping the old /api/me handler did.
- *
- * Called directly (in-process, no fetch) from both /api/me and any
- * server `load` function that needs the current user — that's the
- * point: one shared implementation instead of every route hitting
- * /api/me over HTTP and duplicating this logic.
- *
- * Returns null for any unauthenticated/invalid case rather than
- * throwing, since most callers just want to know "is anyone logged
- * in" without special-casing every failure mode.
- */
 export async function getCurrentUser(
 	request: Request,
 	cookies: Cookies

@@ -2,54 +2,29 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import '../../app.css';
 
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import Cookies from 'js-cookie';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import { ArrowLeft } from 'lucide-svelte';
 	import { mode } from 'mode-watcher';
 
-	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import Navigation from '../Navigation.svelte';
 	import PostButton from '../PostButton.svelte';
 	import ProfileButton from '../ProfileButton.svelte';
 	import DownloadsContent from '../DownloadsContent.svelte';
 	import { cdnUrl } from '../stores';
+	import type { PageData } from './$types';
 
-	let authenticated = $state(false);
-	let loading = $state(true);
-	let userData = $state({
-		username: '',
-		handle: '',
-		id: ''
-	});
-
-	async function checkAuth() {
-		if (Cookies.get('_TOKEN__DO_NOT_SHARE')) {
-			authenticated = true;
-		}
-		try {
-			const res = await fetch('/api/me', { method: 'GET', credentials: 'include' });
-			if (res.status === 200) {
-				const data = await res.json();
-				userData = { username: data.username, handle: data.handle, id: data.id };
-				authenticated = true;
-			} else {
-				authenticated = false;
-			}
-		} catch (error) {
-			console.error('Error checking auth status:', error);
-			authenticated = false;
-		} finally {
-			loading = false;
-		}
-	}
-
-	onMount(() => {
-		checkAuth();
-	});
+	// `data.user` comes from the root +layout.server.ts — no client-side
+	// /api/me fetch or loading state needed on this page anymore.
+	let { data }: { data: PageData } = $props();
+	let authenticated = $derived(!!data.user);
+	let userData = $derived(
+		data.user
+			? { username: data.user.username, handle: data.user.handle, id: data.user.id }
+			: { username: '', handle: '', id: '' }
+	);
 </script>
 
 <svelte:head>
@@ -59,9 +34,7 @@
 <ModeWatcher defaultMode={'light'} />
 <Toaster />
 
-{#if loading}
-	<LoadingSpinner />
-{:else if !authenticated}
+{#if !authenticated}
 	<!-- Guests: a plain, standalone page — no sidebar, no login wall. -->
 	<div class="min-h-dvh w-full">
 		<div class="border-border flex items-center gap-3 border-b px-4 py-3">

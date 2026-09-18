@@ -268,7 +268,7 @@
 							>
 								<div class="plaque-ribbon">{achievement.tier}</div>
 								<div class="plaque-body">
-									<img
+									<img loading="lazy" decoding="async"
 										src={`/achievements/${achievement.icon}`}
 										alt={achievement.name}
 										class="achievement-icon achievement-icon-lg"
@@ -313,7 +313,7 @@
 								<div class="plaque-ribbon">{achievement.unlocked ? achievement.tier : 'locked'}</div>
 								<div class="plaque-body">
 									{#if achievement.icon}
-										<img
+										<img loading="lazy" decoding="async"
 											src={`/achievements/${achievement.icon}`}
 											alt={achievement.name}
 											class={`achievement-icon ${achievement.unlocked ? '' : 'grayscale'}`}
