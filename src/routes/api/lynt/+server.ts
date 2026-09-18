@@ -88,7 +88,7 @@ export const POST: RequestHandler = async ({
 
 	const verdict = await moderateContent(content);
 	if (!verdict.allowed) {
-		return json({ error: verdict.reason }, { status: 400 });
+		return json({ error: verdict.reason, moderationNotices: verdict.notices }, { status: 400 });
 	}
 
 	try {
@@ -266,7 +266,7 @@ export const POST: RequestHandler = async ({
 			console.error('Unhandled error in post-creation side effects:', err)
 		);
 
-		return json(newLynt, { status: 201 });
+		return json({ ...newLynt, moderationNotices: verdict.notices }, { status: 201 });
 	} catch (error) {
 		console.error('Error creating lynt:', error);
 		return json({ error: 'Failed to create lynt' }, { status: 500 });

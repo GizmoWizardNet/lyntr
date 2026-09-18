@@ -10,22 +10,14 @@
 	const CHAR_LIMIT = 280;
 
 	interface Props {
-		// Where the fetch goes. /api/lynt for new posts, /api/comment for replies.
 		submitUrl: string;
-		// localStorage key for draft autosave/restore. Pass a stable, unique
-		// key per surface (e.g. 'compose:new' or `compose:reply:${lyntId}`).
 		draftKey: string;
 		placeholder?: string;
 		submitLabel?: string;
 		allowPoll?: boolean;
 		autofocus?: boolean;
-		// Called with the parsed JSON response body on a successful post.
 		onPosted?: (item: any) => void;
-		// Called when the user explicitly cancels (Escape / close button).
-		// If there's unsaved content, Composer confirms before calling this.
 		onCancel?: (() => void) | null;
-		// Extra fields the caller needs on the FormData before it's sent —
-		// e.g. { id: parentLyntId } for replies, { reposted: id } for reposts.
 		extraFields?: Record<string, string>;
 		onTypingStart?: (() => void) | null;
 		onTypingStop?: (() => void) | null;
@@ -221,12 +213,17 @@
 
 			if (res.status === 201) {
 				const item = await res.json();
+				// The moderation model may have hopped providers before it landed
+				// on a verdict — surface that so a stalled-feeling post isn't a
+				// silent mystery.
+				for (const notice of item?.moderationNotices ?? []) toast.info(notice);
 				reset();
 				onPosted?.(item);
 			} else if (res.status === 429) {
 				toast.warning('Woah, slow down! You are being ratelimited.');
 			} else {
 				const body = await res.json().catch(() => null);
+				for (const notice of body?.moderationNotices ?? []) toast.info(notice);
 				toast.error(body?.error || `Something went wrong. Error: ${res.status} ${res.statusText}`);
 			}
 		} finally {
