@@ -13,8 +13,20 @@
 	import { unreadMessages } from './stores';
 	import type { PageData } from './$types';
 
-	let authenticated: boolean = $state(false);
-	let loading: boolean = $state(true);
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+
+	// Server-rendered auth: when the load function already resolved the
+	// session cookie to a user, skip the loading spinner and any client
+	// fetch entirely on first paint — checkAuthAndProfileStatus() below
+	// still runs in the background afterward to refresh streak/coins
+	// and to cover edge cases (desktop token exchange, cache misses),
+	// but it no longer gates what's shown first.
+	let authenticated: boolean = $state(!!data.user);
+	let loading: boolean = $state(!data.user);
 	let noAccount: boolean = $state(false);
 	let userData = $state<{
 		username: string;
@@ -24,13 +36,25 @@
 		id: string;
 		default_feed?: string;
 		custom_font?: string | null;
-	}>({
-		username: '',
-		handle: '',
-		created_at: '',
-		iq: 90,
-		id: ''
-	});
+	}>(
+		data.user
+			? {
+					username: data.user.username,
+					handle: data.user.handle,
+					created_at: String(data.user.created_at),
+					iq: data.user.iq,
+					id: data.user.id,
+					default_feed: data.user.default_feed ?? undefined,
+					custom_font: data.user.custom_font
+				}
+			: {
+					username: '',
+					handle: '',
+					created_at: '',
+					iq: 90,
+					id: ''
+				}
+	);
 
 	const SYSTEM_FONTS = new Set([
 		'Tahoma', 'Geneva', 'Verdana', 'Arial', 'Helvetica', 'Georgia',
@@ -129,12 +153,6 @@
 		checkAuthAndProfileStatus();
 	});
 
-	interface Props {
-		data: PageData;
-	}
-
-	let { data }: Props = $props();
-
 	$effect(() => {
 		const baseTitle = data.lynt ? `${data.lynt.username} on Lyntr` : 'Lyntr';
 		document.title = $unreadMessages > 0 ? `(${$unreadMessages}) ${baseTitle}` : baseTitle;
@@ -167,7 +185,7 @@
 		}}
 	/>
 {:else}
-	<MainPage {...userData} lyntOpened={data.lyntOpened} />
+	<MainPage {...userData} lyntOpened={data.lyntOpened} initialFeed={data.initialFeed} />
 {/if}
 
 <svelte:head>

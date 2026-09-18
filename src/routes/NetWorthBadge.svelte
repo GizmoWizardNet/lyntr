@@ -72,13 +72,13 @@
 		on:click|stopPropagation
 		title="#{s.rank} holder of ${s.coin.symbol} — {s.percentage.toFixed(2)}% of supply"
 	>
-		<img
+		<img loading="lazy" decoding="async"
 			src="https://rugplay.com/rugplay.svg"
 			alt="Rugplay"
 			class="rugplay-logo"
 			on:error={(e) => ((e.currentTarget as HTMLElement).style.display = 'none')}
 		/>
-		<img
+		<img loading="lazy" decoding="async"
 			src="https://rugplay.com/api/proxy/s3/{s.coin.icon}"
 			alt={s.coin.name}
 			class="icon"

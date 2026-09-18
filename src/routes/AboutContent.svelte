@@ -13,8 +13,7 @@
 		Code,
 		MessageCircle,
 		Mail,
-		AppWindow,
-		Rss
+		AppWindow
 	} from 'lucide-svelte';
 
 	const features: Array<{ icon: any; color: string; label: string }> = [
@@ -80,22 +79,6 @@
 					characters.
 				</p>
 				<p>Build bots, dashboards or WHATEVER you want — the REST API is open to everyone!</p>
-			</div>
-		</section>
-
-		<section class="about-card">
-			<h2><Rss class="h-4 w-4" /> Using the RSS/Atom 2.0 feed</h2>
-			<div class="about-card-body">
-				<p>
-					Thanks to big-time contributor NotHMRC(follow him @libhmrc6) we finally have a true RSS and Atom 2.0 feed generator; and its the simplest to use!
-				</p>
-				<p>
-					Head over to https://nothmrc.codeberg.page/lyntr-atom/, select the type of feed you want(RSS or Atom 2.0), and then click generate! The resultant link
-					will be your feed.
-
-					Feeds can be generated of a specific user, or just the newest first feed, or can be filtered(still newest first) by tag used. 
-				</p>
-				<p>use it wherever you want.</p>
 			</div>
 		</section>
 
@@ -198,6 +181,11 @@
 		color: hsl(var(--muted-foreground));
 	}
 
+	/* Auto-fitting columns instead of a rigid 3-up grid, and each card
+	   sizes to its own content (align-items: start) — so a Credits
+	   card that grows over time (more links) doesn't force Features
+	   and About to stretch to match it, and everything still reflows
+	   to a single column on narrow screens without any breakpoints. */
 	.about-masonry {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -219,6 +207,9 @@
 		box-shadow: var(--hard-shadow-sm);
 	}
 
+	/* Credits tends to grow (more links over time) — let it claim the
+	   full row on wide layouts instead of being squeezed into a third
+	   column alongside two much shorter cards. */
 	.about-card-wide {
 		grid-column: 1 / -1;
 	}
@@ -270,6 +261,11 @@
 		font-size: 13px;
 		color: hsl(var(--foreground));
 	}
+
+	/* Credit links wrap onto their own lines regardless of label
+	   length — a long "Pylyntr — open source..." button never gets
+	   clipped or forces horizontal scroll, it just takes more width
+	   or drops to its own row. */
 	.credit-links {
 		display: flex;
 		flex-wrap: wrap;

@@ -47,6 +47,7 @@
 		lyntOpened?: string | null;
 		profileOpened?: string | null;
 		default_feed?: string | null;
+		initialFeed?: FeedItem[] | null;
 	}
 
 	let {
@@ -55,15 +56,22 @@
 		id,
 		lyntOpened = $bindable(null),
 		profileOpened = null,
-		default_feed = null
+		default_feed = null,
+		initialFeed = null
 	}: Props = $props();
 
-	let loadingFeed = $state(true);
+	// initialFeed comes from the server load that rendered this page — a
+	// one-time seed, not a reactive binding. Reading it here only
+	// affects the values these $state()s are created with; later prop
+	// changes (e.g. from an in-app navigation that reruns the root
+	// load) are intentionally NOT re-synced, so we never clobber
+	// whatever the user has since scrolled/loaded into `feed`.
+	let loadingFeed = $state(!initialFeed);
 	let page: string = $state('home');
 
 	currentPage.subscribe((value) => { page = value; });
 
-	let feed: FeedItem[] = $state([]);
+	let feed: FeedItem[] = $state(initialFeed ?? []);
 	let comments: FeedItem[] = $state([]);
 	let selectedLynt: FeedItem | null = $state(null);
 	let referencedLynts: FeedItem[] = $state([]);
@@ -431,7 +439,13 @@
 	let unsubBookmarkToggle: () => void;
 
 	onMount(async () => {
-		fetchFeed();
+		// Only fetch client-side if the server load didn't already seed
+		// the "For you" feed for us (different tab, logged out at SSR
+		// time, or the seed query failed) — otherwise this would just
+		// re-request and re-render the same first page we already have.
+		if (!initialFeed) {
+			fetchFeed();
+		}
 		connectWS();
 		if (feedContainer) {
 			feedContainer.addEventListener('scroll', handleScroll);

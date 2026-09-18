@@ -66,7 +66,7 @@
 	{#if verified}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img
+				<img loading="lazy" decoding="async"
 					src={mode.current !== 'light' ? 'white_mode_verified.png?v=7' : 'verified.png?v=7'}
 					alt="Verified"
 					class="badge-img"
@@ -80,7 +80,7 @@
 	{#if isAdmin}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img 
+				<img loading="lazy" decoding="async" 
 					src="/admin_badge.png" 
 					alt="Admin"
 					class="badge-img"
@@ -94,7 +94,7 @@
 	{#if contributor}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img src="/contributor.png" alt="Contributor" class="badge-img" />
+				<img loading="lazy" decoding="async" src="/contributor.png" alt="Contributor" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>This user has <span class="rounded-xl bg-border px-1">contributed</span> to Lyntr!</p></Tooltip.Content>
 		</Tooltip.Root>
@@ -130,7 +130,7 @@
 	{#if followsViewer}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img src="/supporter.png" alt="Supporter" class="badge-img" />
+				<img loading="lazy" decoding="async" src="/supporter.png" alt="Supporter" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>Follows you :D</p></Tooltip.Content>
 		</Tooltip.Root>

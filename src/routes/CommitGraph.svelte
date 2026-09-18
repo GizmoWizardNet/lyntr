@@ -279,7 +279,7 @@
 							<span class="commit-msg">{commit.message}</span>
 							<span class="commit-sub">
 								{#if commit.avatarUrl}
-									<img src={commit.avatarUrl} alt="" class="commit-avatar" />
+									<img loading="lazy" decoding="async" src={commit.avatarUrl} alt="" class="commit-avatar" />
 								{/if}
 								<span class="commit-author">{commit.authorLogin ?? commit.authorName}</span>
 								<code class="commit-sha">{commit.shortSha}</code>

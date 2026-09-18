@@ -580,7 +580,7 @@
 								{/if}
 								{#if msg.attachment_url}
 									{#if isImage(msg.attachment_type)}
-										<img class="attachment-img" src={msg.attachment_url} alt={msg.attachment_name} />
+										<img class="attachment-img" src={msg.attachment_url} alt={msg.attachment_name} loading="lazy" decoding="async" />
 									{:else}
 										<a class="attachment-link" href={msg.attachment_url} target="_blank" rel="noopener noreferrer">
 											📎 {msg.attachment_name}

@@ -558,6 +558,8 @@
 										<img
 											src={`/achievements/${achievement.icon}`}
 											alt={achievement.name}
+											loading="lazy"
+											decoding="async"
 											class={`h-5 w-5 object-contain ${unlocked ? '' : 'grayscale'}`}
 										/>
 									{/if}
