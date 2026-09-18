@@ -105,13 +105,6 @@
 			</div>
 			<div class="credit-links">
 				{#each links as l}
-					<a href={l.href} target={l.external ? '_blank' : undefined} rel={l.external ? 'noopener noreferrer' : undefined}>
-						<l.icon class="h-3.5 w-3.5 shrink-0" />
-						<span>{l.label}</span>
-					</a>
-				{/each}
-
-				{#each links as l}
 	<a
 		href={l.href}
 		target={l.external ? '_blank' : undefined}
