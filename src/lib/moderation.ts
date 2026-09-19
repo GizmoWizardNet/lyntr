@@ -7,7 +7,7 @@ import sharp from 'sharp';
 
 config({ path: '.env' });
 
-const BAD_PREDICTION_TYPES = ['Hentai', 'Porn'];
+const BAD_PREDICTION_TYPES = ['Hentai', 'Porn', 'Erotic', 'Sexual'];
 const PREDICTION_THRESHOLD = 0.7;
 
 export const NSFW_ERROR = json(
