@@ -27,7 +27,6 @@
 		if (absNum >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
 		return num.toString();
 	}
-
 	
 	interface Props {
 		myId: string;
@@ -146,25 +145,7 @@
 	let repostContent = $state('');
 	let likersHover = $state(false);
 
-	// Lyntskin: always visible but frozen on a still frame; the real GIF
-	// underneath only becomes visible (and so only appears to "play") on
-	// hover. See $lib/lyntskinFreezeFrame for why this needs a captured
-	// PNG rather than just a CSS opacity toggle.
 	let lyntskinFreezeFrameUrl: string | null = $state(null);
-	$effect(() => {
-		const skin = lyntskinKey ? LYNTSKIN_BY_KEY[lyntskinKey] : null;
-		if (!skin) {
-			lyntskinFreezeFrameUrl = null;
-			return;
-		}
-		let cancelled = false;
-		getLyntskinFreezeFrame(skin.file).then((url) => {
-			if (!cancelled) lyntskinFreezeFrameUrl = url;
-		});
-		return () => {
-			cancelled = true;
-		};
-	});
 	let likersHoverTimer: ReturnType<typeof setTimeout>;
 
 	function scheduleLikersHover(show: boolean) {
@@ -266,17 +247,13 @@
 	class="mb-2 w-full text-left"
 >
 	<div class="lynt-card flex w-full gap-3 p-3">
-		{#if lyntskinKey && LYNTSKIN_BY_KEY[lyntskinKey]}
-			<div class="lyntskin-bg" aria-hidden="true">
-				<div
-					class="lyntskin-gif"
-					style="background-image: url({LYNTSKIN_BY_KEY[lyntskinKey].file})"
-				></div>
-				{#if lyntskinFreezeFrameUrl}
-					<div class="lyntskin-freeze" style="background-image: url({lyntskinFreezeFrameUrl})"></div>
-				{/if}
-			</div>
-		{/if}
+	{#if lyntskinKey && LYNTSKIN_BY_KEY[lyntskinKey]}
+  {@const skin = LYNTSKIN_BY_KEY[lyntskinKey]}
+  <div class="lyntskin-bg" aria-hidden="true"
+       style="--still: url({skin.file.replace('.webp', '.still.webp')}); --anim: url({skin.file})">
+    <div class="lyntskin-layer"></div>
+  </div>
+{/if}
 		<a href="/@{handle}" class="relative z-[1] inline-block max-h-[40px] min-w-[40px] flex-shrink-0">
 			{#if isClan && contributors.length > 0}
 				<ClanAvatarStack {contributors} size={10} />
@@ -492,22 +469,8 @@
 		opacity: 0.45;
 	}
 
-	.lyntskin-gif,
-	.lyntskin-freeze {
-		position: absolute;
-		inset: 0;
-		background-size: cover;
-		background-position: center;
-	}
-
-	.lyntskin-freeze {
-		opacity: 1;
-		transition: opacity 0.35s ease;
-	}
-
-	.lynt-card:hover .lyntskin-freeze {
-		opacity: 0;
-	}
+	.lyntskin-layer { position:absolute; inset:0; background-size:cover; background-position:center; background-image: var(--still); }
+	.lynt-card:hover .lyntskin-layer { background-image: var(--anim); }
 
 	@media (prefers-reduced-motion: reduce) {
 		.lyntskin-freeze {

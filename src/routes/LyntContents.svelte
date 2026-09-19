@@ -135,6 +135,7 @@
 	let bookmarked = false;
 
 	async function loadBookmarkState() {
+		if (!get(page).data.user) return;   // user comes from your root layout
 		const res = await fetch(`api/bookmark?id=${postId}`);
 		if (res.ok) {
 			const data = await res.json();
