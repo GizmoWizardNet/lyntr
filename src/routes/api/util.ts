@@ -5,15 +5,9 @@ import sharp from 'sharp';
 import { isImageNsfw } from '@/moderation';
 import { broadcastLyntDeleted, broadcastRepostUpdate, broadcastCommentCountUpdate } from '@/sse';
 
-// Hard cap on images per lynt/comment — keeps the composer's drag-and-drop
-// grid and the rendered gallery both predictable (2x2 max grid).
 export const MAX_LYNT_IMAGES = 4;
 
 export const lyntObj = (userId: string | null) => {
-	// ── social-state helpers ───────────────────────────────────────────────
-	// These must stay as correlated subqueries because they are viewer-
-	// dependent and therefore cannot be pre-joined at the FROM level.
-
 	const likedByUser = userId
 		? sql<boolean>`exists(
 			select 1 from ${likes}
@@ -47,9 +41,6 @@ export const lyntObj = (userId: string | null) => {
 		)`.as('follows_viewer')
 		: sql<boolean>`false`.as('follows_viewer');
 
-	// ── aggregate counts ───────────────────────────────────────────────────
-	// Kept as correlated subqueries.  The new indexes on history(lynt_id),
-	// likes(lynt_id via PK), and lynts(parent) make these fast.
 
 	const viewCount = sql<number>`(
 		select count(*)
@@ -126,9 +117,6 @@ export const lyntObj = (userId: string | null) => {
 		) p
 	)`;
 
-	// Individual columns extracted from the JSON blob.
-	// These keep the exact same aliases as the old correlated subqueries so
-	// no call site needs changing.
 	const parentContent       = sql<string | null>`(${parentJson}->>'content')`.as('parent_content');
 	const parentHasImage      = sql<boolean | null>`((${parentJson}->>'has_image')::boolean)`.as('has_image');
 	const parentGifUrl        = sql<string | null>`(${parentJson}->>'gif_url')`.as('parent_gif_url');
@@ -215,7 +203,6 @@ export const lyntObj = (userId: string | null) => {
 	)`.as('reactions');
 
 	return {
-		// ── lynt core ─────────────────────────────────────────────────────
 		id:           lynts.id,
 		reactions:    reactionsJson,
 		content:      lynts.content,
@@ -233,18 +220,15 @@ export const lyntObj = (userId: string | null) => {
 		clanAvgIq:    lynts.clan_avg_iq,
 		contributors: contributorsJson,
 
-		// ── counts ────────────────────────────────────────────────────────
 		views:        viewCount,
 		likeCount,
 		repostCount,
 		commentCount,
 
-		// ── viewer social state ───────────────────────────────────────────
 		likedByUser,
 		repostedByUser,
 		likedByFollowed,
 
-		// ── author info (comes from the LEFT JOIN users in every feed) ────
 		handle:          users.handle,
 		bio:             users.bio,
 		userCreatedAt:   users.created_at,
@@ -257,6 +241,9 @@ export const lyntObj = (userId: string | null) => {
 		followerCount,
 		followsViewer,
 		nameColor:       users.name_color,
+		statusText:
+			sql<string | null>`case when ${users.status_expires_at} is not null and ${users.status_expires_at} <= now() then null else ${users.status_text} end`.as('status_text'),
+		statusExpiresAt: users.status_expires_at,
 
 		_parentJson: parentJson.as('_parent_json'),
 		parentContent,
@@ -274,7 +261,6 @@ export const lyntObj = (userId: string | null) => {
 		parentCreatedAt,
 		parentUserNameColor,
 
-		// ── poll (single lateral subquery, null if none exists) ───────────
 		poll: pollJson,
 	};
 };
@@ -430,7 +416,6 @@ export async function fetchReferencedLynts(
 ): Promise<any[]> {
 	if (!parentId) return [];
 
-	// Step 1: walk the parent chain in one recursive CTE.
 	const chainRows = await db.execute<{ id: string; parent: string | null; depth: number }>(
 		sql`
 			WITH RECURSIVE chain AS (
@@ -451,7 +436,6 @@ export async function fetchReferencedLynts(
 
 	if (chainRows.length === 0) return [];
 
-	// Step 2: fetch all parents in a single lyntObj query, preserving order.
 	const ids = chainRows.map((r) => r.id);
 	const obj = lyntObj(userId);
 
@@ -461,7 +445,6 @@ export async function fetchReferencedLynts(
 		.leftJoin(users, eq(lynts.user_id, users.id))
 		.where(inArray(lynts.id, ids));
 
-	// Re-order to match the chain order (oldest ancestor first).
 	const byId = new Map(rows.map((r) => [r.id, r]));
 	return ids.map((id) => byId.get(id)).filter(Boolean);
 }

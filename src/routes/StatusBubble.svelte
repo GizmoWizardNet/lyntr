@@ -14,39 +14,26 @@
 <style>
 	.status-bubble {
 		position: absolute;
-		bottom: calc(100% + 10px);
+		bottom: calc(100% + 8px);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 50;
 		width: max-content;
 		max-width: 240px;
-		padding: 8px 14px;
-		border-radius: 14px;
+		padding: 6px 10px;
+		border-radius: var(--radius-sm);
+		font-family: var(--font-retro);
 		font-size: 0.8125rem;
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.35;
 		text-align: center;
-		color: hsl(var(--foreground));
-		background: hsl(var(--popover) / 0.5);
-		/* Frosted glass depth */
-		-webkit-backdrop-filter: blur(16px) saturate(180%);
-		backdrop-filter: blur(16px) saturate(180%);
-		border: 1px solid hsl(var(--foreground) / 0.12);
-		box-shadow:
-			0 12px 28px -6px rgba(0, 0, 0, 0.35),
-			0 2px 8px rgba(0, 0, 0, 0.15),
-			inset 0 1px 0 rgba(255, 255, 255, 0.25),
-			inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-		pointer-events: none;
-		animation: status-bubble-pop 0.16s cubic-bezier(0.2, 0.8, 0.3, 1);
-	}
-
-	.status-bubble::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		border-radius: inherit;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);
+		color: hsl(var(--popover-foreground));
+		background: hsl(var(--popover));
+		border-top: 1.5px solid var(--bevel-light);
+		border-left: 1.5px solid var(--bevel-light);
+		border-bottom: 1.5px solid var(--bevel-dark);
+		border-right: 1.5px solid var(--bevel-dark);
+		box-shadow: var(--hard-shadow);
 		pointer-events: none;
 	}
 
@@ -58,32 +45,13 @@
 
 	.status-bubble-tail {
 		position: absolute;
-		bottom: -5px;
+		bottom: -6px;
 		left: 50%;
-		width: 10px;
-		height: 10px;
+		width: 9px;
+		height: 9px;
 		transform: translateX(-50%) rotate(45deg);
-		background: hsl(var(--popover) / 0.5);
-		border-right: 1px solid hsl(var(--foreground) / 0.12);
-		border-bottom: 1px solid hsl(var(--foreground) / 0.12);
-		-webkit-backdrop-filter: blur(16px) saturate(180%);
-		backdrop-filter: blur(16px) saturate(180%);
-	}
-
-	@keyframes status-bubble-pop {
-		from {
-			opacity: 0;
-			transform: translateX(-50%) translateY(4px) scale(0.92);
-		}
-		to {
-			opacity: 1;
-			transform: translateX(-50%) translateY(0) scale(1);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.status-bubble {
-			animation: none;
-		}
+		background: hsl(var(--popover));
+		border-right: 1.5px solid var(--bevel-dark);
+		border-bottom: 1.5px solid var(--bevel-dark);
 	}
 </style>

@@ -15,6 +15,7 @@
 	import NetWorthBadge from './NetWorthBadge.svelte';
 	import UserBadges from './UserBadges.svelte';
 	import UserName from './UserName.svelte';
+	import StatusPill from './StatusPill.svelte';
 
 	function getTimeElapsed(date: Date | string) {
 		if (typeof date === 'string') date = new Date(date);
@@ -87,6 +88,11 @@
 	export let nameColor: string | null = null;
 	export let isClan: boolean = false;
 	export let clanAvgIq: number | null = null;
+	export let statusText: string | null = null;
+	export let statusExpiresAt: string | Date | null = null;
+
+	const isStatusLive = (statusText: string | null, statusExpiresAt: string | Date | null) =>
+		!!statusText && (!statusExpiresAt || new Date(statusExpiresAt).getTime() > Date.now());
 
 	const formattedDate = formatDateTooltip(createdAt);
 
@@ -126,7 +132,6 @@
 		}
 	}
 
-	// ── Bookmark state ───────────────────────────────────────────
 	let bookmarked = false;
 
 	async function loadBookmarkState() {
@@ -139,11 +144,6 @@
 	loadBookmarkState();
 
 	async function toggleBookmark() {
-		// Optimistic: flip immediately and broadcast so any list showing the
-		// Bookmarked tab elsewhere in the app can splice it out live, same
-		// pattern as likes/follows. Roll back on failure instead of the old
-		// behaviour, which set `bookmarked` unconditionally after the fetch —
-		// so a failed request still silently reported success.
 		const wasBookmarked = bookmarked;
 		bookmarked = !wasBookmarked;
 		popoverOpened = false;
@@ -166,8 +166,7 @@
 			toast.error(`Failed to ${wasBookmarked ? 'remove' : 'add'} bookmark. Please try again.`);
 		}
 	}
-
-	// ── Delete ───────────────────────────────────────────────────
+	
 	async function handleDelete() {
 		const response = await fetch('api/lynt?id=' + postId, { method: 'DELETE' });
 
@@ -236,6 +235,9 @@
 								<h4 class="text-sm font-semibold"><UserName name={username} color={nameColor} {verified} /></h4>
 								<h4 class="text-sm font-semibold">@{handle}</h4>
 								<p class="break-words text-sm">{bio}</p>
+								{#if isStatusLive(statusText, statusExpiresAt)}
+									<StatusPill text={statusText as string} class="mt-1 flex" />
+								{/if}
 								<div class="flex items-center pt-2">
 									<CalendarDays class="mr-2 h-4 w-4 opacity-70" />
 									<span class="text-xs text-muted-foreground">
@@ -282,6 +284,9 @@
 								<h4 class="text-sm font-semibold"><UserName name={username} color={nameColor} {verified} /></h4>
 								<h4 class="text-sm font-semibold">@{handle}</h4>
 								<p class="break-words text-sm">{bio}</p>
+								{#if isStatusLive(statusText, statusExpiresAt)}
+									<StatusPill text={statusText as string} class="mt-1 flex" />
+								{/if}
 								<div class="flex items-center pt-2">
 									<CalendarDays class="mr-2 h-4 w-4 opacity-70" />
 									<span class="text-xs text-muted-foreground">

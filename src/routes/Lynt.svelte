@@ -82,6 +82,8 @@
 		isClan?: boolean;
 		clanAvgIq?: number | null;
 		contributors?: { userId: string; username: string; handle: string }[];
+		statusText?: string | null;
+		statusExpiresAt?: string | Date | null;
 	}
 
 	let {
@@ -135,7 +137,9 @@
 		parentUserNameColor = null,
 		isClan = false,
 		clanAvgIq = null,
-		contributors = []
+		contributors = [],
+		statusText = null,
+		statusExpiresAt = null
 	}: Props = $props();
 
 	let openDialog = $state(false);
@@ -308,6 +312,8 @@
 				{nameColor}
 				{isClan}
 				{clanAvgIq}
+				{statusText}
+				{statusExpiresAt}
 			/>
 
 			{#if poll}
