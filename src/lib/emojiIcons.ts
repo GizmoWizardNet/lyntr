@@ -1,15 +1,15 @@
 
 export const EMOJI_ICONS: Record<string, string> = {
-	'❤️': '/emojis/heart.png',
-	'😂': '/emojis/laughing.png',
-	'😮': '/emojis/wow.png',
-	'😢': '/emojis/sad.png',
-	'🔥': '/emojis/fire.png',
-	'👍': '/emojis/thumbs_up.png',
-	'👎': '/emojis/thumbs_down.png',
-	'😡': '/emojis/angry.png',
-	'🎉': '/emojis/confetti.png',
-	'👀': '/emojis/eyes.png'
+	'❤️': '/emojis/heart.webp',
+	'😂': '/emojis/laughing.webp',
+	'😮': '/emojis/wow.webp',
+	'😢': '/emojis/sad.webp',
+	'🔥': '/emojis/fire.webp',
+	'👍': '/emojis/thumbs_up.webp',
+	'👎': '/emojis/thumbs_down.webp',
+	'😡': '/emojis/angry.webp',
+	'🎉': '/emojis/confetti.webp',
+	'👀': '/emojis/eyes.webp'
 };
 
 export function emojiIcon(emoji: string): string | null {

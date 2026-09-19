@@ -2,7 +2,7 @@
 	import { useOldLoadingAnimations } from './stores';
 
 	interface Props {
-		size?: number; // gif width in px, full-screen mode only
+		size?: number;
 		occupy_screen?: boolean;
 	}
 
@@ -21,7 +21,7 @@
 {#if occupy_screen}
 	<div class="loader-wrap full-screen">
 		<img
-			src={$useOldLoadingAnimations ? '/old_loading.gif' : '/loading.gif'}
+			src={$useOldLoadingAnimations ? '/old_loading.webp' : '/loading.webp'}
 			alt="Loading"
 			class="loading-gif"
 			style="width: {size * 2.5}px;"
@@ -30,7 +30,7 @@
 	</div>
 {:else}
 	<div class="loader-wrap inline">
-		<img src="/loading2.gif" alt="Loading" class="loading-gif" style="width: {size * 2}px;" />
+		<img src="/loading2.webp" alt="Loading" class="loading-gif" style="width: {size * 2}px;" />
 	</div>
 {/if}
 

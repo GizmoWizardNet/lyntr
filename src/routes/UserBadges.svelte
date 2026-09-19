@@ -26,14 +26,10 @@
 		size
 	}: Props = $props();
 
-	// `compact` predates `size` — keep it working as `size="compact"` so
-	// existing call sites (ProfilePage, LyntContents, ForumPostCard) don't
-	// need touching.
 	let resolvedSize = $derived(size ?? (compact ? 'compact' : 'default'));
 	let isCompact = $derived(resolvedSize !== 'default');
 	let isTiny = $derived(resolvedSize === 'tiny');
 
-	// ── Star tier ────────────────────────────────────────────────
 	type StarTier = { color: string; label: string } | null;
 
 	function getStarTier(n: number): StarTier {
@@ -48,7 +44,6 @@
 	}
 	let starTier = $derived(getStarTier(followerCount));
 
-	// ── Streak colour ────────────────────────────────────────────
 	function streakColor(n: number): string {
 		if (n >= 365) return '#F5C518';
 		if (n >= 30)  return '#FF6B35';
@@ -67,7 +62,7 @@
 		<Tooltip.Root>
 			<Tooltip.Trigger>
 				<img loading="lazy" decoding="async"
-					src={mode.current !== 'light' ? 'white_mode_verified.png?v=7' : 'verified.png?v=7'}
+					src={mode.current !== 'light' ? 'white_mode_verified.webp?v=7' : 'verified.webp?v=7'}
 					alt="Verified"
 					class="badge-img"
 				/>
@@ -81,7 +76,7 @@
 		<Tooltip.Root>
 			<Tooltip.Trigger>
 				<img loading="lazy" decoding="async" 
-					src="/admin_badge.png" 
+					src="/admin_badge.webp" 
 					alt="Admin"
 					class="badge-img"
 				/>
@@ -94,7 +89,7 @@
 	{#if contributor}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img loading="lazy" decoding="async" src="/contributor.png" alt="Contributor" class="badge-img" />
+				<img loading="lazy" decoding="async" src="/contributor.webp" alt="Contributor" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>This user has <span class="rounded-xl bg-border px-1">contributed</span> to Lyntr!</p></Tooltip.Content>
 		</Tooltip.Root>
@@ -110,10 +105,6 @@
 		</Tooltip.Root>
 	{/if}
 
-	<!-- Login streak — only on the full/default size (profile page). Every
-	     compact context (feed cards, sidebars, DMs) is tight on space and
-	     the streak is the least essential badge, so it's dropped there
-	     entirely rather than squeezed in. -->
 	{#if !isCompact}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
@@ -130,7 +121,7 @@
 	{#if followsViewer}
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<img loading="lazy" decoding="async" src="/supporter.png" alt="Supporter" class="badge-img" />
+				<img loading="lazy" decoding="async" src="/supporter.webp" alt="Supporter" class="badge-img" />
 			</Tooltip.Trigger>
 			<Tooltip.Content><p>Follows you :D</p></Tooltip.Content>
 		</Tooltip.Root>
@@ -143,7 +134,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		flex-shrink: 0; /* never let the whole badge cluster get squeezed by a parent flex row */
+		flex-shrink: 0;
 	}
 	.badges-row.compact { gap: 3px; }
 	.badges-row.tiny { gap: 2px; }
@@ -153,8 +144,6 @@
 	.streak-wrap { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
 	.streak-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
 
-	/* lucide-svelte renders a raw <svg> for each icon (ShieldCheck, Star, Flame) —
-	   without this, those svgs shrink individually inside the inline-flex row too */
 	.badges-row :global(svg) {
 		flex-shrink: 0;
 	}

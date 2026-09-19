@@ -28,13 +28,8 @@
 
 	const links: Array<{ href: string; icon: any; label: string; external: boolean }> = [
 		{ href: 'https://github.com/GizmoWizardNet/lyntr', icon: Code, label: 'Our Github!', external: true },
-		{
-	href: 'https://bsky.app/profile/lyntr.bsky.social',
-	icon: null,
-	label: 'Lyntr on Bluesky',
-	external: true
-},
-		{ href: 'https://discord.gg/y5PA8uS5Tj', icon: MessageCircle, label: 'Discord!', external: true },
+		{ href: 'https://bsky.app/profile/lyntr.bsky.social', icon: null, label: 'Official Bluesky', external: true },
+		{ href: 'https://discord.gg/y5PA8uS5Tj', icon: MessageCircle, label: 'Discordo!', external: true },
 		{
 			href: 'https://github.com/NotHMRC/pylyntr',
 			icon: Code,
@@ -48,7 +43,7 @@
 			external: true
 		},
 		{ href: 'mailto:dev@gizmowizard.tech', icon: Mail, label: 'Contact me', external: false },
-		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, archived repo', external: true }
+		{ href: 'https://github.com/face-hh/lyntr', icon: Code, label: 'Original, dead repo', external: true }
 	];
 
 	
