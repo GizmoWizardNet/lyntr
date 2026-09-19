@@ -102,7 +102,7 @@ Examples:
 "you're an idiot" -> ALLOW
 "I disagree, this idea is shit" -> ALLOW`;
 
-const MODERATION_MODELS = ['google/gemma-4-31b-it:free', 'qwen/qwen3.8-27b:free'];
+const MODERATION_MODELS = ['google/gemma-4-31b-it:free', 'qwen/qwen3.8-27b:free', 'inclusionai/ling-3.0-flash-vl:free', 'nvidia/nemotron-3.5-lightning:free', 'deepseek/deepseek-v4-flash-0731:free'];
 
 const HOP_NOTICE = 'Please wait - the server is now going to hack OpenRouter';
 const ALL_FAILED_MESSAGE = 'Moderation Failure - blame OpenRouter';
