@@ -21,10 +21,7 @@
 		animate?: boolean;
 		small?: boolean;
 		iconAnim?: string | null;
-		// Extra class(es) applied to the visible label span only — e.g. a
-		// gradient-text treatment for a single standout nav item.
 		textClass?: string | undefined;
-		// Accessible name for icon-only buttons (buttons with `text` are already named).
 		label?: string | undefined;
 	}
 
@@ -178,6 +175,17 @@
 		box-shadow: var(--aero-shadow);
 		-webkit-backdrop-filter: blur(var(--aero-blur)) saturate(160%);
 		backdrop-filter: blur(var(--aero-blur)) saturate(160%);
+		text-shadow: var(--emboss-in-text);
+	}
+	.shit .nav-icon :global(svg) {
+		filter: var(--emboss-in-icon);
+	}
+
+	.shit.nav-pill {
+		text-shadow: var(--emboss-out-text);
+	}
+	.shit.nav-pill .nav-icon :global(svg) {
+		filter: none;
 	}
 
 	.shit::before {
@@ -348,13 +356,6 @@
 	}
 
 	.gold-sheen {
-		/* No position declaration here on purpose — this class is applied
-		   alongside Tailwind's `absolute` on the notification badge, and a
-		   `position: relative` here would win the cascade (scoped selector
-		   beats a plain utility class) and silently knock the badge out of
-		   its absolutely-positioned overlap with the icon, back into
-		   normal document flow. overflow:hidden works fine regardless of
-		   which position value the element ends up with. */
 		overflow: hidden;
 		color: #3a2400;
 		background-image:

@@ -71,6 +71,11 @@
     --aero-shadow:         0 2px 8px rgba(40, 30, 10, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
     --aero-shadow-active:  0 3px 10px rgba(40, 30, 10, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     --aero-blur:           12px;
+
+    --emboss-in-text:   -1px -1px 0 var(--bevel-dark), 1px 1px 0 var(--bevel-light);
+    --emboss-out-text:  -1px -1px 0 var(--bevel-light), 1px 1px 0 var(--bevel-dark);
+    --emboss-in-icon:   drop-shadow(-1px -1px 0 var(--bevel-dark)) drop-shadow(1px 1px 0 var(--bevel-light));
+    --emboss-out-icon:  drop-shadow(-1px -1px 0 var(--bevel-light)) drop-shadow(1px 1px 0 var(--bevel-dark));
   }
 
   .dark {
@@ -211,6 +216,10 @@
   box-shadow: var(--hard-shadow-sm) !important;
 }
 
+.shit.nav-pill {
+  text-shadow: var(--emboss-out-text) !important;
+}
+
 button.bg-primary,
 .btn-gloss,
 [data-button-root][class*="bg-primary"] {
@@ -239,6 +248,19 @@ button.bg-primary:active,
   filter: brightness(0.95) !important;
   box-shadow: var(--hard-shadow-sm) !important;
   transform: translate(1px, 1px) !important;
+}
+
+.bg-gradient-gloss,
+button.bg-primary,
+.btn-gloss,
+[data-button-root][class*="bg-primary"] {
+  text-shadow: var(--emboss-in-text) !important;
+}
+.bg-gradient-gloss svg,
+button.bg-primary svg,
+.btn-gloss svg,
+[data-button-root][class*="bg-primary"] svg {
+  filter: var(--emboss-in-icon) !important;
 }
 
 [class*="buttonVariants"],
@@ -541,16 +563,10 @@ hr {
   border: 1px solid hsl(var(--primary-dim)) !important;
 }
 
-/* ════════════════════════════════════════════════
-   HEADING TEXT-SHADOW (for text on dark surfaces)
-   ════════════════════════════════════════════════ */
 h1, h2, h3, h4, h5, h6 {
   text-shadow: 1px 1px 2px rgba(60, 30, 0, 0.1);
 }
 
-/* ════════════════════════════════════════════════
-   NAV RIBBON (explicit class, not fragile selector)
-   ════════════════════════════════════════════════ */
 .nav-ribbon {
   background: var(--header-bg);
   border-top: 2px solid var(--bevel-light);
@@ -562,9 +578,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-retro);
 }
 
-/* ════════════════════════════════════════════════
-   LYNT CARD (explicit class)
-   ════════════════════════════════════════════════ */
 .lynt-card {
   background: hsl(var(--lynt-focus));
   box-shadow: var(--inset-shadow);
@@ -582,7 +595,6 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--hard-shadow);
 }
 
-/* REPOST QUOTE — beveled left-accent frame */
 .repost-quote {
   border: var(--ghost-border);
   border-left: 3px solid hsl(var(--primary));
@@ -591,9 +603,6 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--inset-shadow);
 }
 
-/* ════════════════════════════════════════════════
-   REPLY BAR & PROFILE TRIGGER (explicit classes)
-   ════════════════════════════════════════════════ */
 .reply-bar {
   background: hsl(var(--input));
   box-shadow: var(--inset-shadow);
@@ -619,9 +628,6 @@ h1, h2, h3, h4, h5, h6 {
   background: hsl(var(--card));
 }
 
-/* ════════════════════════════════════════════════
-   INLINE EDITOR (LyntContents + DivInput shared)
-   ════════════════════════════════════════════════ */
 .edit-tab-bar {
   display: flex;
   align-items: center;

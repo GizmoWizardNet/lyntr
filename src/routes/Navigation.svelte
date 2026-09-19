@@ -130,7 +130,7 @@
 			secondary={badgeFor(item)}
 			secondaryClass={item.label === 'Achievements' ? 'gold-sheen' : undefined}
 			textClass={item.label === 'Shop' ? 'bg-gradient-gloss bg-clip-text text-transparent' : undefined}
-			className="hidden border-none md:flex md:w-auto !rounded-full"
+			className="nav-pill hidden border-none md:flex md:w-auto !rounded-full"
 			on:click={() => handleNavClick(item.page)}
 		/>
 	{/each}
@@ -142,7 +142,7 @@
 				iconAnim={item.anim}
 				secondary={badgeFor(item)}
 				secondaryClass={item.label === 'Achievements' ? 'gold-sheen' : undefined}
-				className="flex-1 border-none md:hidden !rounded-full"
+				className="nav-pill flex-1 border-none md:hidden !rounded-full"
 				on:click={() => handleNavClick(item.page)}
 			/>
 		{/if}
@@ -155,7 +155,7 @@
 					<button
 						{...builder}
 						onclick={() => (moreOpen = !moreOpen)}
-						class="shit inline-flex w-full items-center justify-center rounded-full font-bold text-primary"
+						class="shit nav-pill inline-flex w-full items-center justify-center rounded-full font-bold text-primary"
 					>
 						<MoreHorizontal class="h-6 w-6" strokeWidth={2.5} />
 					</button>
