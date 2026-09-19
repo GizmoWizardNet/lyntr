@@ -24,6 +24,8 @@
 		// Extra class(es) applied to the visible label span only — e.g. a
 		// gradient-text treatment for a single standout nav item.
 		textClass?: string | undefined;
+		// Accessible name for icon-only buttons (buttons with `text` are already named).
+		label?: string | undefined;
 	}
 
 	let {
@@ -40,7 +42,8 @@
 		animate = false,
 		small = true,
 		iconAnim = null,
-		textClass = undefined
+		textClass = undefined,
+		label = undefined
 	}: Props = $props();
 
 	let opened = $state(false);
@@ -94,6 +97,7 @@
 						class:active={isActive}
 						class:animate
 						onclick={handleClick}
+						aria-label={label}
 						class="shit {outline
 							? 'p-1.5'
 							: ''} inline-flex items-center justify-center rounded-xl font-bold text-primary {className}"
@@ -125,6 +129,7 @@
 			class:active={isActive}
 			class:animate
 			onclick={handleClick}
+			aria-label={label}
 			class="shit {outline
 				? 'p-1.5'
 				: ''} inline-flex items-center justify-center gap-1 rounded-xl font-bold text-primary {className}"

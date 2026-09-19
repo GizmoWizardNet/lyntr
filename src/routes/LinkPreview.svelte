@@ -3,6 +3,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  let el: HTMLDivElement;
+
   export let url: string;
 
   interface OgData {
@@ -20,7 +22,17 @@
   // Module-level cache so the same URL never double-fetches across lynts in the feed
   const _cache = new Map<string, OgData | null>();
 
-  onMount(async () => {
+  onMount(() => {
+    // Don't fire /api/og for every link preview on load — only when it's near the viewport.
+    if (typeof IntersectionObserver === 'undefined') { load(); return; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); }
+    }, { rootMargin: '300px' });
+    io.observe(el);
+    return () => io.disconnect();
+  });
+
+  async function load() {
     if (_cache.has(url)) {
       data = _cache.get(url) ?? null;
       state = data ? 'loaded' : 'error';
@@ -41,7 +53,7 @@
       _cache.set(url, null);
       state = 'error';
     }
-  });
+  }
 
   function trimUrl(u: string) {
     try {
@@ -61,6 +73,7 @@
   }
 </script>
 
+<div bind:this={el}>
 {#if state === 'loading'}
   <div class="og-card og-skeleton" aria-hidden="true">
     <div class="og-skeleton-img"></div>
@@ -100,6 +113,7 @@
     </div>
   </a>
 {/if}
+</div>
 
 <style>
   /* ── Card shell ── */

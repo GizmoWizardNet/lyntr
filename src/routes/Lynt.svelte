@@ -441,7 +441,7 @@
 						text={formatNumber(views)}
 						outline={true}
 					/>
-					<OutlineButton icon={Share2} on:click={handleShare} animate={copied} />
+					<OutlineButton icon={Share2} label="Share" on:click={handleShare} animate={copied} />
 				</div>
 			</div>
 		</div>

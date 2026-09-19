@@ -6,7 +6,6 @@
 	import { onMount } from 'svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import Auth from '../Auth.svelte';
-	import AccountCreator from '../AccountCreator.svelte';
 	import { page } from '$app/stores';
 	import MainPage from '../MainPage.svelte';
 	import Cookies from 'js-cookie';
@@ -61,7 +60,9 @@
 {#if !authenticated}
 	<Auth />
 {:else if noAccount}
-	<AccountCreator />
+	{#await import('../AccountCreator.svelte') then { default: AccountCreator }}
+		<AccountCreator />
+	{/await}
 {:else}
 	<MainPage {...userData} profileOpened={handle} />
 {/if}

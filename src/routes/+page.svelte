@@ -6,7 +6,6 @@
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import Auth from './Auth.svelte';
 	import Landing from './Landing.svelte';
-	import AccountCreator from './AccountCreator.svelte';
 	import MainPage from './MainPage.svelte';
 	import WorkingOverlay from './WorkingOverlay.svelte';
 	import Cookies from 'js-cookie';
@@ -118,6 +117,15 @@
 			}
 		}
 
+		// The root layout already resolved the user server-side. If it says nobody
+		// is logged in, /api/me would just 401 again (and log a console error).
+		if (!data.user) {
+			noAccount = true;
+			if (!midOAuthSignup) authenticated = false;
+			loading = false;
+			return;
+		}
+
 		try {
 			const loginResponse = await fetch(`api/me`, {
 				method: 'GET',
@@ -185,17 +193,20 @@
 {:else if !authenticated}
 	<Landing feed={data.publicFeed} scrollables={data.publicScrollables} />
 {:else if noAccount}
-	<AccountCreator
-		on:registered={(e) => { pendingUserData = e.detail; }}
-		on:login={() => {
-			if (pendingUserData) {
-				localStorage.setItem('user-data', JSON.stringify(pendingUserData));
-				userData = pendingUserData;
-			}
-			noAccount = false;
-			authenticated = true;
-		}}
-	/>
+	<!-- Sign-up flow (IQ test + every question component) is only needed by new users -->
+	{#await import('./AccountCreator.svelte') then { default: AccountCreator }}
+		<AccountCreator
+			on:registered={(e) => { pendingUserData = e.detail; }}
+			on:login={() => {
+				if (pendingUserData) {
+					localStorage.setItem('user-data', JSON.stringify(pendingUserData));
+					userData = pendingUserData;
+				}
+				noAccount = false;
+				authenticated = true;
+			}}
+		/>
+	{/await}
 {:else}
 	<MainPage {...userData} lyntOpened={data.lyntOpened} initialFeed={data.initialFeed} />
 {/if}

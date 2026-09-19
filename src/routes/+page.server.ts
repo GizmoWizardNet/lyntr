@@ -6,6 +6,7 @@ import { newFeed } from './api/feed/new';
 import { mainFeed } from './api/feed/main';
 import { hydratePolls } from './api/util';
 import { scrollableFeed } from '$lib/server/scrollables';
+import { swrCached } from '$lib/server/ttlCache';
 
 const TIMESTAMP_OPTS: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
@@ -14,6 +15,12 @@ const TIMESTAMP_OPTS: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     year: 'numeric',
 };
+
+// The logged-out landing page is identical for every visitor (viewer id = null),
+// so hit the database at most once per 30s instead of on every request.
+// This is what was driving the ~1.1s server response time in Lighthouse.
+const cachedPublicFeed = swrCached(30_000, () => newFeed(null));
+const cachedPublicScrollables = swrCached(30_000, () => scrollableFeed(null));
 
 export const load: PageServerLoad  = async ({ url, cookies, parent }) => {
     const id = url.searchParams.get('id');
@@ -29,8 +36,8 @@ export const load: PageServerLoad  = async ({ url, cookies, parent }) => {
     // for someone we already know is authenticated.
     const [lynt, publicFeedRaw, publicScrollables] = await Promise.all([
         getLynt(id || ''),
-        hasAuthCookie ? Promise.resolve([]) : newFeed(null),
-        hasAuthCookie ? Promise.resolve([]) : scrollableFeed(null)
+        hasAuthCookie ? Promise.resolve([]) : cachedPublicFeed(),
+        hasAuthCookie ? Promise.resolve([]) : cachedPublicScrollables()
     ]);
 
     const publicFeed = hydratePolls(publicFeedRaw);

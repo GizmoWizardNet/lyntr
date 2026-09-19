@@ -21,21 +21,13 @@
 	import { working } from '$lib/working';
 	import { currentPage, onlineUsers, typingUsers, viewerCounts, wsConnected, bookmarkToggled } from './stores';
 	import { wsClient } from '$lib/ws-client';
-	import Search from './Search.svelte';
-	import Notifications from './Notifications.svelte';
 	import ProfilePage from './ProfilePage.svelte';
 	import MentionAutocomplete from './MentionAutocomplete.svelte';
 	import { goto } from '$app/navigation';
 	import TopTab from './TopTab.svelte';
 	import AutoRefreshControl from './AutoRefreshControl.svelte';
-	import ForumPage from './Forum/ForumPage.svelte';
-	import ScrollablesPage from './scrollables/ScrollablesPage.svelte';
 	import CoinPop from './CoinPop.svelte';
 	import AchievementPop from './AchievementPop.svelte';
-	import AchievementsPage from './Achievements/AchievementsPage.svelte';
-	import LeaderboardPage from './Leaderboard/LeaderboardPage.svelte';
-	import ShopPage from './Shop/ShopPage.svelte';
-	import DMPage from './DMPage.svelte';
 	import TrendingSidebar from './TrendingSidebar.svelte';
 	import Composer from './Composer.svelte';
 	import type { FeedItem } from './stores';
@@ -511,22 +503,40 @@
 			<!-- Main content — scrolls independently above the fixed bottom nav -->
 			<div class="flex h-full w-full flex-col items-center gap-1 overflow-hidden pb-[calc(76px+env(safe-area-inset-bottom,0px))] md:flex-row md:items-start md:pb-0 {page === 'scrollables' ? 'max-md:!pb-0' : ''}">
 				<div class="flex h-full w-full max-w-[600px] flex-col overflow-hidden px-3 md:px-1 {lyntOpened && selectedLynt ? 'hidden md:flex' : ''} {page === 'forum' ? 'md:max-w-[900px]' : ''} {page === 'messages' ? 'md:max-w-[700px]' : ''} {page === 'scrollables' ? '!max-w-[480px] !px-0' : ''} {page === 'achievements' ? 'md:max-w-[1150px]' : ''}">
+					<!-- These views aren't visible on first paint, so they're code-split
+					     and only downloaded when the user actually navigates to them. -->
 					{#if page === 'search'}
-						<Search userId={id} {handleLyntClick} />
+						{#await import('./Search.svelte') then { default: Search }}
+							<Search userId={id} {handleLyntClick} />
+						{/await}
 					{:else if page === 'forum'}
-						<ForumPage myId={id} />
+						{#await import('./Forum/ForumPage.svelte') then { default: ForumPage }}
+							<ForumPage myId={id} />
+						{/await}
 					{:else if page === 'scrollables'}
-						<ScrollablesPage myId={id} />
+						{#await import('./scrollables/ScrollablesPage.svelte') then { default: ScrollablesPage }}
+							<ScrollablesPage myId={id} />
+						{/await}
 					{:else if page === 'leaderboard'}
-						<LeaderboardPage />
+						{#await import('./Leaderboard/LeaderboardPage.svelte') then { default: LeaderboardPage }}
+							<LeaderboardPage />
+						{/await}
 					{:else if page === 'shop'}
-						<ShopPage />
+						{#await import('./Shop/ShopPage.svelte') then { default: ShopPage }}
+							<ShopPage />
+						{/await}
 					{:else if page === 'achievements'}
-						<AchievementsPage />
+						{#await import('./Achievements/AchievementsPage.svelte') then { default: AchievementsPage }}
+							<AchievementsPage />
+						{/await}
 					{:else if page === 'notifications'}
-						<Notifications {handleLyntClick} />
+						{#await import('./Notifications.svelte') then { default: Notifications }}
+							<Notifications {handleLyntClick} />
+						{/await}
 					{:else if page === 'messages'}
-						<DMPage myId={id} />
+						{#await import('./DMPage.svelte') then { default: DMPage }}
+							<DMPage myId={id} />
+						{/await}
 					{:else if page.startsWith('profile')}
 						{#key page}
 							<ProfilePage

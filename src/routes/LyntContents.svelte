@@ -4,6 +4,8 @@
 	import * as HoverCard from '@/components/ui/hover-card/index.js';
 	import Avatar from './Avatar.svelte';
 	import { cdnUrl, bookmarkToggled } from './stores';
+	import { page } from '$app/stores';
+	import { loadBookmarkIds, setBookmarkedLocal } from '$lib/bookmarks';
 
 	import CalendarDays from 'lucide-svelte/icons/calendar-days';
 	import * as Popover from '@/components/ui/popover';
@@ -135,12 +137,9 @@
 	let bookmarked = false;
 
 	async function loadBookmarkState() {
-		if (!get(page).data.user) return;   // user comes from your root layout
-		const res = await fetch(`api/bookmark?id=${postId}`);
-		if (res.ok) {
-			const data = await res.json();
-			bookmarked = data.bookmarked;
-		}
+		// Logged-out visitors can't have bookmarks — don't fire a request that will 401.
+		if (!$page.data.user) return;
+		bookmarked = (await loadBookmarkIds()).has(String(postId));
 	}
 	loadBookmarkState();
 
@@ -160,6 +159,7 @@
 
 			if (!response.ok) throw new Error(String(response.status));
 
+			setBookmarkedLocal(postId, !wasBookmarked);
 			toast.success(wasBookmarked ? 'Bookmark removed.' : 'Lynt bookmarked!');
 			bookmarkToggled.set({ lyntId: postId, bookmarked: !wasBookmarked });
 		} catch {
@@ -326,7 +326,7 @@
 				<Popover.Root bind:open={popoverOpened}>
 					<Popover.Trigger asChild>
 						{#snippet children({ builder }: { builder: any })}
-							<button {...builder} on:click|stopPropagation={() => (popoverOpened = !popoverOpened)}>
+							<button {...builder} aria-label="More options" on:click|stopPropagation={() => (popoverOpened = !popoverOpened)}>
 								<Ellipsis />
 							</button>
 						{/snippet}

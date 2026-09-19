@@ -6,7 +6,7 @@
 	import { cdnUrl } from './stores';
 	import Composer from './Composer.svelte';
 	import ClanLyntComposer from './ClanLyntComposer.svelte';
-	import LyntskinPicker from './LyntskinPicker.svelte';
+	import LyntskinPicker from './LyntSkinPicker.svelte';
 	import { Users, PenLine } from 'lucide-svelte';
 
 	interface Props {
