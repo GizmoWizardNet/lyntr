@@ -21,11 +21,6 @@
 	let loadingMore = $state(false);
 	let activeIndex = $state(0);
 	let muted = $state(true);
-	// Same "one shared setting, applies to whichever video is active" model
-	// as `muted` above — YouTube's playback speed works the same way,
-	// persisting across videos within a session. Also persisted to
-	// localStorage so it survives a page reload/revisit, matching YouTube's
-	// actual cross-session behavior rather than just cross-video.
 	const PLAYBACK_SPEED_KEY = 'lyntr_scrollables_playback_speed';
 	const VALID_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 	let playbackRate = $state(1);
@@ -35,19 +30,8 @@
 	let containerEl: HTMLDivElement | undefined = $state();
 
 	let observer: IntersectionObserver | undefined;
-	// Slots can mount (and run the registerSlot action, below) before this
-	// component's own onMount has had a chance to construct the observer —
-	// Svelte mounts a component's template elements/actions before firing
-	// that component's onMount. Anything that registers in that gap is
-	// buffered here and flushed once the observer exists.
 	let pendingSlots: HTMLDivElement[] = [];
 
-	// Only decode/play video for cards within this many slots of the active
-	// one. Scrollables can carry up to 300MB of video each — mounting every
-	// <video> in the feed at once (the old behavior) meant a long scroll
-	// session kept dozens of decoders alive simultaneously, which is exactly
-	// the kind of thing that grinds a phone to a halt. Cards outside the
-	// window render just their poster frame instead.
 	const RENDER_WINDOW = 2;
 	function inWindow(i: number) {
 		return Math.abs(i - activeIndex) <= RENDER_WINDOW;
@@ -95,18 +79,10 @@
 		try {
 			localStorage.setItem(PLAYBACK_SPEED_KEY, String(rate));
 		} catch {
-			// Same private-browsing/storage-disabled fallback as the onMount
-			// read above — the rate still applies for this session either way.
 		}
 	}
 
 	function maybeLoadMore() {
-		// Fetch the next page once the viewer is within 3 cards of the end —
-		// this is what makes the mobile scroll feel infinite rather than
-		// hitting a wall. Which card is "active" is handled by the
-		// IntersectionObserver below (via the registerSlot action), which is
-		// robust to padding/rounding instead of dividing scrollTop by
-		// clientHeight the way this page used to.
 		if (!loadingMore && activeIndex >= items.length - 3) {
 			load(false);
 		}
@@ -121,9 +97,6 @@
 		items = [{ ...scrollable, username: 'You', handle: '', likeCount: 0, commentCount: 0, bookmarkCount: 0, liked: false, bookmarked: false }, ...items];
 	}
 
-	// Svelte action: registers each slot element with the shared
-	// IntersectionObserver and unregisters it on teardown/id change (e.g.
-	// when Svelte reuses a DOM node for a different keyed item on reorder).
 	function registerSlot(node: HTMLDivElement, id: string) {
 		node.dataset.slotId = id;
 		if (observer) observer.observe(node);
@@ -136,14 +109,6 @@
 		};
 	}
 
-	// ── Live reactivity (WSS authoritative) ──────────────────────────────
-	// Every handler patches `items` by re-mapping to fresh objects so
-	// ScrollableCard's $bindable props (which only resync when the object
-	// they were spread from actually changes) pick up the server's version —
-	// same pattern MainPage.svelte uses for like_update/repost_update on the
-	// main feed. The client never trusts its own optimistic math as final;
-	// it's just there so a tap feels instant while the real number is in
-	// flight over the socket.
 	let wsUnsubs: Array<() => void> = [];
 
 	onMount(() => {
@@ -151,18 +116,10 @@
 			const stored = Number(localStorage.getItem(PLAYBACK_SPEED_KEY));
 			if (stored && VALID_SPEEDS.includes(stored)) playbackRate = stored;
 		} catch {
-			// localStorage unavailable (private browsing, etc.) — just fall
-			// back to the 1x default, no need to surface an error for this.
 		}
 
 		observer = new IntersectionObserver(
 			(entries) => {
-				// The slot with the most visible area is "active". With
-				// scroll-snap this is normally unambiguous (one slot fully
-				// visible at a time), but taking the max rather than the
-				// first >50% match keeps things correct during the snap
-				// animation itself, when two slots are briefly both partly
-				// visible.
 				let best: { id: string; ratio: number } | null = null;
 				for (const entry of entries) {
 					const id = (entry.target as HTMLElement).dataset.slotId;
@@ -233,17 +190,10 @@
 		</Button>
 	</div>
 
-	<!-- Mobile-only floating post button — the toolbar (with the same
-	     action) fades out on mobile so the video feed can go full-bleed. -->
 	<button class="mobile-post-fab" onclick={() => (uploadOpen = true)} aria-label="Post a scrollable">
 		<Plus class="h-5 w-5" />
 	</button>
 
-	<!-- Mobile-only floating back button — icon-only on purpose. This is a
-	     full-bleed TikTok-style feed, so a labeled "Back to Home" button
-	     would break the immersion the full-bleed layout is going for; a
-	     small glass icon in the corner (same visual language as the "+"
-	     FAB) gives an escape hatch without announcing itself. -->
 	<button class="mobile-back-fab" onclick={() => currentPage.set('home')} aria-label="Back to home">
 		<ArrowLeft class="h-5 w-5" />
 	</button>
@@ -301,10 +251,6 @@
 		transition: opacity 0.2s ease;
 	}
 
-	/* Full-bleed on mobile — this is a TikTok-style vertical feed, so the
-	   IQ filter/refresh controls just get in the way of the video. They
-	   stay available on desktop where there's room for them. A floating
-	   "+" (below) keeps posting reachable without the toolbar. */
 	@media (max-width: 767px) {
 		.toolbar {
 			opacity: 0;
@@ -355,8 +301,6 @@
 			height: 36px;
 			border-radius: 999px;
 			z-index: 10;
-			/* Deliberately subtler than the post FAB — a low-key glass
-			   escape hatch, not a call-to-action competing with the video. */
 			background: var(--aero-surface);
 			color: #fff;
 			border: 1px solid var(--aero-border-top);

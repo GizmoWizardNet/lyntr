@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heart, MessageCircle, Bookmark, Share, Volume2, VolumeX, MoreHorizontal, Play, Trash2 } from 'lucide-svelte';
+	import { Heart, MessageCircle, Bookmark, Share2, Volume2, VolumeX, MoreHorizontal, Play, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import Avatar from '../Avatar.svelte';
 	import UserName from '../UserName.svelte';
@@ -12,17 +12,9 @@
 		scrollable: any;
 		myId: string;
 		active: boolean;
-		// Whether this card is inside the render window (see RENDER_WINDOW
-		// in ScrollablesPage.svelte). Cards outside it skip the <video> src
-		// entirely and show just the poster, so a long scroll session
-		// doesn't keep dozens of video decoders alive at once.
 		renderVideo: boolean;
 		muted: boolean;
 		onToggleMute: () => void;
-		// YouTube-style playback speed. Lives in the parent (same lifting
-		// pattern as `muted`) so it's one shared setting across every card
-		// rather than resetting to 1x each time a new video scrolls into
-		// view.
 		playbackRate: number;
 		onSetPlaybackRate: (rate: number) => void;
 		onOpenComments: () => void;
@@ -31,11 +23,6 @@
 
 	let { scrollable, myId, active, renderVideo, muted, onToggleMute, playbackRate, onSetPlaybackRate, onOpenComments, onDeleted }: Props = $props();
 
-	// Tracks `scrollable.id` so a like/bookmark tap can update these locally
-	// for instant feedback, while a fresh `scrollable` object from the
-	// parent (arriving from a WSS broadcast — new likeCount, a comment
-	// landing, etc.) always resyncs them to the server's authoritative
-	// value. WSS wins; the local edit is just there to cover the round-trip.
 	let liked = $state(scrollable.liked);
 	let likeCount = $state(scrollable.likeCount);
 	let bookmarked = $state(scrollable.bookmarked);
@@ -43,9 +30,6 @@
 	let lastSyncedId = scrollable.id;
 
 	$effect(() => {
-		// Re-run whenever `scrollable` changes identity (parent re-mapped
-		// `items`). If it's still the same card, take the server's numbers;
-		// a brand new card (feed scrolled/reset) just re-seeds from scratch.
 		if (scrollable.id !== lastSyncedId) {
 			lastSyncedId = scrollable.id;
 		}
@@ -61,9 +45,6 @@
 	let likersHover = $state(false);
 	let likersHoverTimer: ReturnType<typeof setTimeout>;
 
-	// Same debounce reasoning as the equivalent in Lynt.svelte — avoid a
-	// fetch per accidental cursor pass, and give room to move from the
-	// button into the dropdown before it closes.
 	function scheduleLikersHover(show: boolean) {
 		clearTimeout(likersHoverTimer);
 		likersHoverTimer = setTimeout(() => (likersHover = show), show ? 350 : 150);
@@ -80,12 +61,6 @@
 		}
 	});
 
-	// `playbackRate` isn't a bindable HTML attribute (unlike `muted`) — it
-	// has to be set imperatively on the element, so it needs its own
-	// effect, re-applied whenever the shared rate changes OR whenever this
-	// card gets a freshly-mounted <video> element (scrolling back to a
-	// card outside the render window unmounts/remounts it — see
-	// `renderVideo` in the Props doc above).
 	$effect(() => {
 		if (!videoEl) return;
 		videoEl.playbackRate = playbackRate;
@@ -175,9 +150,6 @@
 				class="video-el"
 			></video>
 		{:else if scrollable.thumbnailKey}
-			<!-- Outside the render window: just the poster frame, no decoder
-			     mounted. Swapped back in for a real <video> the moment this
-			     card re-enters the window (see RENDER_WINDOW). -->
 			<img
 				class="video-el poster-el"
 				src={scrollableCdnRawUrl(`${scrollable.thumbnailKey}.webp`)}
@@ -196,8 +168,6 @@
 			{#if muted}<VolumeX class="h-5 w-5" />{:else}<Volume2 class="h-5 w-5" />{/if}
 		</button>
 
-		<!-- Playback speed — same YouTube-style control, sitting just above
-		     the mute button so both live in one predictable corner. -->
 		<Popover.Root bind:open={speedMenuOpen}>
 			<Popover.Trigger asChild>
 				{#snippet children({ builder }: { builder: any })}
@@ -224,7 +194,6 @@
 		</Popover.Root>
 	</div>
 
-	<!-- Author + caption overlay, bottom-left -->
 	<div class="meta-overlay">
 		<button class="author-row" onclick={goToProfile}>
 			<Avatar src={cdnUrl(scrollable.userId, 'small')} alt="" userId={scrollable.userId} showPresence={false} border />
@@ -236,7 +205,6 @@
 		{/if}
 	</div>
 
-	<!-- Action rail, matches the reference layout -->
 	<div class="action-rail">
 		<div
 			class="relative inline-block"
@@ -258,7 +226,7 @@
 			<Bookmark class="h-7 w-7 {bookmarked ? 'fill-current' : ''}" />
 		</button>
 		<button class="rail-btn" onclick={copyLink}>
-			<Share class="h-7 w-7" />
+			<Share2 class="h-7 w-7" />
 		</button>
 		{#if scrollable.userId === myId}
 			<Popover.Root bind:open={moreOpen}>
